@@ -52,8 +52,8 @@ coupled by name to markup and CSS. Change one side, change the other.
 | It reads / writes | Behavior |
 |---|---|
 | `[data-reveal-group]`, `.reveal` → `.in` | stagger-in on scroll, 90 ms apart |
-| `.cm-section`, `[data-tone]`, `.progress a[data-t]` | active-section tracking + palette flip |
-| `.cm-section` ids, in DOM order | the walkable list for keyboard navigation |
+| `.slide`, `[data-tone]`, `.progress a[data-t]` | active-section tracking + palette flip |
+| `.slide` ids, in DOM order | the walkable list for keyboard navigation |
 | `.modulo-demo-slide[data-back-target]` | demo focus lock |
 | `html.demo-locked` | CSS scroll lock while a demo is open |
 | `postMessage` type `nuki-demo:esc` | ESC pressed *inside* the demo iframe |
@@ -64,7 +64,7 @@ Two details worth knowing:
 
 **The walkable list is derived from the DOM, not from `deckNav`.** That is
 deliberate: `#inspetor-demo` is reachable with the arrow keys but invisible in
-the progress nav, because it is a `.cm-section` with an id that has no `deckNav`
+the progress nav, because it is a `.slide` with an id that has no `deckNav`
 entry. `deckNav` is the source of truth for the nav only.
 
 **The ESC bridge is a two-part contract.** The iframe cannot bubble key events to
@@ -117,14 +117,13 @@ Three layers:
 1. `src/styles/globals.css` — Tailwind v4 (`@import "tailwindcss"`) plus the
    `@theme inline` block with the brand tokens. No `tailwind.config` file; v4 is
    CSS-first.
-2. `src/styles/deck.css` — the shell and the module-slide design system, all
-   scoped under `.jornada`.
-3. `src/styles/slides.css` — per-slide styling, scoped under `.comercial`.
+2. `src/styles/deck.css` — the shell and the module-slide design system.
+3. `src/styles/slides.css` — per-slide styling.
 
-The deck's root element carries both classes. The double scope is inherited from
-`nk-lp`, where these sheets were shared with the landing page's journey page; in
-a deck-only repo it collapses to a single scope. That collapse is not done yet —
-see `docs/decisions.md`.
+Everything is scoped under a single `.deck` on the root element. Keep that scope:
+`slides.css` defines classes named `.card`, `.grid`, `.item`, `.step`, `.tag`,
+`.lead` and `.n`, which would collide with anything added later and would leak
+into the Tailwind-styled footer if left unscoped.
 
 Both sheets are sectioned with `/* ===== SECTION ===== */` headers that map to
 slides, so they split cleanly per component when someone wants to. The calculator

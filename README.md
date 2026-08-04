@@ -77,7 +77,7 @@ projeto antes do primeiro deploy. Ver [`docs/deployment.md`](docs/deployment.md)
 | [`docs/demo-embedding.md`](docs/demo-embedding.md) | embutir a demo de um módulo em iframe |
 | [`docs/deployment.md`](docs/deployment.md) | Vercel, env, redirects |
 | [`docs/decisions.md`](docs/decisions.md) | por que as coisas são como são |
-| [`docs/pending-css-rename.md`](docs/pending-css-rename.md) | o rename de CSS que ainda falta |
+| [`docs/pending-css-rename.md`](docs/pending-css-rename.md) | limpeza de CSS morto ainda pendente |
 | [`docs/context/`](docs/context/README.md) | contexto de produto e negócio (fonte da copy) |
 
 ## O que este repo não tem

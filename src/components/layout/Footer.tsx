@@ -6,7 +6,7 @@ const SITE_URL = "https://nukibr.com";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-nuki-cinza-claro shadow-[0_10px_20.7px_0_rgba(0,0,0,0.25)]">
+    <footer className="w-full bg-nuki-gray-light shadow-[0_10px_20.7px_0_rgba(0,0,0,0.25)]">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col items-start gap-6 px-6 py-8 sm:px-8 sm:py-10 md:flex-row md:items-center md:justify-between md:px-12 md:py-10 lg:h-[160px] lg:gap-16 lg:px-16 lg:py-0 xl:gap-[152px] xl:px-[108px]">
         <a href={SITE_URL} aria-label="Nuki" className="shrink-0">
           <img
@@ -21,14 +21,14 @@ export function Footer() {
         <div className="flex w-full min-w-0 flex-col items-start gap-8 md:flex-row md:items-center md:justify-between lg:w-[912px]">
           <div className="grid w-full min-w-0 grid-cols-1 items-start gap-8 sm:grid-cols-2 md:w-auto md:flex md:flex-1 md:items-start md:justify-between lg:justify-start lg:gap-[152px]">
             <nav aria-label="Recursos" className="flex flex-col gap-1.5">
-              <p className="text-[12px] font-extrabold leading-6 tracking-[0.15px] text-nuki-preto">
+              <p className="text-[12px] font-extrabold leading-6 tracking-[0.15px] text-nuki-black">
                 Recursos
               </p>
-              <ul className="flex flex-col gap-1.5 text-[12px] font-normal leading-5 tracking-[0.25px] text-nuki-cinza">
+              <ul className="flex flex-col gap-1.5 text-[12px] font-normal leading-5 tracking-[0.25px] text-nuki-gray">
                 <li>
                   <a
                     href={`${SITE_URL}/recursos/personalizacao`}
-                    className="inline-block py-2 transition-colors hover:text-nuki-preto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02"
+                    className="inline-block py-2 transition-colors hover:text-nuki-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-green-02"
                   >
                     Personalização
                   </a>
@@ -36,7 +36,7 @@ export function Footer() {
                 <li>
                   <a
                     href={`${SITE_URL}/recursos/controle-analise`}
-                    className="inline-block py-2 transition-colors hover:text-nuki-preto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02"
+                    className="inline-block py-2 transition-colors hover:text-nuki-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-green-02"
                   >
                     Controle e análise
                   </a>
@@ -47,7 +47,7 @@ export function Footer() {
             <nav aria-label="Institucional" className="flex flex-col gap-3">
               <a
                 href={`${SITE_URL}/conheca-nossa-historia`}
-                className="inline-block py-2 text-[12px] font-extrabold leading-6 tracking-[0.15px] text-nuki-preto transition-colors hover:text-nuki-verde-02 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02"
+                className="inline-block py-2 text-[12px] font-extrabold leading-6 tracking-[0.15px] text-nuki-black transition-colors hover:text-nuki-green-02 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-green-02"
               >
                 Sobre a Nuki
               </a>
@@ -59,7 +59,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="inline-flex items-center justify-center rounded-full text-nuki-preto transition-colors hover:bg-black/5 hover:text-nuki-verde-02 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02 max-lg:size-11"
+                className="inline-flex items-center justify-center rounded-full text-nuki-black transition-colors hover:bg-black/5 hover:text-nuki-green-02 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-green-02 max-lg:size-11"
               >
                 <InstagramIcon className="size-[22.875px]" />
               </a>
@@ -68,7 +68,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
-                className="inline-flex items-center justify-center rounded-full text-nuki-preto transition-colors hover:bg-black/5 hover:text-nuki-verde-02 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02 max-lg:size-11"
+                className="inline-flex items-center justify-center rounded-full text-nuki-black transition-colors hover:bg-black/5 hover:text-nuki-green-02 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-green-02 max-lg:size-11"
               >
                 <LinkedinIcon className="size-[22.875px]" />
               </a>

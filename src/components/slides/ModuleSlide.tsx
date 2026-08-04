@@ -72,7 +72,7 @@ export function ModuleSlide({
   return (
     <section
       ref={sectionRef}
-      className={`cm-section modulo-slide${isPhone ? " is-phone" : " is-desktop"}`}
+      className={`slide module-slide${isPhone ? " is-phone" : " is-desktop"}`}
       id={data.id}
       data-reveal-group=""
       onMouseEnter={() => setIsPaused(true)}
@@ -83,7 +83,7 @@ export function ModuleSlide({
       {/* Numeral gigante "01/02/03" de fundo — herda estilo base de
           `.jornada .bgnum` (jornada.css:95-105) já importado. Parallax nativo
           via animation-timeline: view() ou fallback JS do ComercialScripts. */}
-      <span className="bgnum" data-parallax="-70" aria-hidden="true">
+      <span className="bg-numeral" data-parallax="-70" aria-hidden="true">
         {String(index + 1).padStart(2, "0")}
       </span>
       {/* Pearl decorativa — mesma linguagem do /antiga (SobreANuki, FaleComAGente).
@@ -94,22 +94,22 @@ export function ModuleSlide({
         alt=""
         width={240}
         height={240}
-        className="modulo-slide-pearl"
+        className="module-slide-pearl"
         aria-hidden="true"
       />
-      <div className="cm-wrap">
-        <div className="modulo-slide-grid">
+      <div className="slide-inner">
+        <div className="module-slide-grid">
           {/* -------- Coluna esquerda: cópia + tabs + highlights -------- */}
-          <div className="modulo-slide-copy">
+          <div className="module-slide-copy">
             <p className="tag reveal">{data.tag}</p>
             <h2 className="reveal">
-              <span className="modulo-slide-h2-pre">{data.title.pre}</span>{" "}
+              <span className="module-slide-h2-pre">{data.title.pre}</span>{" "}
               <strong>{data.title.strong}</strong>
             </h2>
             <p className="lead reveal">{data.description}</p>
 
             <ul
-              className="modulo-slide-tabs reveal"
+              className="module-slide-tabs reveal"
               role="tablist"
               aria-label={`Recursos do ${data.title.strong}`}
             >
@@ -122,51 +122,51 @@ export function ModuleSlide({
                     aria-selected={i === activeBeat}
                     aria-controls={panelId}
                     tabIndex={i === activeBeat ? 0 : -1}
-                    className={`modulo-slide-tab${i === activeBeat ? " on" : ""}`}
+                    className={`module-slide-tab${i === activeBeat ? " is-active" : ""}`}
                     onClick={() => setActiveBeat(i)}
                   >
-                    <span className="modulo-slide-tab-num">
+                    <span className="module-slide-tab-num">
                       Beat {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="modulo-slide-tab-title">{b.title}</span>
+                    <span className="module-slide-tab-title">{b.title}</span>
                   </button>
                 </li>
               ))}
             </ul>
 
             <div
-              className="modulo-slide-detail"
+              className="module-slide-detail"
               id={panelId}
               role="tabpanel"
               aria-labelledby={`${data.id}-tab-${activeBeat}`}
             >
-              <p key={beat.description} className="modulo-slide-detail-desc">
+              <p key={beat.description} className="module-slide-detail-desc">
                 {beat.description}
               </p>
             </div>
 
-            <div className="modulo-slide-highlights reveal">
+            <div className="module-slide-highlights reveal">
               {data.highlights.map((h) => (
-                <div className="modulo-slide-hl" key={h.label}>
-                  <span className="modulo-slide-hl-num">
+                <div className="module-slide-hl" key={h.label}>
+                  <span className="module-slide-hl-num">
                     {(h.prefix ?? "") + h.target + (h.suffix ?? "")}
                   </span>
-                  <span className="modulo-slide-hl-lbl">{h.label}</span>
+                  <span className="module-slide-hl-lbl">{h.label}</span>
                 </div>
               ))}
             </div>
 
             {data.links?.length ? (
-              <div className="modulo-slide-ctas reveal">
+              <div className="module-slide-ctas reveal">
                 {data.links.map((l) => (
                   <a
                     key={l.href}
-                    className="modulo-slide-cta"
+                    className="module-slide-cta"
                     href={l.href}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <span className="modulo-slide-cta-glyph" aria-hidden="true">
+                    <span className="module-slide-cta-glyph" aria-hidden="true">
                       ↗
                     </span>
                     {l.label}
@@ -176,20 +176,20 @@ export function ModuleSlide({
             ) : data.demoUrl ? (
               <button
                 type="button"
-                className="modulo-slide-cta reveal"
+                className="module-slide-cta reveal"
                 onClick={() => {
                   document
                     .getElementById(`${data.id}-demo`)
                     ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
               >
-                <span className="modulo-slide-cta-glyph" aria-hidden="true">
+                <span className="module-slide-cta-glyph" aria-hidden="true">
                   ▷
                 </span>
                 Explorar o {data.title.strong}
               </button>
             ) : (
-              <a className="modulo-slide-link reveal" href={data.learnMoreHref}>
+              <a className="module-slide-link reveal" href={data.learnMoreHref}>
                 Saiba mais <span aria-hidden="true">→</span>
               </a>
             )}
@@ -204,15 +204,15 @@ export function ModuleSlide({
               2. `import { YouTubeEmbed } from "@next/third-parties/google";`
               3. Substituir o bloco `{data.videoUrl ? (...) : (...)}` abaixo por:
                    {data.videoUrl ? (
-                     <div className="modulo-slide-video">
+                     <div className="module-slide-video">
                        <YouTubeEmbed videoid={data.videoUrl} params="rel=0" />
                      </div>
                    ) : (...)}
               4. Setar `videoUrl` no módulo alvo em `modulos.data.ts`.
               Enquanto `videoUrl` estiver undefined pra um módulo, o cross-fade
               de screenshots roda normalmente. */}
-          <div className="modulo-slide-shot">
-            <div className="modulo-slide-shot-stage">
+          <div className="module-slide-shot">
+            <div className="module-slide-shot-stage">
               {data.beats.map((b, i) => (
                 <ScreenshotSlot
                   key={b.shot.base}
@@ -246,7 +246,7 @@ function ScreenshotSlot({
 }) {
   const { base, kind, alt } = shot;
   const loading = eager ? undefined : "lazy";
-  const cls = `modulo-slide-shot-slot${active ? " on" : ""}`;
+  const cls = `module-slide-shot-slot${active ? " is-active" : ""}`;
 
   if (kind === "phone") {
     return (

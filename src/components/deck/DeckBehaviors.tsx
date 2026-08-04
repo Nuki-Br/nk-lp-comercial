@@ -35,7 +35,7 @@ export function DeckBehaviors() {
           if (!e.isIntersecting) return;
           const items = e.target.querySelectorAll<HTMLElement>(".reveal");
           items.forEach((el, i) => {
-            const t = window.setTimeout(() => el.classList.add("in"), reduce ? 0 : i * 90);
+            const t = window.setTimeout(() => el.classList.add("is-visible"), reduce ? 0 : i * 90);
             timeouts.push(t);
           });
           revIO.unobserve(e.target);
@@ -52,15 +52,15 @@ export function DeckBehaviors() {
     // 2) Progress nav — .cm-section (seções da apresentação) + .module (Modulos reusa JourneyModule).
     //    Reflete o tom do fundo da seção ativa no .progress via data-tone, pra
     //    paleta escura/clara do próprio nav responder ao contexto sem piscar.
-    const progressEl = document.querySelector<HTMLElement>(".progress");
+    const progressEl = document.querySelector<HTMLElement>(".progress-nav");
     const navIO = new IntersectionObserver(
       (es) => {
         es.forEach((e) => {
           if (!e.isIntersecting) return;
           const section = e.target as HTMLElement;
           const id = section.id;
-          document.querySelectorAll(".progress a").forEach((a) => {
-            a.classList.toggle("on", (a as HTMLElement).dataset.t === id);
+          document.querySelectorAll(".progress-nav a").forEach((a) => {
+            a.classList.toggle("is-active", (a as HTMLElement).dataset.sectionId === id);
           });
           const tone = section.dataset.tone === "dark" ? "dark" : "light";
           progressEl?.setAttribute("data-tone", tone);
@@ -68,7 +68,7 @@ export function DeckBehaviors() {
       },
       { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
     );
-    document.querySelectorAll(".cm-section, .module").forEach((s) => navIO.observe(s));
+    document.querySelectorAll(".slide, .module").forEach((s) => navIO.observe(s));
     cleanups.push(() => navIO.disconnect());
 
     // 3) Navegação por teclado — deriva a lista walkable do DOM em runtime
@@ -77,7 +77,7 @@ export function DeckBehaviors() {
     // navegáveis por seta ← → mas continuem invisíveis no progress-nav lateral.
     // comercialNav segue sendo a fonte da verdade só do progress-nav.
     const getWalkableIds = (): string[] => {
-      const nodes = document.querySelectorAll<HTMLElement>(".cm-section, .module");
+      const nodes = document.querySelectorAll<HTMLElement>(".slide, .module");
       const ids: string[] = [];
       nodes.forEach((el) => {
         if (el.id) ids.push(el.id);
@@ -118,7 +118,7 @@ export function DeckBehaviors() {
       );
     };
 
-    // Demo lock — quando um `.modulo-demo-slide` fica ≥ 70% no viewport, o
+    // Demo lock — quando um `.module-demo-slide` fica ≥ 70% no viewport, o
     // usuário só pode sair via botão × ou tecla ESC. Setas, espaço, PageUp/Down,
     // Home/End e scroll (via `html.demo-locked` no CSS) ficam bloqueados. Isso
     // evita "sair sem querer" enquanto o prospect explora o produto real.
@@ -153,7 +153,7 @@ export function DeckBehaviors() {
       },
       { threshold: [0, 0.3, 0.7, 1] },
     );
-    document.querySelectorAll(".modulo-demo-slide").forEach((s) => demoIO.observe(s));
+    document.querySelectorAll(".module-demo-slide").forEach((s) => demoIO.observe(s));
     cleanups.push(() => {
       demoIO.disconnect();
       document.documentElement.classList.remove("demo-locked");
@@ -218,7 +218,7 @@ export function DeckBehaviors() {
           es.forEach((e) => {
             if (!e.isIntersecting) return;
             const idx = (e.target as HTMLElement).dataset.step;
-            screens.forEach((s) => s.classList.toggle("show", s.dataset.screen === idx));
+            screens.forEach((s) => s.classList.toggle("is-visible", s.dataset.screen === idx));
           });
         },
         { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
@@ -256,10 +256,10 @@ export function DeckBehaviors() {
     }
 
     // 6) Dica flutuante ← →. Aparece 800ms após o load, some após 4s.
-    const hint = document.querySelector<HTMLElement>(".cm-hint");
+    const hint = document.querySelector<HTMLElement>(".keyboard-hint");
     if (hint && !reduce) {
-      const t1 = window.setTimeout(() => hint.classList.add("show"), 800);
-      const t2 = window.setTimeout(() => hint.classList.remove("show"), 5000);
+      const t1 = window.setTimeout(() => hint.classList.add("is-visible"), 800);
+      const t2 = window.setTimeout(() => hint.classList.remove("is-visible"), 5000);
       cleanups.push(() => {
         clearTimeout(t1);
         clearTimeout(t2);

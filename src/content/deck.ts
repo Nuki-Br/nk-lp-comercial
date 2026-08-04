@@ -187,7 +187,7 @@ export type RoomAreaType = "seca" | "molhada";
 
 /** Categoria de "peso" visual do tile — 3 tiers só, pra ler à distância
     sem virar um degradê contínuo difícil de decodificar. */
-export type RoomWeight = "leve" | "medio" | "pesado";
+export type RoomWeight = "light" | "medium" | "heavy";
 
 /** Configuração de um ambiente dentro de uma metragem. */
 export type RoomConfig = {
@@ -218,7 +218,7 @@ export const buildDefaultRooms = (): RoomConfig[] => [
     id: "quartos",
     name: "Quartos",
     areaType: "seca",
-    weight: "leve",
+    weight: "light",
     units: 2,
     components: 3,
     locked: true,
@@ -227,7 +227,7 @@ export const buildDefaultRooms = (): RoomConfig[] => [
     id: "banheiros",
     name: "Banheiros",
     areaType: "molhada",
-    weight: "pesado",
+    weight: "heavy",
     units: 1,
     components: 8,
     locked: true,
@@ -236,7 +236,7 @@ export const buildDefaultRooms = (): RoomConfig[] => [
 
 /** Defaults aplicados a ambientes custom criados via "+ Adicionar". */
 export const CUSTOM_ROOM_DEFAULTS = {
-  weight: "medio" as RoomWeight,
+  weight: "medium" as RoomWeight,
   units: 1,
   components: 4,
 };

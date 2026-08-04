@@ -39,7 +39,7 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
   const navigate = (dir: -1 | 1) => {
     if (typeof document === "undefined") return;
     const walkable = Array.from(
-      document.querySelectorAll<HTMLElement>(".cm-section, .module"),
+      document.querySelectorAll<HTMLElement>(".slide, .module"),
     ).filter((el) => el.id);
     const currentIdx = walkable.findIndex((el) => el.id === demoId);
     if (currentIdx === -1) return;
@@ -49,14 +49,14 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
 
   return (
     <section
-      className="cm-section is-fullscreen modulo-demo-slide"
+      className="slide is-fullscreen module-demo-slide"
       id={demoId}
       data-back-target={data.id}
     >
-      <header className="modulo-demo-bar">
+      <header className="module-demo-bar">
         <button
           type="button"
-          className="modulo-demo-bar-nav"
+          className="module-demo-bar-nav"
           onClick={() => navigate(-1)}
           aria-label={`Voltar para ${data.title.strong}`}
           title="Voltar (←)"
@@ -64,15 +64,15 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
           <span aria-hidden="true">←</span> Voltar
         </button>
 
-        <span className="modulo-demo-bar-title">
+        <span className="module-demo-bar-title">
           <strong>{data.title.strong}</strong>
-          <span className="modulo-demo-bar-sep">·</span>
-          <span className="modulo-demo-bar-suffix">Demo interativa</span>
+          <span className="module-demo-bar-sep">·</span>
+          <span className="module-demo-bar-suffix">Demo interativa</span>
         </span>
 
         <button
           type="button"
-          className="modulo-demo-bar-nav"
+          className="module-demo-bar-nav"
           onClick={() => navigate(1)}
           aria-label="Seguir para a próxima seção"
           title="Seguir (→)"
@@ -81,10 +81,10 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
         </button>
       </header>
 
-      <div className="modulo-demo-stage">
+      <div className="module-demo-stage">
         {/* Iframe full width/height; onLoad esconde o skeleton */}
         <iframe
-          className="modulo-demo-frame"
+          className="module-demo-frame"
           src={data.demoUrl}
           title={`${data.title.strong} — demo interativa`}
           loading="lazy"
@@ -92,20 +92,20 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
         />
 
         {!loaded && (
-          <div className="modulo-demo-skeleton" aria-hidden="true">
-            <div className="modulo-demo-skeleton-pulse" />
-            <p className="modulo-demo-skeleton-text">Carregando demo…</p>
+          <div className="module-demo-skeleton" aria-hidden="true">
+            <div className="module-demo-skeleton-pulse" />
+            <p className="module-demo-skeleton-text">Carregando demo…</p>
           </div>
         )}
 
         {/* Mobile fallback — CSS controla a visibilidade */}
-        <div className="modulo-demo-mobile" role="note">
-          <p className="modulo-demo-mobile-title">Demo funciona melhor no desktop</p>
-          <p className="modulo-demo-mobile-body">
+        <div className="module-demo-mobile" role="note">
+          <p className="module-demo-mobile-title">Demo funciona melhor no desktop</p>
+          <p className="module-demo-mobile-body">
             O {data.title.strong} foi feito pra tela larga. No celular, abra em uma nova aba pra explorar com espaço.
           </p>
           <a
-            className="modulo-demo-mobile-link"
+            className="module-demo-mobile-link"
             href={data.demoUrl}
             target="_blank"
             rel="noopener noreferrer"

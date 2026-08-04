@@ -15,7 +15,7 @@ import {
 
 export default function DeckPage() {
   return (
-    <div className="jornada comercial flex min-h-screen flex-col">
+    <div className="deck flex min-h-screen flex-col">
       <ProgressNav />
       <main className="flex flex-1 flex-col">
         <CoverSlide />
@@ -37,7 +37,7 @@ export default function DeckPage() {
       </main>
       <Footer />
       <DeckBehaviors />
-      <div className="cm-hint" aria-hidden="true">
+      <div className="keyboard-hint" aria-hidden="true">
         Use <kbd>←</kbd> <kbd>→</kbd> para navegar
       </div>
     </div>

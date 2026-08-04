@@ -3,29 +3,24 @@
 @theme inline {
   --font-sans: var(--font-manrope);
 
-  --color-nuki-preto: #000000;
-  --color-nuki-branco: #ffffff;
-  --color-nuki-cinza: #434343;
-  --color-nuki-cinza-claro: #f7f7f7;
-  --color-nuki-cinza-divisor: #f0f0f0;
-  --color-nuki-cinza-borda: #d9d9d9;
-  --color-nuki-verde-02: #047676;
-  --color-nuki-verde-03: #00363a;
-  --color-nuki-verde-08: #025259;
-  --color-nuki-verde-suave: #e6fafa;
-  --color-nuki-cinza-medio: #595959;
-  --color-nuki-cinza-7: #8c8c8c;
-  --color-nuki-cinza-12: #141414;
-  --color-nuki-laranja: #e8713f;
-  --color-nuki-laranja-suave: #fdf1ec;
-  --color-nuki-status-roxo: #efdbff;
-  --color-nuki-status-verde: #d9f7be;
-  --color-nuki-status-laranja: #ffe7ba;
-  --color-nuki-status-vermelho: #ffefef;
+  --color-nuki-black: #000000;
+  --color-nuki-white: #ffffff;
+  --color-nuki-gray: #434343;
+  --color-nuki-gray-light: #f7f7f7;
+  --color-nuki-gray-divider: #f0f0f0;
+  --color-nuki-gray-border: #d9d9d9;
+  --color-nuki-green-02: #047676;
+  --color-nuki-green-03: #00363a;
+  --color-nuki-green-08: #025259;
+  --color-nuki-green-soft: #e6fafa;
+  --color-nuki-gray-mid: #595959;
+  --color-nuki-gray-7: #8c8c8c;
+  --color-nuki-orange: #e8713f;
+  --color-nuki-orange-soft: #fdf1ec;
 }
 
 body {
-  background: var(--color-nuki-cinza-claro);
-  color: var(--color-nuki-preto);
+  background: var(--color-nuki-gray-light);
+  color: var(--color-nuki-black);
   font-family: var(--font-sans), system-ui, sans-serif;
 }

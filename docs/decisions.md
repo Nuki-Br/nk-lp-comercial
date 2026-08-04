@@ -74,16 +74,28 @@ fragments.
 surface and closer to copy than to code, which would argue for pt-BR. Consistency
 with the rest of the codebase won.
 
-## 6. `.deck` scope collapse — not done
+## 6. One `.deck` scope, and the scope stays
 
-The root element still carries `className="jornada comercial"`, and the two
-stylesheets are still scoped `.jornada` / `.comercial`. That double scope only
-existed because these sheets were shared with the landing page's journey page.
+**Context.** The root element carried `className="jornada comercial"` and the two
+stylesheets were scoped `.jornada` / `.comercial` — a double scope that existed
+only because these sheets were shared with the landing page's journey page.
 
-Here it should collapse to a single `.deck`. **Keep the scope — do not drop it
-entirely:** `slides.css` defines classes named `.card`, `.grid`, `.item`,
-`.step`, `.tag`, `.lead`, `.n`, `.d`, `.t`. Unscoped, those would collide with
-anything added later and would leak into the Tailwind-styled footer.
+**Decision.** Collapse both to a single `.deck`, but **keep the scope rather than
+dropping it.** `slides.css` defines classes named `.card`, `.grid`, `.item`,
+`.step`, `.tag`, `.lead` and `.n`. Unscoped, those would collide with anything
+added later and would leak into the Tailwind-styled footer.
+
+**Consequence.** One rule became unsatisfiable and was deleted:
+`.jornada:not(.comercial) .modulo-slide-pearl { display: none }` hid the
+decorative pearl on the landing page. There is no landing page here, so the rule
+never matched even before the collapse — the pearl always showed, and still does.
+
+**How the rename was verified.** Class-coverage invariant: every class the page
+renders must appear in a CSS selector. Before, 157 rendered / 156 styled / 1
+orphan; after, 155 rendered / 154 styled / the same orphan, renamed. The drop of
+exactly 2 is accounted for — `jornada`+`comercial` collapsed to `deck`, and
+`on`+`ativa` collapsed to `is-active`. Method written up in
+`docs/pending-css-rename.md`.
 
 ## 7. No test framework
 

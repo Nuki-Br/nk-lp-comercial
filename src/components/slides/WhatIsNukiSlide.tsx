@@ -2,9 +2,9 @@ import { moduleFlow } from "@/content/deck";
 
 export function WhatIsNukiSlide() {
   return (
-    <section className="cm-section o-que-e" id="what-is-nuki" data-reveal-group="">
-      <div className="cm-wrap">
-        <div className="cm-head">
+    <section className="slide what-is-nuki" id="what-is-nuki" data-reveal-group="">
+      <div className="slide-inner">
+        <div className="section-head">
           <p className="tag reveal">O que é a Nuki</p>
           <h2 className="reveal">
             A camada de gestão de todo o ciclo de personalização —{" "}
@@ -15,12 +15,12 @@ export function WhatIsNukiSlide() {
           </p>
         </div>
 
-        <div className="fluxo reveal">
+        <div className="flow reveal">
           {moduleFlow.map((m) => (
             <div className="step" key={m.name}>
-              <span className="fase">{m.phase}</span>
-              <span className="nome">{m.name}</span>
-              <p className="desc">{m.description}</p>
+              <span className="phase">{m.phase}</span>
+              <span className="name">{m.name}</span>
+              <p className="description">{m.description}</p>
             </div>
           ))}
         </div>

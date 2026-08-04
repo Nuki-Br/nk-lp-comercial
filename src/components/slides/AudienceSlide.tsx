@@ -2,9 +2,9 @@ import { personas, fitList } from "@/content/deck";
 
 export function AudienceSlide() {
   return (
-    <section className="cm-section publico" id="audience" data-reveal-group="">
-      <div className="cm-wrap">
-        <div className="cm-head">
+    <section className="slide audience" id="audience" data-reveal-group="">
+      <div className="slide-inner">
+        <div className="section-head">
           <p className="tag reveal">Pra quem serve</p>
           <h2 className="reveal">
             Feita pra quem gerencia personalização{" "}
@@ -20,10 +20,10 @@ export function AudienceSlide() {
             <article className="persona reveal" key={p.name}>
               <span className="role">{p.role}</span>
               <h3>{p.name}</h3>
-              <p className="rot">Foco</p>
-              <p className="foco">{p.foco}</p>
-              <p className="rot">Dor típica</p>
-              <p className="dor">{p.pain}</p>
+              <p className="persona-label">Foco</p>
+              <p className="focus">{p.foco}</p>
+              <p className="persona-label">Dor típica</p>
+              <p className="pain">{p.pain}</p>
             </article>
           ))}
         </div>

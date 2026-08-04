@@ -10,9 +10,9 @@ const logos = [
 
 export function CasesSlide() {
   return (
-    <section className="cm-section cases" id="cases" data-reveal-group="">
-      <div className="cm-wrap">
-        <div className="cm-head">
+    <section className="slide cases" id="cases" data-reveal-group="">
+      <div className="slide-inner">
+        <div className="section-head">
           <p className="tag reveal">Cases</p>
           <h2 className="reveal">
             Construtoras que já <em>saíram da planilha.</em>

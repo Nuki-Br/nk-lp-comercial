@@ -348,9 +348,9 @@ export function CalculatorSlide() {
           <p className="calc-admin-hint">Ctrl+Alt+K abre/fecha · ESC fecha</p>
         </div>
       )}
-    <section className="cm-section calculadora" id="calculator" data-reveal-group="">
-      <div className="cm-wrap">
-        <div className="cm-head">
+    <section className="slide calculator" id="calculator" data-reveal-group="">
+      <div className="slide-inner">
+        <div className="section-head">
           <p className="tag reveal">Estime o setup</p>
           <h2 className="reveal">
             Descubra quantas imagens seu empreendimento{" "}
@@ -389,17 +389,17 @@ export function CalculatorSlide() {
             </div>
 
             {/* Tabs de metragens */}
-            <div className="calc-metragem-tabs" role="tablist" aria-label="Metragens do empreendimento">
+            <div className="calc-unit-type-tabs" role="tablist" aria-label="Metragens do empreendimento">
               {unitTypes.map((m, i) => (
                 <div
                   key={m.id}
-                  className={`calc-metragem-tab${i === activeUnitTypeIndex ? " on" : ""}`}
+                  className={`calc-unit-type-tab${i === activeUnitTypeIndex ? " is-active" : ""}`}
                   role="tab"
                   aria-selected={i === activeUnitTypeIndex}
                 >
                   <button
                     type="button"
-                    className="calc-metragem-tab-btn"
+                    className="calc-unit-type-tab-btn"
                     onClick={() => selectMetragem(i)}
                   >
                     Metragem {String(i + 1).padStart(2, "0")}
@@ -407,7 +407,7 @@ export function CalculatorSlide() {
                   {unitTypes.length > ESTIMATE_RANGES.unitTypes.min && (
                     <button
                       type="button"
-                      className="calc-metragem-tab-x"
+                      className="calc-unit-type-tab-remove"
                       onClick={(e) => {
                         e.stopPropagation();
                         removeMetragem(i);
@@ -422,7 +422,7 @@ export function CalculatorSlide() {
               {unitTypes.length < ESTIMATE_RANGES.unitTypes.max && (
                 <button
                   type="button"
-                  className="calc-metragem-add"
+                  className="calc-unit-type-add"
                   onClick={addMetragem}
                   aria-label="Adicionar metragem"
                 >
@@ -433,9 +433,9 @@ export function CalculatorSlide() {
 
             {/* Painel da metragem ativa */}
             {isActive && (
-              <div className="calc-metragem-panel">
-                <div className="calc-ambient-rows">
-                  <p className="calc-label calc-ambient-rows-head">Ambientes personalizáveis</p>
+              <div className="calc-unit-type-panel">
+                <div className="calc-room-rows">
+                  <p className="calc-label calc-room-rows-head">Ambientes personalizáveis</p>
                   {isActive.rooms.map((a) => (
                     <RoomRow
                       key={a.id}
@@ -472,7 +472,7 @@ export function CalculatorSlide() {
                         type="button"
                         role="radio"
                         aria-checked={n === isActive.variants}
-                        className={`calc-pill${n === isActive.variants ? " on" : ""}`}
+                        className={`calc-pill${n === isActive.variants ? " is-active" : ""}`}
                         onClick={() => updateAtiva({ variants: n })}
                       >
                         {n}
@@ -582,16 +582,16 @@ function RoomRow({
 }) {
   const isEmpty = room.units <= 0;
   return (
-    <div className={`calc-ambient-row${isEmpty ? " zerada" : ""}`}>
-      <span className="calc-ambient-row-name">
+    <div className={`calc-room-row${isEmpty ? " is-empty" : ""}`}>
+      <span className="calc-room-row-name">
         {room.name}
         {!room.locked && (
-          <span className="calc-ambient-row-classe" aria-label={`Classificação: ${room.areaType}`}>
+          <span className="calc-room-row-class" aria-label={`Classificação: ${room.areaType}`}>
             {room.areaType === "seca" ? "seca" : "molhada"}
           </span>
         )}
       </span>
-      <div className="calc-ambient-row-fields">
+      <div className="calc-room-row-fields">
         <div className="calc-micro-field">
           <span className="calc-micro-label">unidades</span>
           <Stepper
@@ -615,7 +615,7 @@ function RoomRow({
         {!room.locked && (
           <button
             type="button"
-            className="calc-ambient-remove"
+            className="calc-room-remove"
             onClick={onRemove}
             aria-label={`Remover ${room.name}`}
             title={`Remover ${room.name}`}
@@ -647,7 +647,7 @@ function AddAmbienteControl({
 }) {
   if (state === null) {
     return (
-      <button type="button" className="calc-add-ambient-btn" onClick={onOpen}>
+      <button type="button" className="calc-add-room-btn" onClick={onOpen}>
         + Adicionar ambiente
       </button>
     );
@@ -657,31 +657,31 @@ function AddAmbienteControl({
      form de nome livre. Clicar num preset já adiciona o ambient. */
   if (state.mode === "picker") {
     return (
-      <div className="calc-add-ambient-picker" role="group" aria-label="Escolher ambiente">
-        <p className="calc-add-ambient-picker-label">Escolha um ambiente:</p>
-        <div className="calc-add-ambient-preset-list">
+      <div className="calc-add-room-picker" role="group" aria-label="Escolher ambiente">
+        <p className="calc-add-room-picker-label">Escolha um ambiente:</p>
+        <div className="calc-add-room-preset-list">
           {ROOM_PRESETS.map((preset) => (
             <button
               key={preset.name}
               type="button"
-              className={`calc-add-ambient-preset calc-add-ambient-preset-${preset.areaType}`}
+              className={`calc-add-room-preset calc-add-ambient-preset-${preset.areaType}`}
               onClick={() => onSelectPreset(preset)}
             >
-              <span className="calc-add-ambient-preset-nome">{preset.name}</span>
-              <span className="calc-add-ambient-preset-classe">
+              <span className="calc-add-room-preset-name">{preset.name}</span>
+              <span className="calc-add-room-preset-class">
                 {preset.areaType === "seca" ? "seca" : "molhada"}
               </span>
             </button>
           ))}
           <button
             type="button"
-            className="calc-add-ambient-preset calc-add-ambient-preset-custom"
+            className="calc-add-room-preset calc-add-room-preset-custom"
             onClick={onSelectCustom}
           >
-            <span className="calc-add-ambient-preset-nome">+ Personalizado</span>
+            <span className="calc-add-room-preset-name">+ Personalizado</span>
           </button>
         </div>
-        <button type="button" className="calc-add-ambient-cancel" onClick={onCancel}>
+        <button type="button" className="calc-add-room-cancel" onClick={onCancel}>
           Cancelar
         </button>
       </div>
@@ -691,10 +691,10 @@ function AddAmbienteControl({
   /* Passo 2 (só se user escolheu "Personalizado"): form de nome + classe. */
   const canConfirm = state.name.trim().length > 0;
   return (
-    <div className="calc-add-ambient-form" role="group" aria-label="Adicionar ambiente personalizado">
+    <div className="calc-add-room-form" role="group" aria-label="Adicionar ambiente personalizado">
       <input
         type="text"
-        className="calc-add-ambient-input"
+        className="calc-add-room-input"
         placeholder="Nome do ambiente (ex: Home Office)"
         value={state.name}
         onChange={(e) => onChange({ name: e.target.value })}
@@ -705,12 +705,12 @@ function AddAmbienteControl({
         autoFocus
         maxLength={40}
       />
-      <div className="calc-add-ambient-classe" role="radiogroup" aria-label="Classificação">
+      <div className="calc-add-room-class" role="radiogroup" aria-label="Classificação">
         <button
           type="button"
           role="radio"
           aria-checked={state.areaType === "seca"}
-          className={`calc-pill${state.areaType === "seca" ? " on" : ""}`}
+          className={`calc-pill${state.areaType === "seca" ? " is-active" : ""}`}
           onClick={() => onChange({ areaType: "seca" })}
         >
           Seca
@@ -719,22 +719,22 @@ function AddAmbienteControl({
           type="button"
           role="radio"
           aria-checked={state.areaType === "molhada"}
-          className={`calc-pill${state.areaType === "molhada" ? " on" : ""}`}
+          className={`calc-pill${state.areaType === "molhada" ? " is-active" : ""}`}
           onClick={() => onChange({ areaType: "molhada" })}
         >
           Molhada
         </button>
       </div>
-      <div className="calc-add-ambient-actions">
+      <div className="calc-add-room-actions">
         <button
           type="button"
-          className="calc-add-ambient-confirm"
+          className="calc-add-room-confirm"
           onClick={onConfirm}
           disabled={!canConfirm}
         >
           Adicionar
         </button>
-        <button type="button" className="calc-add-ambient-cancel" onClick={onCancel}>
+        <button type="button" className="calc-add-room-cancel" onClick={onCancel}>
           Cancelar
         </button>
       </div>
@@ -763,7 +763,7 @@ function UnitTypeGroup({
   };
   return (
     <div
-      className={`metragem-group${isActive ? " ativa" : ""}`}
+      className={`unit-type-group${isActive ? " is-active" : ""}`}
       role="button"
       tabIndex={0}
       aria-pressed={isActive}
@@ -771,11 +771,11 @@ function UnitTypeGroup({
       onClick={onSelect}
       onKeyDown={handleKey}
     >
-      <header className="metragem-group-head">
-        <span className="metragem-group-idx">Metragem {String(index + 1).padStart(2, "0")}</span>
-        <span className="metragem-group-imgs">{calc.total.toLocaleString("pt-BR")} imagens</span>
+      <header className="unit-type-group-head">
+        <span className="unit-type-group-index">Metragem {String(index + 1).padStart(2, "0")}</span>
+        <span className="unit-type-group-images">{calc.total.toLocaleString("pt-BR")} imagens</span>
       </header>
-      <div className="metragem-group-cards">
+      <div className="unit-type-group-cards">
         {Array.from({ length: unitType.variants }, (_, v) => {
           const isBase = v === 0;
           return (
@@ -806,28 +806,28 @@ function VariantCard({
 }) {
   const isBase = mode === "base";
   return (
-    <article className={`tipologia-card tipologia-card-${mode}`} role="listitem">
-      <header className="tipologia-head">
-        <span className="tipologia-idx">
+    <article className={`variant-card variant-card-${mode}`} role="listitem">
+      <header className="variant-head">
+        <span className="variant-index">
           Variação {String(variantIndex).padStart(2, "0")}
-          {!isBase && <span className="tipologia-tag">apenas ambientes impactados</span>}
+          {!isBase && <span className="variant-tag">apenas ambientes impactados</span>}
         </span>
-        <span className="tipologia-imgs">
+        <span className="variant-images">
           {isBase ? "" : "+"}
           {images.toLocaleString("pt-BR")} imgs
         </span>
       </header>
       {rooms.length > 0 ? (
-        <div className="tipologia-grid">
+        <div className="variant-room-grid">
           {rooms.map((a) => (
-            <div key={a.key} className={`ambient-tile peso-${a.weight}`}>
-              <span className="ambient-label">{a.label}</span>
-              <span className="ambient-imgs">{a.images}</span>
+            <div key={a.key} className={`room-tile weight-${a.weight}`}>
+              <span className="room-tile-label">{a.label}</span>
+              <span className="room-tile-images">{a.images}</span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="tipologia-empty">
+        <p className="variant-empty">
           {isBase
             ? "Nenhum ambiente adicionado. Suba as unidades acima."
             : "Nenhum ambiente marcado como impactado."}

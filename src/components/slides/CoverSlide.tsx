@@ -4,11 +4,11 @@ const HOME_URL = "https://nukibr.com";
 
 export function CoverSlide() {
   return (
-    <section className="cm-section capa" id="cover" data-tone="dark" data-reveal-group="">
-      <a href={HOME_URL} className="cm-back" aria-label="Voltar para a home">
-        <ChevronLeftIcon className="cm-back-icon" />
+    <section className="slide cover" id="cover" data-tone="dark" data-reveal-group="">
+      <a href={HOME_URL} className="back-link" aria-label="Voltar para a home">
+        <ChevronLeftIcon className="back-link-icon" />
       </a>
-      <div className="cm-wrap">
+      <div className="slide-inner">
         <p className="kicker reveal">Apresentação comercial · 2026</p>
         <h1 className="reveal">
           Agora, a jornada completa —{" "}

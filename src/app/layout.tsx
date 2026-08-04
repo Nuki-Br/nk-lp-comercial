@@ -53,7 +53,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${manrope.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-nuki-cinza-claro text-nuki-preto">
+      <body className="min-h-full flex flex-col bg-nuki-gray-light text-nuki-black">
         <AccessGate>{children}</AccessGate>
       </body>
     </html>

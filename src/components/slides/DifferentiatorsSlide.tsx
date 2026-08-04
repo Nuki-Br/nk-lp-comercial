@@ -2,9 +2,9 @@ import { differentiators } from "@/content/deck";
 
 export function DifferentiatorsSlide() {
   return (
-    <section className="cm-section diferenciais" id="differentiators" data-tone="dark" data-reveal-group="">
-      <div className="cm-wrap">
-        <div className="cm-head">
+    <section className="slide differentiators" id="differentiators" data-tone="dark" data-reveal-group="">
+      <div className="slide-inner">
+        <div className="section-head">
           <p className="tag reveal">Diferenciais</p>
           <h2 className="reveal">
             O que faz a Nuki ser <em>a escolha certa.</em>

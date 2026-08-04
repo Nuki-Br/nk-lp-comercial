@@ -58,9 +58,9 @@ Components are `PascalCase.tsx`; everything else is `camelCase.ts`.
 
 - **Every `deckNav` entry needs a rendered element with that `id`.** Miss one and
   the progress nav loses a dot with no error. `src/content/deck.ts`.
-- **`DeckBehaviors` owns the DOM contract.** It queries `.cm-section`,
+- **`DeckBehaviors` owns the DOM contract.** It queries `.slide`,
   `[data-reveal-group]`, `[data-tone]`, `[data-parallax]`, `[data-back-target]`,
-  `[data-t]`, `.modulo-demo-slide`, and toggles `html.demo-locked`. Renaming any
+  `[data-section-id]`, `.module-demo-slide`, and toggles `html.demo-locked`. Renaming any
   of those means changing both the component and the CSS.
 - **`nuki-demo:esc` must not be renamed.** The postMessage type is baked into the
   committed 2.3 MB `public/demos/inspetor/index.html`. Renaming the listener

@@ -1,114 +1,82 @@
-# Pending: CSS class and token rename
+# Pending: dead CSS cleanup
 
-The English-identifier pass covered TypeScript — components, types, object keys,
-locals, and the slide anchor ids. **CSS class names, custom properties and design
-tokens are still Portuguese**, and so are most code comments. This document
-specifies the remaining work so it can be executed mechanically.
+> **The class and token rename is done.** CSS class names, custom properties,
+> design tokens, `data-*` attributes and keyframe names are all English, and the
+> `.jornada` / `.comercial` double scope has collapsed to a single `.deck`. What
+> remains is deleting rules that no longer have markup behind them, and
+> translating the Portuguese comments.
 
-Nothing here is user-visible; it is purely a consistency debt.
+## What is left
 
-## Scope
+### 1. Dead CSS inherited from nk-lp
 
-| Surface | Where |
-|---|---|
-| Class names, custom properties | `src/styles/deck.css` (974 l), `src/styles/slides.css` (2242 l) |
-| Design tokens | `src/styles/globals.css` (`@theme inline`) |
-| `className` / `data-*` strings | the 15 files under `src/components/` |
-| Selector strings | `src/components/deck/DeckBehaviors.tsx` |
-| Tailwind utilities | `src/app/layout.tsx` (1 line), `src/components/layout/Footer.tsx` (~14) |
-| Comments | throughout `src/` |
+`deck.css` was written for the landing page's journey page and carries a large
+block that nothing in this repo renders. Verified dead — none of these classes
+appear in the rendered DOM, and the only component that ever emitted them
+(`JourneyModule`) stayed in nk-lp:
 
-## How to do it safely
+- `.hero`, `.scrolldot`, `@keyframes bob`
+- `.module`, `.module.alt`, `.module.reverse`
+- `.head`, `.beats`, `.beat`, `.beat-text`, `.dsc`, `.lnk`
+- `.highlights`, `.hi`, `.num`, `.lbl`
+- `.shot`, `.device`, `@keyframes float`, `@keyframes float-phone`
+- `.device-grid`, `.device-col`, `.device-step`, `.device-steps`,
+  `.device-screen`, `.device-screens`, `.phone-inline`
+- `.outro`, `.wrap`
+- the `--deck-pad` / `--deck-gutter` / `--deck-edge` custom properties, whose
+  only consumers are the rules above
 
-CSS files can be rewritten wholesale — there is no user-facing text in them
-(verified: no `content:` property carries copy).
+In `slides.css`: `.calc-toggle`, `.calc-toggle-thumb`, `.calc-money`,
+`.calc-money-prefix`, `.calc-hint`, `.calc-field-inline`, and `.arrow`
+(`.flow .arrow` — the flow renders no arrow element).
 
-**TSX cannot.** `className="cm-section capa"` and `"O problema"` are both string
-literals, and the copy contains the very words being renamed. Target JSX
-attributes through the TypeScript AST — `ts.isJsxAttribute` with name `className`
-or `data-*`, then rewrite only its `StringLiteral` initializer. A blanket
-string replace will corrupt the copy; this already happened once, see
-`docs/decisions.md` §4.
+**Care required.** `.tag`, `.kicker`, `.lead` and `.step` *are* rendered, and some
+of them are also styled inside the dead blocks (e.g. `.deck .head .tag`).
+Deleting a dead block must not remove the only rule that styles a live class.
+Check each one has surviving coverage before deleting.
 
-Apply longest-match-first so prefixes never clobber their supersets
-(`comercial-gate` before `comercial`; `modulo-demo-slide` before `modulo-slide`).
+Roughly 400 lines across the two files.
 
-## Root scope
+### 2. Matching dead JavaScript
 
-The deck root is `<div className="jornada comercial">` and the sheets are scoped
-`.jornada` / `.comercial`. That double scope only existed because these sheets
-were shared with nk-lp's journey page. Collapse both to a single **`.deck`**.
+`DeckBehaviors.tsx` still contains the sticky-device block (~20 lines) that
+queries `.device-grid` / `.device-step` / `.device-screen`, and `.module` appears
+in two selector lists. All match nothing. They go with the CSS above.
 
-**Keep the scope.** `slides.css` defines `.card`, `.grid`, `.item`, `.step`,
-`.tag`, `.lead`, `.n`, `.d`, `.t` — unscoped, those collide with anything added
-later and leak into the Tailwind-styled footer.
+### 3. Portuguese comments
 
-## Mapping
+Comments and JSDoc are still pt-BR throughout `src/`. They are substantial and
+genuinely useful — the rationale in `EstimateProvider`, the hydration note in
+`AccessGate`, the CSS section headers — so translate rather than drop them.
 
-| Current | New |
-|---|---|
-| `.jornada` + `.comercial` (root) | `.deck` |
-| `.cm-section` / `.cm-wrap` / `.cm-head` | `.slide` / `.slide-inner` / `.section-head` |
-| `.cm-back` / `.cm-back-icon` / `.cm-hint` | `.back-link` / `.back-link-icon` / `.keyboard-hint` |
-| `.comercial-gate*` | `.gate*` |
-| `.modulo-slide-*` / `.modulo-demo-*` | `.module-slide-*` / `.module-demo-*` |
-| `.bgnum` | `.bg-numeral` |
-| `.progress` / `.progress .d` / `.progress .t` | `.progress-nav` / `.progress-nav-dot` / `.progress-nav-label` |
-| `.capa` `.problema` `.o-que-e` `.diferenciais` `.publico` `.calculadora` `.cta` `.total-estimado` | `.cover` `.problem` `.what-is-nuki` `.differentiators` `.audience` `.calculator` `.pricing` `.estimated-total` |
-| `.in` / `.ativa` / `.zerada` / `.on` | `.is-visible` / `.is-active` / `.is-empty` / `.is-active` |
-| `.calc-metragem-*` / `.calc-ambient-*` / `.calc-add-ambient-*` | `.calc-unit-type-*` / `.calc-room-*` / `.calc-add-room-*` |
-| `.tipologia-card*` / `.ambient-tile` / `.peso-{leve,medio,pesado}` | `.variant-card*` / `.room-tile` / `.weight-{light,medium,heavy}` |
-| `.planos` / `.plano` / `.destaque` / `.preco*` | `.plans` / `.plan` / `.is-featured` / `.price*` |
-| `.ciclo-toggle*` / `.cta-plano-simulador*` | `.billing-cycle-toggle*` / `.plan-simulator*` |
-| `--cm-pad` / `--cm-max` | `--slide-pad` / `--slide-max` |
-| `--jr-pad` / `--jr-gutter` / `--jr-edge` | drop — no surviving consumer |
-| `data-t` | `data-section-id` (and `dataset.t` → `dataset.sectionId`) |
+### 4. Optional: split the stylesheets
 
-Already English, leave alone: `.kicker`, `.lead`, `.meta`, `.shot`, `.reveal`,
-`.demo-locked`, `.is-fullscreen`, `.has-error`, `.device-*`.
+`slides.css` is 2242 lines and the calculator alone is about half of it. Both
+files are sectioned with `/* ===== SECTION ===== */` headers that map cleanly to
+components, so a one-file-per-slide split under `src/styles/slides/` is close to
+mechanical. Worth doing for agent ergonomics — an agent changing a pill radius
+currently loads 2200 lines.
 
-## Design tokens
+## How to verify any of this
 
-`preto→black` · `branco→white` · `cinza→gray` · `cinza-claro→gray-light` ·
-`cinza-divisor→gray-divider` · `cinza-borda→gray-border` · `cinza-medio→gray-mid` ·
-`cinza-7→gray-7` · `verde-02/03/08→green-02/03/08` · `verde-suave→green-soft` ·
-`laranja→orange` · `laranja-suave→orange-soft`.
+The rename was verified with a class-coverage invariant, and the same method
+works for deletions:
 
-Keep the numeric suffixes — they are the brand scale, not Portuguese.
+1. Collect every class name appearing in a CSS selector.
+2. Collect every class the page actually renders (`document.querySelectorAll('*')`
+   → `classList`), filtering out Tailwind utilities.
+3. Every rendered class must appear in the CSS set.
 
-**Five tokens are unused** and should be deleted rather than renamed:
-`--color-nuki-cinza-12` and the four `--color-nuki-status-*`. Zero references
-across CSS and TSX.
+Before this rename: 157 rendered, 156 styled, 1 orphan (`tipologia-card-base`).
+After: 155 rendered, 154 styled, 1 orphan (`variant-card-base` — the same class).
+The drop of 2 is exact and expected: `jornada`+`comercial` collapsed to `deck`,
+and `on`+`ativa` collapsed to `is-active`.
 
-> **Silent-failure trap.** Every `var(--color-nuki-*, #hex)` in the deck CSS
-> carries a hex fallback, so a missed rename produces **no visual diff** while
-> silently dropping the token. Guard afterwards with:
-> ```bash
-> grep -rn -- '--color-nuki-' src/ | grep -vE 'black|white|gray|green|orange'
-> ```
-> It must return nothing.
+Then confirm styling is genuinely applied, not just present — read
+`getComputedStyle` on a few landmarks (`.slide` min-height, `.progress-nav`
+position, `#cover` background, `.module-slide-grid` display) rather than trusting
+that the class name merely exists.
 
-## Dead CSS worth deleting while in there
-
-- `.module`, `.module.alt`, `.module.reverse` — never rendered here; the leftover
-  `.module` selector in `DeckBehaviors` goes with them
-- `.device-*` and the sticky-device block in `DeckBehaviors` (~20 lines TS,
-  ~110 CSS) — only nk-lp's `JourneyModule` ever emitted those
-- `.wrap`, `.outro`, `.scrolldot`, the hero block, `.beat*`/`.shot` media rules —
-  landing-page-only survivors of the port
-- `.calc-toggle*`, `.calc-money*`, `.calc-hint`, `.calc-field-inline`,
-  `.fluxo .arrow` — roughly 90 lines with no markup behind them
-
-## Verification
-
-`npm run check && npm run build`, then load the deck and compare against the
-current appearance. Class renames have no typecheck coverage — a missed one is
-invisible to the compiler and shows up only as unstyled markup. Check every slide
-at 1440 / 900 / 375 px, plus the gate, the demo slide and the calculator's
-sub-states (add/remove room, the Ctrl+Alt+K panel).
-
-## While you are there
-
-Comments and JSDoc are still Portuguese. They are substantial and genuinely
-useful — the rationale in `EstimateProvider`, the hydration note in `AccessGate`,
-the CSS section headers — so translate them rather than dropping them.
+Finally check the states that do not render on load: the access gate (clear
+`localStorage.nuki-comercial-unlocked`), the calculator's add-room form and its
+`Ctrl+Alt+K` panel, and the demo slide.

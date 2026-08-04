@@ -2,9 +2,9 @@ import { problemCards } from "@/content/deck";
 
 export function ProblemSlide() {
   return (
-    <section className="cm-section problema" id="problem" data-reveal-group="">
-      <div className="cm-wrap">
-        <div className="cm-head">
+    <section className="slide problem" id="problem" data-reveal-group="">
+      <div className="slide-inner">
+        <div className="section-head">
           <p className="tag reveal">O problema</p>
           <h2 className="reveal">
             A personalização de unidades acontece hoje em três etapas —{" "}
@@ -21,7 +21,7 @@ export function ProblemSlide() {
               <span className="step">{c.step}</span>
               <h3>{c.title}</h3>
               <p>{c.description}</p>
-              <p className="dor">{c.pain}</p>
+              <p className="pain">{c.pain}</p>
             </article>
           ))}
         </div>

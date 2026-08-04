@@ -18,9 +18,9 @@ export function PricingSlide() {
   };
 
   return (
-    <section className="cm-section cta" id="pricing" data-tone="dark" data-reveal-group="">
-      <div className="cm-wrap">
-        <div className="cm-head">
+    <section className="slide pricing" id="pricing" data-tone="dark" data-reveal-group="">
+      <div className="slide-inner">
+        <div className="section-head">
           <p className="tag reveal">Plano & contato</p>
           <h2 className="reveal">
             Todos os módulos em <em>um plano só</em>.
@@ -30,52 +30,52 @@ export function PricingSlide() {
           </p>
         </div>
 
-        <div className="ciclo-toggle reveal" role="tablist" aria-label="Ciclo de cobrança">
+        <div className="billing-cycle-toggle reveal" role="tablist" aria-label="Ciclo de cobrança">
           {billingCycles.map((c) => (
             <button
               key={c.id}
               type="button"
               role="tab"
               aria-selected={c.id === cycle.id}
-              className={`ciclo-toggle-btn${c.id === cycle.id ? " on" : ""}`}
+              className={`billing-cycle-btn${c.id === cycle.id ? " is-active" : ""}`}
               onClick={() => setCycle(c)}
             >
               {c.label}
               {c.discount > 0 && (
-                <span className="ciclo-toggle-off">−{Math.round(c.discount * 100)}%</span>
+                <span className="billing-cycle-off">−{Math.round(c.discount * 100)}%</span>
               )}
             </button>
           ))}
         </div>
 
-        <div className="planos">
+        <div className="plans">
           {plans.map((p, i) => {
             const finalMonthlyPrice = discountedMonthlyPrice(p.monthlyPrice, cycle.discount);
             const subtotal = (months[i] ?? 0) * finalMonthlyPrice;
             return (
-              <article className={`plano reveal${p.featured ? " destaque" : ""}`} key={p.n}>
+              <article className={`plan reveal${p.featured ? " is-featured" : ""}`} key={p.n}>
                 <span className="n">{p.n}</span>
                 <ul>
                   {p.items.map((it) => (
                     <li key={it}>{it}</li>
                   ))}
                 </ul>
-                <div className="preco">
+                <div className="price">
                   {cycle.discount > 0 && (
-                    <span className="preco-antigo">{formatCurrency(p.monthlyPrice)}</span>
+                    <span className="price-original">{formatCurrency(p.monthlyPrice)}</span>
                   )}
-                  <span className="preco-valor">{formatCurrency(finalMonthlyPrice)}/mês</span>
-                  <span className="un">
+                  <span className="price-value">{formatCurrency(finalMonthlyPrice)}/mês</span>
+                  <span className="price-unit">
                     por empreendimento
                     {cycle.discount > 0 && (
-                      <span className="preco-badge">
+                      <span className="price-badge">
                         −{Math.round(cycle.discount * 100)}%
                       </span>
                     )}
                   </span>
                 </div>
-                <div className="cta-plano-simulador">
-                  <span className="cta-plano-simulador-label">Meses na plataforma</span>
+                <div className="plan-simulator">
+                  <span className="plan-simulator-label">Meses na plataforma</span>
                   <Stepper
                     value={months[i] ?? 0}
                     min={0}
@@ -83,7 +83,7 @@ export function PricingSlide() {
                     onChange={(v) => updateMeses(i, v)}
                     ariaLabel={`Meses no ${p.n}`}
                   />
-                  <span className={`cta-plano-simulador-sub${(months[i] ?? 0) > 0 ? " on" : ""}`}>
+                  <span className={`plan-simulator-sub${(months[i] ?? 0) > 0 ? " is-active" : ""}`}>
                     {(months[i] ?? 0) > 0 ? formatCurrency(subtotal) : "—"}
                   </span>
                 </div>

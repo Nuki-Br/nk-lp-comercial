@@ -1,27 +1,27 @@
 /* Jornada Nuki — animação portada de nk-lp-animation/styles.css.
    Estrutura/animação ficam em CSS; as cores consomem os tokens @theme da marca
-   via var(--color-nuki-*) com fallback no hex oficial. Tudo escopado em .jornada
+   via var(--color-nuki-*) com fallback no hex oficial. Tudo escopado em .deck
    para não vazar para o resto do site (Topbar/Footer usam classes Tailwind). */
 
-.jornada :focus-visible {
-  outline: 2px solid var(--color-nuki-verde-02, #047676);
+.deck :focus-visible {
+  outline: 2px solid var(--color-nuki-green-02, #047676);
   outline-offset: 2px;
 }
 
 /* Tokens de layout: ramp de padding (igual ao container da marca), folga da borda
    no lado da imagem, e o recuo que alinha o texto à coluna da marca (=content-left
    do container 1440 centrado). --jr-edge recompõe a cada breakpoint via --jr-pad. */
-.jornada {
+.deck {
   --jr-pad: 24px;
   --jr-gutter: clamp(24px, 3vw, 80px);
   --jr-edge: calc(max(0px, (100vw - 1440px) / 2) + var(--jr-pad));
 }
-@media (min-width: 640px) { .jornada { --jr-pad: 32px; } }
-@media (min-width: 768px) { .jornada { --jr-pad: 48px; } }
-@media (min-width: 1024px) { .jornada { --jr-pad: 64px; } }
-@media (min-width: 1280px) { .jornada { --jr-pad: 108px; } }
+@media (min-width: 640px) { .deck { --jr-pad: 32px; } }
+@media (min-width: 768px) { .deck { --jr-pad: 48px; } }
+@media (min-width: 1024px) { .deck { --jr-pad: 64px; } }
+@media (min-width: 1280px) { .deck { --jr-pad: 108px; } }
 
-.jornada .wrap {
+.deck .wrap {
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 var(--jr-pad);
@@ -30,7 +30,7 @@
 }
 
 /* HERO (faixa de transição entre o Hero global e o primeiro módulo) */
-.jornada .hero {
+.deck .hero {
   min-height: 40vh;
   display: flex;
   flex-direction: column;
@@ -39,32 +39,32 @@
   text-align: center;
   padding: 40px;
 }
-.jornada .hero .kicker {
+.deck .hero .kicker {
   font-weight: 600;
   font-size: 13px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-nuki-verde-02, #047676);
+  color: var(--color-nuki-green-02, #047676);
   margin: 0 0 18px;
 }
-.jornada .hero h1 {
+.deck .hero h1 {
   font-weight: 800;
   font-size: clamp(28px, 6vw, 58px);
   line-height: 1.04;
   margin: 0;
   max-width: 18ch;
 }
-.jornada .hero h1 em {
+.deck .hero h1 em {
   font-style: normal;
-  color: var(--color-nuki-laranja, #e8713f);
+  color: var(--color-nuki-orange, #e8713f);
 }
-.jornada .hero p {
+.deck .hero p {
   font-weight: 500;
   font-size: 16px;
-  color: var(--color-nuki-cinza-medio, #595959);
+  color: var(--color-nuki-gray-mid, #595959);
   margin: 18px 0 0;
 }
-.jornada .scrolldot {
+.deck .scrolldot {
   margin-top: 34px;
   width: 44px;
   height: 44px;
@@ -72,12 +72,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-nuki-cinza, #434343);
+  color: var(--color-nuki-gray, #434343);
   transition: color 0.2s;
   animation: bob 2s ease-in-out infinite;
 }
-.jornada .scrolldot:hover {
-  color: var(--color-nuki-verde-02, #047676);
+.deck .scrolldot:hover {
+  color: var(--color-nuki-green-02, #047676);
 }
 @keyframes bob {
   0%, 100% { transform: translateY(0); }
@@ -85,40 +85,40 @@
 }
 
 /* MODULE */
-.jornada .module {
+.deck .module {
   position: relative;
   padding: 6vh 0;
 }
-.jornada .module.alt {
-  background: var(--color-nuki-cinza-claro, #f7f7f7);
+.deck .module.alt {
+  background: var(--color-nuki-gray-light, #f7f7f7);
 }
-.jornada .bgnum {
+.deck .bg-numeral {
   position: absolute;
   top: 4vh;
   font-weight: 800;
   font-size: 38vh;
   line-height: 0.8;
-  color: var(--color-nuki-cinza-divisor, #f0f0f0);
+  color: var(--color-nuki-gray-divider, #f0f0f0);
   z-index: 0;
   pointer-events: none;
   user-select: none;
 }
-.jornada .module:not(.reverse) .bgnum { right: 2vw; }
-.jornada .module.reverse .bgnum { left: 2vw; }
+.deck .module:not(.reverse) .bg-numeral { right: 2vw; }
+.deck .module.reverse .bg-numeral { left: 2vw; }
 
 /* TEXT + BEATS */
-.jornada .head {
+.deck .head {
   margin-bottom: 2vh;
 }
-.jornada .head .tag {
+.deck .head .tag {
   font-weight: 600;
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-nuki-verde-02, #047676);
+  color: var(--color-nuki-green-02, #047676);
   margin: 0 0 12px;
 }
-.jornada .head h2 {
+.deck .head h2 {
   font-weight: 800;
   font-size: clamp(34px, 5vw, 58px);
   line-height: 1;
@@ -127,11 +127,11 @@
 /* Beats full-width: texto alinhado à coluna da marca (padding-left = --jr-edge) e
    imagem sangrando até a borda do viewport (padding-right = --jr-gutter). A imagem
    escala com o viewport (coluna 1fr), com teto via .shot max-width. Mantém 8:5. */
-.jornada .beats {
+.deck .beats {
   position: relative;
   z-index: 1; /* acima do bgnum (os beats saíram do .wrap, que tinha z-index) */
 }
-.jornada .beat {
+.deck .beat {
   min-height: 74vh;
   display: grid;
   grid-template-columns: minmax(300px, 460px) 1fr;
@@ -140,97 +140,97 @@
   padding-left: var(--jr-edge);
   padding-right: var(--jr-gutter);
 }
-.jornada .module.reverse .beat {
+.deck .module.reverse .beat {
   grid-template-columns: 1fr minmax(300px, 460px);
   padding-left: var(--jr-gutter);
   padding-right: var(--jr-edge);
 }
-.jornada .beat .shot {
+.deck .beat .shot {
   max-width: 1100px;
 }
 /* Texto de um passo (vale p/ .beat e p/ .device-step, ambos usam .beat-text). */
-.jornada .beat-text h3 {
+.deck .beat-text h3 {
   font-weight: 800;
   font-size: clamp(20px, 2.4vw, 28px);
   line-height: 1.15;
   margin: 0 0 14px;
 }
-.jornada .beat-text .dsc {
+.deck .beat-text .dsc {
   font-weight: 500;
   font-size: 16px;
   line-height: 1.65;
-  color: var(--color-nuki-cinza, #434343);
+  color: var(--color-nuki-gray, #434343);
   max-width: 420px;
   margin: 0;
 }
-.jornada .beat-text .lnk {
+.deck .beat-text .lnk {
   display: inline-block;
   font-weight: 800;
   font-size: 15px;
-  color: var(--color-nuki-preto, #000);
+  color: var(--color-nuki-black, #000);
   text-decoration: none;
   margin-top: 24px;
 }
-.jornada .beat-text .lnk i {
-  color: var(--color-nuki-laranja, #e8713f);
+.deck .beat-text .lnk i {
+  color: var(--color-nuki-orange, #e8713f);
   font-style: normal;
   display: inline-block;
   transition: transform 0.3s;
 }
-.jornada .beat-text .lnk:hover i {
+.deck .beat-text .lnk:hover i {
   transform: translateX(4px);
 }
-.jornada .highlights {
+.deck .highlights {
   margin-top: 26px;
   display: flex;
   gap: 44px;
   flex-wrap: wrap;
 }
-.jornada .hi .num {
+.deck .hi .num {
   font-weight: 800;
   font-size: clamp(32px, 4vw, 46px);
   line-height: 1;
 }
-.jornada .hi .lbl {
+.deck .hi .lbl {
   display: block;
   font-weight: 500;
   font-size: 13px;
-  color: var(--color-nuki-cinza-medio, #595959);
+  color: var(--color-nuki-gray-mid, #595959);
   margin-top: 8px;
   max-width: 150px;
 }
 
 /* MEDIA — uma imagem por beat (.shot), no fluxo ao lado do seu texto (grade do .beat).
    Aparece via .reveal e mantém o float ambiente. Mobile (<=820px): empilha sob o texto. */
-.jornada .shot {
+.deck .shot {
   position: relative;
   width: 100%;
   aspect-ratio: 8 / 5;
   margin: 0;
 }
 /* Módulos reverse: imagem na coluna 1, texto na 2. */
-.jornada .module.reverse .shot {
+.deck .module.reverse .shot {
   order: -1;
 }
-.jornada #inspetor .shot {
+.deck #inspetor .shot {
   aspect-ratio: 9 / 16;
   width: 100%;
   max-width: 300px;
   margin: 0 auto;
 }
-.jornada #planner .shot,
-.jornada #personaliza .shot {
+.deck #planner .shot,
+.deck #personaliza .shot {
   border-radius: 16px;
 }
-.jornada #inspetor .shot img.device {
+.deck #inspetor .shot img.device {
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.12)) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.2));
   animation: float-phone 6.5s ease-in-out infinite;
 }
-.jornada .shot picture,
-.jornada .device-screen picture {
+.deck .shot picture,
+.deck .device-screen picture {
   display: contents;
 }
-.jornada .shot img.device {
+.deck .shot img.device {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -240,8 +240,8 @@
 }
 /* Planner/Personaliza: a sombra fica no próprio screenshot (acompanha o float),
    sem card branco atrás — antes o ::before aparecia ao fundo durante a animação. */
-.jornada #planner .shot img.device,
-.jornada #personaliza .shot img.device {
+.deck #planner .shot img.device,
+.deck #personaliza .shot img.device {
   position: relative;
   border-radius: 10px;
   filter:
@@ -262,20 +262,20 @@
    e um único celular fica sticky à direita, com a tela trocando por passo
    (cross-fade dirigido pelo JourneyScripts). A tela inline (.phone-inline) só
    aparece no mobile, onde o celular sticky some. */
-.jornada .device-grid {
+.deck .device-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 64px;
   align-items: start; /* impede o stretch p/ o .device-col poder ser sticky */
 }
-.jornada .device-step {
+.deck .device-step {
   min-height: 80vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 20px; /* só conta no mobile, quando a tela inline aparece */
 }
-.jornada .device-col {
+.deck .device-col {
   position: sticky;
   top: 0;
   height: 100vh;
@@ -283,7 +283,7 @@
   align-items: center;
   justify-content: center;
 }
-.jornada #inspetor .device {
+.deck #inspetor .device {
   position: relative;
   /* A tela é 9:16 (alta), então o tamanho é guiado pela ALTURA do viewport:
      preenche bem a coluna sem estourar a altura em telas mais baixas.
@@ -293,7 +293,7 @@
   aspect-ratio: 9 / 16;
 }
 /* glow teal sutil de marca atrás do aparelho */
-.jornada #inspetor .device::before {
+.deck #inspetor .device::before {
   content: "";
   position: absolute;
   inset: -12% -28%;
@@ -301,33 +301,33 @@
   background: radial-gradient(closest-side, rgba(4, 118, 118, 0.1), transparent 70%);
   pointer-events: none;
 }
-.jornada .device-screens {
+.deck .device-screens {
   position: relative;
   width: 100%;
   height: 100%;
 }
-.jornada .device-screen {
+.deck .device-screen {
   position: absolute;
   inset: 0;
   margin: 0;
   opacity: 0;
   transition: opacity 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.jornada .device-screen.show {
+.deck .device-screen.is-visible {
   opacity: 1;
 }
-.jornada .device-screen img.device {
+.deck .device-screen img.device {
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center;
 }
-.jornada #inspetor .device-screen img.device {
+.deck #inspetor .device-screen img.device {
   border-radius: 10px;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.12)) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.2));
 }
 /* tela inline de cada passo: escondida no desktop (o celular sticky cobre isso) */
-.jornada .phone-inline {
+.deck .phone-inline {
   display: none;
 }
 
@@ -335,32 +335,32 @@
    mas full-bleed e em proporção landscape (8:5). O .device-grid é renderizado fora
    do .wrap, então espelha o padding edge/gutter do .beat: texto alinhado à coluna
    da marca, imagem sangrando até a borda do viewport. */
-.jornada #planner .device-grid,
-.jornada #personaliza .device-grid {
+.deck #planner .device-grid,
+.deck #personaliza .device-grid {
   grid-template-columns: minmax(300px, 460px) 1fr;
   column-gap: clamp(24px, 3vw, 72px);
   padding-left: var(--jr-edge);
   padding-right: var(--jr-gutter);
 }
 /* Personaliza (reverse): imagem na coluna 1 sangrando à esquerda, texto à direita. */
-.jornada #personaliza .device-grid {
+.deck #personaliza .device-grid {
   grid-template-columns: 1fr minmax(300px, 460px);
   padding-left: var(--jr-gutter);
   padding-right: var(--jr-edge);
 }
-.jornada .module.reverse .device-steps { order: 2; }
-.jornada .module.reverse .device-col { order: 1; }
+.deck .module.reverse .device-steps { order: 2; }
+.deck .module.reverse .device-col { order: 1; }
 /* Quadro sticky landscape: guiado pela LARGURA (preenche a coluna 1fr até um teto),
    8:5, centralizado vertical pela flexbox do .device-col. */
-.jornada #planner .device,
-.jornada #personaliza .device {
+.deck #planner .device,
+.deck #personaliza .device {
   width: min(100%, 1100px);
   aspect-ratio: 8 / 5;
 }
 /* Telas landscape: sombra de card desktop (igual ao .shot) + mantém o float
    (não é herdado, pois .device-screen não é .shot). */
-.jornada #planner .device-screen img.device,
-.jornada #personaliza .device-screen img.device {
+.deck #planner .device-screen img.device,
+.deck #personaliza .device-screen img.device {
   border-radius: 10px;
   filter:
     drop-shadow(0 1px 3px rgba(0, 0, 0, 0.04))
@@ -371,34 +371,34 @@
 
 /* Parallax do número de fundo: timeline nativa (compositor, fora da main thread).
    O JourneyScripts só roda como fallback onde animation-timeline não existe. */
-@keyframes bgnum-drift {
+@keyframes bg-numeral-drift {
   from { transform: translateY(-35px); }
   to { transform: translateY(35px); }
 }
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .jornada .bgnum {
-      animation: bgnum-drift linear both;
+    .deck .bg-numeral {
+      animation: bg-numeral-drift linear both;
       animation-timeline: view();
     }
   }
 }
 
 /* REVEAL + STAGGER */
-.jornada .reveal {
+.deck .reveal {
   opacity: 0;
   transform: translateY(40px);
   transition:
     opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
     transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.jornada .reveal.in {
+.deck .reveal.is-visible {
   opacity: 1;
   transform: none;
 }
 
 /* PROGRESS NAV */
-.jornada .progress {
+.deck .progress-nav {
   position: fixed;
   right: 30px;
   top: 50%;
@@ -408,7 +408,7 @@
   flex-direction: column;
   gap: 12px;
 }
-.jornada .progress a {
+.deck .progress-nav a {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -417,39 +417,39 @@
   padding: 7px 0;
   min-height: 24px;
 }
-.jornada .progress .d {
+.deck .progress-nav .progress-nav-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--color-nuki-cinza-divisor, #f0f0f0);
+  background: var(--color-nuki-gray-divider, #f0f0f0);
   transition: all 0.35s;
   flex: none;
 }
-.jornada .progress .t {
+.deck .progress-nav .progress-nav-label {
   font-weight: 600;
   font-size: 12px;
-  color: var(--color-nuki-cinza-medio, #595959);
+  color: var(--color-nuki-gray-mid, #595959);
   opacity: 0;
   transform: translateX(6px);
   transition: all 0.35s;
   white-space: nowrap;
 }
-.jornada .progress a.on .d {
-  background: var(--color-nuki-verde-02, #047676);
+.deck .progress-nav a.is-active .progress-nav-dot {
+  background: var(--color-nuki-green-02, #047676);
   transform: scale(1.4);
 }
-.jornada .progress a.on .t {
+.deck .progress-nav a.is-active .progress-nav-label {
   opacity: 1;
   transform: none;
-  color: var(--color-nuki-preto, #000);
+  color: var(--color-nuki-black, #000);
 }
-.jornada .progress a:hover .t {
+.deck .progress-nav a:hover .progress-nav-label {
   opacity: 1;
   transform: none;
 }
 
 /* OUTRO */
-.jornada .outro {
+.deck .outro {
   min-height: 50vh;
   display: flex;
   flex-direction: column;
@@ -459,23 +459,23 @@
   gap: 28px;
   padding: 40px;
 }
-.jornada .outro h2 {
+.deck .outro h2 {
   font-weight: 800;
   font-size: clamp(28px, 4vw, 46px);
   margin: 0;
 }
-.jornada .outro h2 em {
+.deck .outro h2 em {
   font-style: normal;
-  color: var(--color-nuki-laranja, #e8713f);
+  color: var(--color-nuki-orange, #e8713f);
 }
 
 /* MOBILE (<=820px) — exceção documentada: é onde o swap de duas colunas com
    imagem fixa deixa de fazer sentido, então os .shot voltam ao fluxo. */
 @media (max-width: 820px) {
-  .jornada .progress { display: none; }
+  .deck .progress-nav { display: none; }
   /* Empilha: texto em cima, imagem embaixo (inclusive nos módulos reverse). */
-  .jornada .beat,
-  .jornada .module.reverse .beat {
+  .deck .beat,
+  .deck .module.reverse .beat {
     grid-template-columns: 1fr;
     gap: 24px;
     min-height: auto;
@@ -483,64 +483,64 @@
     padding-left: var(--jr-pad);
     padding-right: var(--jr-pad);
   }
-  .jornada .beat .shot { max-width: none; }
-  .jornada .module.reverse .shot { order: 0; }
+  .deck .beat .shot { max-width: none; }
+  .deck .module.reverse .shot { order: 0; }
   /* Inspetor no mobile: sem celular sticky; cada passo mostra a tela inline. */
-  .jornada .device-grid {
+  .deck .device-grid {
     grid-template-columns: 1fr;
     gap: 24px;
   }
   /* Planner/Personaliza (sticky-media): zera o padding edge/gutter no empilhado. */
-  .jornada #planner .device-grid,
-  .jornada #personaliza .device-grid {
+  .deck #planner .device-grid,
+  .deck #personaliza .device-grid {
     grid-template-columns: 1fr;
     padding-left: var(--jr-pad);
     padding-right: var(--jr-pad);
   }
-  .jornada .device-step {
+  .deck .device-step {
     min-height: auto;
     margin-bottom: 24px;
   }
-  .jornada .device-col { display: none; }
-  .jornada .phone-inline { display: block; }
-  .jornada .shot {
+  .deck .device-col { display: none; }
+  .deck .phone-inline { display: block; }
+  .deck .shot {
     aspect-ratio: auto;
     margin: 20px 0 0;
   }
-  .jornada .shot img.device {
+  .deck .shot img.device {
     height: auto;
     animation: none;
     filter: none;
   }
-  .jornada #planner .shot,
-  .jornada #personaliza .shot {
+  .deck #planner .shot,
+  .deck #personaliza .shot {
     border-radius: 10px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   }
-  .jornada #planner .phone-inline,
-  .jornada #personaliza .phone-inline {
-    border: 1px solid var(--color-nuki-cinza-borda, #d9d9d9);
+  .deck #planner .phone-inline,
+  .deck #personaliza .phone-inline {
+    border: 1px solid var(--color-nuki-gray-border, #d9d9d9);
     border-radius: 12px;
     overflow: hidden;
   }
-  .jornada #inspetor .shot {
+  .deck #inspetor .shot {
     width: 100%;
     max-width: 300px;
     margin: 0 auto;
   }
-  .jornada #inspetor .shot img.device {
+  .deck #inspetor .shot img.device {
     transform: none;
     filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15));
   }
-  .jornada .bgnum {
+  .deck .bg-numeral {
     font-size: 22vh;
     opacity: 0.6;
   }
   /* Batch mobile polish. */
-  .jornada .hero h1 { max-width: 22ch; }
-  .jornada .head { margin-bottom: 24px; }
-  .jornada .highlights { row-gap: 24px; column-gap: 44px; }
-  .jornada .beat-text .lnk {
+  .deck .hero h1 { max-width: 22ch; }
+  .deck .head { margin-bottom: 24px; }
+  .deck .highlights { row-gap: 24px; column-gap: 44px; }
+  .deck .beat-text .lnk {
     display: inline-flex;
     align-items: center;
     padding: 12px 4px;
@@ -549,47 +549,45 @@
     line-height: 1;
     margin-top: 14px;
   }
-  .jornada .outro { min-height: 0; padding-block: 60px; }
+  .deck .outro { min-height: 0; padding-block: 60px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jornada .reveal {
+  .deck .reveal {
     transition: none;
     opacity: 1;
     transform: none;
   }
-  .jornada .scrolldot { animation: none; }
-  .jornada .shot img.device { animation: none; }
-  .jornada .device-screen img.device { animation: none; }
-  .jornada .device-screen { transition: none; }
+  .deck .scrolldot { animation: none; }
+  .deck .shot img.device { animation: none; }
+  .deck .device-screen img.device { animation: none; }
+  .deck .device-screen { transition: none; }
 }
 
-/* ===== Foundation do layout "slide comercial" =====
-   Portado do /comercial pra funcionar também na home. Design tokens + classes
-   base (.cm-wrap, .cm-section) escopadas em `.jornada` porque ambas as rotas
-   têm essa classe no root (home = `.jornada`; /comercial = `.jornada.comercial`).
-   O /comercial ainda declara os mesmos valores em `.comercial` — inofensivo,
-   valores idênticos. */
-.jornada {
-  --cm-pad: 24px;
-  --cm-max: 1440px;
+/* ===== Foundation do layout de slide =====
+   Design tokens + classes base (.slide, .slide-inner) escopadas em `.deck`.
+   `slides.css` redeclara os mesmos valores — inofensivo, são idênticos; é
+   resquício de quando as duas folhas serviam páginas diferentes. */
+.deck {
+  --slide-pad: 24px;
+  --slide-max: 1440px;
 }
-@media (min-width: 640px) { .jornada { --cm-pad: 32px; } }
-@media (min-width: 768px) { .jornada { --cm-pad: 48px; } }
-@media (min-width: 1024px) { .jornada { --cm-pad: 64px; } }
-@media (min-width: 1280px) { .jornada { --cm-pad: 108px; } }
+@media (min-width: 640px) { .deck { --slide-pad: 32px; } }
+@media (min-width: 768px) { .deck { --slide-pad: 48px; } }
+@media (min-width: 1024px) { .deck { --slide-pad: 64px; } }
+@media (min-width: 1280px) { .deck { --slide-pad: 108px; } }
 
-.jornada .cm-wrap {
-  max-width: var(--cm-max);
+.deck .slide-inner {
+  max-width: var(--slide-max);
   margin: 0 auto;
-  padding: 0 var(--cm-pad);
+  padding: 0 var(--slide-pad);
   position: relative;
   z-index: 1;
 }
 
 /* Seção genérica: cobre viewport, centraliza, dá respiro pra apresentação
    consumida com setas (viver um "slide" por vez) sem impedir scroll natural. */
-.jornada .cm-section {
+.deck .slide {
   position: relative;
   min-height: 100vh;
   display: flex;
@@ -602,23 +600,20 @@
 /* Variant fullscreen — usado por seções que hospedam iframe (ex: demo dos
    módulos). Elimina padding/flex-center do container base, deixando o
    conteúdo interno ocupar viewport inteiro sem margens forçadas. */
-.jornada .cm-section.is-fullscreen {
+.deck .slide.is-fullscreen {
   padding: 0;
   min-height: 100vh;
   display: block;
 }
 
 /* ===== MÓDULOS — slide com tabs internos =====
-   Portado do /comercial pra ficar acessível na home também. Escopado em
-   `.jornada` porque ambas as rotas têm essa classe no root
-   (home = `.jornada`, /comercial = `.jornada .comercial`).
    Cada módulo (Planner · Personaliza · Inspetor) vira uma slide estática
    no padrão comercial: layout 2-col (copy + shot), tabs verticais dos
    beats à esquerda, screenshot grande à direita com cross-fade ao trocar
    de tab. Nada scroll-driven. Variantes .is-desktop / .is-phone controlam
    o aspect ratio do shot (landscape 8:5 vs celular 9:16 centralizado). */
-.jornada .modulo-slide {
-  background: var(--color-nuki-branco, #fff);
+.deck .module-slide {
+  background: var(--color-nuki-white, #fff);
   /* Ancora bgnum e pearl (absolutas), e clipa o numeral 38vh que ultrapassa
      lateralmente. */
   position: relative;
@@ -627,18 +622,18 @@
 /* Slide dos módulos respira um pouco mais largo que o wrap default (1440px)
    pra dar espaço extra ao shot na coluna direita, sem "estourar" a régua
    das outras seções da apresentação. */
-.jornada .modulo-slide .cm-wrap {
+.deck .module-slide .slide-inner {
   max-width: 1600px;
 }
-/* Ajusta a posição lateral do .bgnum importado dos rules acima — no /jornada
+/* Ajusta a posição lateral do .bg-numeral importado dos rules acima — no /jornada
    original, `right: 2vw` só se aplica em `.module:not(.reverse)`, que não é
    nosso caso. */
-.jornada .modulo-slide .bgnum {
+.deck .module-slide .bg-numeral {
   right: 2vw;
 }
 /* Pearl decorativa — mesma linguagem do /antiga (SobreANuki, FaleComAGente).
    Off-canvas, borrada, transparente. Sem interação. */
-.jornada .modulo-slide-pearl {
+.deck .module-slide-pearl {
   position: absolute;
   right: -80px;
   bottom: -40px;
@@ -648,13 +643,11 @@
   user-select: none;
   z-index: 0;
 }
-/* Home (só `.jornada`, sem `.comercial`) esconde o pearl — decisão de UX pra
-   deixar o slide mais limpo fora do contexto da apresentação. Só o /comercial
-   (que tem `.jornada.comercial` no root) segue mostrando. */
-.jornada:not(.comercial) .modulo-slide-pearl {
-  display: none;
-}
-.jornada .modulo-slide-grid {
+/* Nota: no nk-lp havia aqui um `.jornada:not(.comercial) .modulo-slide-pearl
+   { display: none }`, que escondia o pearl na home e o mantinha só na
+   apresentação. Neste repo só existe a apresentação, então a regra nunca
+   casava — removida. O pearl sempre aparece. */
+.deck .module-slide-grid {
   display: grid;
   /* Coluna esquerda estreita ("book column") + mídia gorda dominando à direita.
      Copy encosta no início do wrap, mídia respira até 1050px. Espelha o
@@ -668,31 +661,31 @@
   z-index: 1;
 }
 @media (max-width: 900px) {
-  .jornada .modulo-slide-grid {
+  .deck .module-slide-grid {
     grid-template-columns: 1fr;
     gap: 40px;
   }
   /* Decorações somem no mobile — coluna vertical não tem espaço lateral pro
      numeral respirar, e a pearl clutter os beats empilhados. */
-  .jornada .modulo-slide .bgnum,
-  .jornada .modulo-slide-pearl {
+  .deck .module-slide .bg-numeral,
+  .deck .module-slide-pearl {
     display: none;
   }
 }
-.jornada .modulo-slide-copy {
+.deck .module-slide-copy {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-/* Chip verde-suave — espelha a receita de `.tipologia-tag` (comercial.css). É a
+/* Chip verde-suave — espelha a receita de `.variant-tag` (comercial.css). É a
    assinatura da tag Nuki no /antiga; texto solto vira pílula com bg verde-claro. */
-.jornada .modulo-slide-copy .tag {
+.deck .module-slide-copy .tag {
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-nuki-verde-02, #047676);
-  background: var(--color-nuki-verde-suave, #e6fafa);
+  color: var(--color-nuki-green-02, #047676);
+  background: var(--color-nuki-green-soft, #e6fafa);
   padding: 6px 14px;
   border-radius: 999px;
   align-self: flex-start;
@@ -701,31 +694,31 @@
 }
 /* Título com peso misto — assinatura Nuki (fino prefixo + extrabold nome).
    Espelha o padrão dos H2 do /antiga (SobreANuki:23-25, SuaIdentidade:9-11). */
-.jornada .modulo-slide-copy h2 {
+.deck .module-slide-copy h2 {
   font-weight: 400;
   font-size: clamp(32px, 4vw, 48px);
   line-height: 1.05;
   margin: 0;
   letter-spacing: -0.01em;
-  color: var(--color-nuki-preto, #000);
+  color: var(--color-nuki-black, #000);
 }
-.jornada .modulo-slide-h2-pre {
+.deck .module-slide-h2-pre {
   font-weight: 400;
   opacity: 0.7;
 }
-.jornada .modulo-slide-copy h2 strong {
+.deck .module-slide-copy h2 strong {
   font-weight: 800;
 }
-.jornada .modulo-slide-copy .lead {
+.deck .module-slide-copy .lead {
   font-size: 15px;
-  color: var(--color-nuki-cinza, #434343);
+  color: var(--color-nuki-gray, #434343);
   line-height: 1.55;
   margin: 0;
   font-weight: 500;
 }
 
 /* Tabs verticais — uma por beat */
-.jornada .modulo-slide-tabs {
+.deck .module-slide-tabs {
   list-style: none;
   padding: 0;
   margin: 8px 0 0;
@@ -733,13 +726,13 @@
   flex-direction: column;
   gap: 6px;
 }
-.jornada .modulo-slide-tab {
+.deck .module-slide-tab {
   display: block;
   width: 100%;
   text-align: left;
   padding: 14px 18px;
-  background: var(--color-nuki-branco, #fff);
-  border: 1px solid var(--color-nuki-cinza-divisor, #f0f0f0);
+  background: var(--color-nuki-white, #fff);
+  border: 1px solid var(--color-nuki-gray-divider, #f0f0f0);
   border-radius: 14px;
   font-family: inherit;
   cursor: pointer;
@@ -748,46 +741,46 @@
     border-color 0.2s,
     transform 0.15s;
 }
-.jornada .modulo-slide-tab:hover {
-  border-color: var(--color-nuki-cinza-borda, #d9d9d9);
+.deck .module-slide-tab:hover {
+  border-color: var(--color-nuki-gray-border, #d9d9d9);
 }
-.jornada .modulo-slide-tab.on {
-  border-color: var(--color-nuki-verde-02, #047676);
+.deck .module-slide-tab.is-active {
+  border-color: var(--color-nuki-green-02, #047676);
   background: rgba(4, 118, 118, 0.04);
 }
-.jornada .modulo-slide-tab-num {
+.deck .module-slide-tab-num {
   display: block;
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-weight: 800;
-  color: var(--color-nuki-cinza-medio, #595959);
+  color: var(--color-nuki-gray-mid, #595959);
   margin-bottom: 4px;
 }
-.jornada .modulo-slide-tab.on .modulo-slide-tab-num {
-  color: var(--color-nuki-verde-02, #047676);
+.deck .module-slide-tab.is-active .module-slide-tab-num {
+  color: var(--color-nuki-green-02, #047676);
 }
-.jornada .modulo-slide-tab-title {
+.deck .module-slide-tab-title {
   display: block;
   font-size: 14px;
   font-weight: 700;
-  color: var(--color-nuki-preto, #000);
+  color: var(--color-nuki-black, #000);
   line-height: 1.35;
 }
 
 /* Descrição do beat ativo */
-.jornada .modulo-slide-detail {
+.deck .module-slide-detail {
   margin-top: 4px;
   min-height: 60px;
 }
-.jornada .modulo-slide-detail-desc {
+.deck .module-slide-detail-desc {
   font-size: 14px;
-  color: var(--color-nuki-cinza, #434343);
+  color: var(--color-nuki-gray, #434343);
   line-height: 1.55;
   margin: 0;
-  animation: modulo-detail-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: module-detail-in 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-@keyframes modulo-detail-in {
+@keyframes module-detail-in {
   from {
     opacity: 0;
     transform: translateY(4px);
@@ -799,49 +792,49 @@
 }
 
 /* Highlights (2 stat cards horizontais) */
-.jornada .modulo-slide-highlights {
+.deck .module-slide-highlights {
   display: flex;
   gap: 40px;
   flex-wrap: wrap;
   margin-top: 8px;
   padding-top: 20px;
-  border-top: 1px solid var(--color-nuki-cinza-divisor, #f0f0f0);
+  border-top: 1px solid var(--color-nuki-gray-divider, #f0f0f0);
 }
-.jornada .modulo-slide-hl {
+.deck .module-slide-hl {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.jornada .modulo-slide-hl-num {
+.deck .module-slide-hl-num {
   font-size: clamp(28px, 3vw, 36px);
   font-weight: 800;
-  color: var(--color-nuki-preto, #000);
+  color: var(--color-nuki-black, #000);
   line-height: 1;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
-.jornada .modulo-slide-hl-lbl {
+.deck .module-slide-hl-lbl {
   font-size: 11px;
-  color: var(--color-nuki-cinza-medio, #595959);
+  color: var(--color-nuki-gray-mid, #595959);
   max-width: 150px;
   line-height: 1.4;
   font-weight: 500;
 }
 
 /* CTA editorial "▷ Explorar" / "↗ Conheça" — mesmo peso e família do
-   "Saiba mais →" (.modulo-slide-link). Diferença é só o glyph e a semântica:
+   "Saiba mais →" (.module-slide-link). Diferença é só o glyph e a semântica:
    ▷ abre a demo embutida (iframe inline no /comercial), ↗ abre o produto real
    em nova aba, "Saiba mais" leva a uma página de recurso. Sem pílula, sem
    preenchimento — lê como link de fluxo, não como botão que compete com o
    conteúdo. Serve tanto <button> quanto <a> (seletor por classe). */
-.jornada .modulo-slide-cta {
+.deck .module-slide-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 0 0 2px;
   border: 0;
   background: transparent;
-  color: var(--color-nuki-preto, #000);
+  color: var(--color-nuki-black, #000);
   font-family: inherit;
   font-weight: 800;
   font-size: 14px;
@@ -856,78 +849,78 @@
     border-color 0.2s;
 }
 /* Linha de CTAs pro produto no ar — 1 no Planner, 2 no Personaliza. */
-.jornada .modulo-slide-ctas {
+.deck .module-slide-ctas {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 24px;
   margin-top: 12px;
 }
-.jornada .modulo-slide-ctas .modulo-slide-cta {
+.deck .module-slide-ctas .module-slide-cta {
   margin-top: 0;
 }
 /* Em telas estreitas os dois CTAs do Personaliza cabem numa linha só por 1px —
    empilha antes disso pra não ficar colado nas bordas. */
 @media (max-width: 620px) {
-  .jornada .modulo-slide-ctas {
+  .deck .module-slide-ctas {
     flex-direction: column;
     align-items: flex-start;
     gap: 14px;
   }
 }
-.jornada .modulo-slide-cta:hover {
-  color: var(--color-nuki-verde-02, #047676);
+.deck .module-slide-cta:hover {
+  color: var(--color-nuki-green-02, #047676);
   border-bottom-color: currentColor;
 }
-.jornada .modulo-slide-cta-glyph {
+.deck .module-slide-cta-glyph {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-nuki-verde-02, #047676);
+  color: var(--color-nuki-green-02, #047676);
   font-size: 11px;
   line-height: 1;
   transition: transform 0.2s;
 }
-.jornada .modulo-slide-cta:hover .modulo-slide-cta-glyph {
+.deck .module-slide-cta:hover .module-slide-cta-glyph {
   transform: translateX(2px);
 }
 
-.jornada .modulo-slide-link {
+.deck .module-slide-link {
   display: inline-block;
   margin-top: 12px;
   font-weight: 800;
   font-size: 14px;
-  color: var(--color-nuki-preto, #000);
+  color: var(--color-nuki-black, #000);
   text-decoration: none;
   transition: color 0.2s;
 }
-.jornada .modulo-slide-link:hover {
-  color: var(--color-nuki-verde-02, #047676);
+.deck .module-slide-link:hover {
+  color: var(--color-nuki-green-02, #047676);
 }
 
 /* -------- Coluna direita: stage do cross-fade -------- */
-.jornada .modulo-slide-shot {
+.deck .module-slide-shot {
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
-.jornada .modulo-slide-shot-stage {
+.deck .module-slide-shot-stage {
   position: relative;
   width: 100%;
   z-index: 1;
 }
-.jornada .modulo-slide.is-desktop .modulo-slide-shot-stage {
+.deck .module-slide.is-desktop .module-slide-shot-stage {
   aspect-ratio: 8 / 5;
   max-width: 1050px;
 }
-.jornada .modulo-slide.is-phone .modulo-slide-shot-stage {
+.deck .module-slide.is-phone .module-slide-shot-stage {
   aspect-ratio: 9 / 16;
   max-width: 360px;
   margin: 0 auto;
 }
 /* Glow verde-02 sutil atrás do phone (igual ao do jornada scrollytelling, escopado) */
-.jornada .modulo-slide.is-phone .modulo-slide-shot-stage::before {
+.deck .module-slide.is-phone .module-slide-shot-stage::before {
   content: "";
   position: absolute;
   inset: -12% -28%;
@@ -935,7 +928,7 @@
   background: radial-gradient(closest-side, rgba(4, 118, 118, 0.1), transparent 70%);
   pointer-events: none;
 }
-.jornada .modulo-slide-shot-slot {
+.deck .module-slide-shot-slot {
   position: absolute;
   inset: 0;
   opacity: 0;
@@ -943,32 +936,32 @@
   transition: opacity 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
   z-index: 1;
 }
-.jornada .modulo-slide-shot-slot.on {
+.deck .module-slide-shot-slot.is-active {
   opacity: 1;
 }
-.jornada .modulo-slide-shot-slot img {
+.deck .module-slide-shot-slot img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center;
   border-radius: 10px;
 }
-.jornada .modulo-slide.is-desktop .modulo-slide-shot-slot img {
+.deck .module-slide.is-desktop .module-slide-shot-slot img {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.04),
     0 6px 16px rgba(0, 0, 0, 0.08),
     0 24px 48px rgba(0, 0, 0, 0.08);
 }
-.jornada .modulo-slide.is-phone .modulo-slide-shot-slot img {
+.deck .module-slide.is-phone .module-slide-shot-slot img {
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.12))
     drop-shadow(0 24px 48px rgba(0, 0, 0, 0.2));
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jornada .modulo-slide-shot-slot {
+  .deck .module-slide-shot-slot {
     transition: none;
   }
-  .jornada .modulo-slide-detail-desc {
+  .deck .module-slide-detail-desc {
     animation: none;
   }
 }

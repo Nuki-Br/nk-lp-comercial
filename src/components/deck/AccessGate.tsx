@@ -60,20 +60,20 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
   if (unlocked) return <>{children}</>;
 
   return (
-    <div className="comercial-gate">
-      <form className="comercial-gate-card" onSubmit={submit}>
-        <span className="comercial-gate-tag">Acesso restrito</span>
-        <h1 className="comercial-gate-title">Apresentação comercial Nuki</h1>
-        <p className="comercial-gate-lead">
+    <div className="gate">
+      <form className="gate-card" onSubmit={submit}>
+        <span className="gate-tag">Acesso restrito</span>
+        <h1 className="gate-title">Apresentação comercial Nuki</h1>
+        <p className="gate-lead">
           Este conteúdo é exclusivo para o time Nuki. Informe a senha de acesso
           para continuar.
         </p>
-        <label className="comercial-gate-label" htmlFor="comercial-gate-input">
+        <label className="gate-label" htmlFor="comercial-gate-input">
           Senha
         </label>
         <input
           id="comercial-gate-input"
-          className={`comercial-gate-input${error ? " has-error" : ""}`}
+          className={`gate-input${error ? " has-error" : ""}`}
           type="password"
           autoComplete="current-password"
           autoFocus
@@ -85,11 +85,11 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
           placeholder="••••••••"
         />
         {error && (
-          <p className="comercial-gate-error" role="alert">
+          <p className="gate-error" role="alert">
             Senha incorreta. Tente novamente.
           </p>
         )}
-        <button type="submit" className="comercial-gate-btn">
+        <button type="submit" className="gate-submit">
           Entrar
         </button>
       </form>

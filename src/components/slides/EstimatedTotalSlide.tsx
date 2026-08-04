@@ -20,9 +20,9 @@ export function EstimatedTotalSlide() {
   const grandTotalDisplay = useCountUp(grandTotal);
 
   return (
-    <section className="cm-section total-estimado" id="total" data-reveal-group="">
-      <div className="cm-wrap">
-        <div className="cm-head">
+    <section className="slide estimated-total" id="total" data-reveal-group="">
+      <div className="slide-inner">
+        <div className="section-head">
           <p className="tag reveal">Total estimado</p>
           <h2 className="reveal">
             O investimento completo do seu <em>empreendimento.</em>
@@ -30,33 +30,33 @@ export function EstimatedTotalSlide() {
         </div>
 
         <div
-          className="total-estimado-card reveal"
+          className="estimated-total-card reveal"
           aria-label="Total estimado do empreendimento"
         >
-          <div className="total-estimado-grid">
-            <div className="total-estimado-line">
-              <span className="total-estimado-line-label">Setup de imagens</span>
-              <span className="total-estimado-line-value">
+          <div className="estimated-total-grid">
+            <div className="estimated-total-line">
+              <span className="estimated-total-line-label">Setup de imagens</span>
+              <span className="estimated-total-line-value">
                 {formatCurrency(imageCostDisplay)}
               </span>
-              <span className="total-estimado-line-hint">
+              <span className="estimated-total-line-hint">
                 {totals.imageCount.toLocaleString("pt-BR")} imagens estimadas
               </span>
             </div>
-            <div className="total-estimado-line">
-              <span className="total-estimado-line-label">Plataforma</span>
-              <span className="total-estimado-line-value">
+            <div className="estimated-total-line">
+              <span className="estimated-total-line-label">Plataforma</span>
+              <span className="estimated-total-line-value">
                 {formatCurrency(platformCostDisplay)}
               </span>
-              <span className="total-estimado-line-hint">
+              <span className="estimated-total-line-hint">
                 {totalMonths === 0
                   ? "configure os meses em Plano & contato"
                   : `${totalMonths} ${totalMonths === 1 ? "mês" : "meses"} de operação Nuki`}
               </span>
             </div>
-            <div className="total-estimado-total">
-              <span className="total-estimado-total-label">Total</span>
-              <span className="total-estimado-total-value">
+            <div className="estimated-total-sum">
+              <span className="estimated-total-sum-label">Total</span>
+              <span className="estimated-total-sum-value">
                 {formatCurrency(grandTotalDisplay)}
               </span>
             </div>
