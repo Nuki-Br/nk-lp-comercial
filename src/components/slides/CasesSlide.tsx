@@ -18,7 +18,7 @@ export function CasesSlide() {
             Construtoras que já <em>saíram da planilha.</em>
           </h2>
           <p className="lead reveal">
-            Construtoras que já organizaram o ciclo de personalização com a Nuki. Cases detalhados em breve.
+            Construtoras que já organizaram o ciclo de personalização com a Nuki.
           </p>
         </div>
 

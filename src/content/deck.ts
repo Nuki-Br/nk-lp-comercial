@@ -320,8 +320,8 @@ export const plans: Plan[] = [
   {
     n: "Plano único",
     items: ["Planner", "Personaliza", "Inspetor", "Infraestrutura", "Suporte"],
-    priceLabel: "R$ 1.150/mês",
-    monthlyPrice: 1150,
+    priceLabel: "R$ 1.599/mês",
+    monthlyPrice: 1599,
     featured: true,
   },
 ];

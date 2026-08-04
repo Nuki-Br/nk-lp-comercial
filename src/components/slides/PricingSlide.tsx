@@ -6,7 +6,7 @@ import { formatCurrency } from "@/lib/format";
 import { discountedMonthlyPrice } from "@/lib/pricing";
 import { useEstimate } from "@/components/deck/EstimateProvider";
 
-const MAX_MONTHS = 24;
+const MAX_MONTHS = 36;
 
 export function PricingSlide() {
   /* Meses/ciclo vivem no CalculadoraProvider — o CTA edita, a seção
