@@ -107,9 +107,13 @@ keyboard nav, the demo iframe's ESC bridge — are browser behavior that unit te
 would not catch anyway. `npm run check` plus the manual checklist in `AGENTS.md`
 is the guard.
 
-**The one exception worth revisiting:** if the pricing math is ever disputed in a
-sales call, extract it from `CalculatorSlide.tsx` into a pure module and test
-that single file. Not before.
+**The extraction happened; the tests did not.** When the calculator gained a
+second tariff (base image vs option image), the math moved out of
+`CalculatorSlide.tsx` into `src/lib/estimate.ts` — pure, React-free, and small
+enough to read in one sitting. That was for legibility, not for testability: the
+slide was already 850 lines. If the pricing is ever disputed in a sales call,
+that single file is now the thing to test, and it is the only file in the repo
+worth a test at all.
 
 ## 8. Committed demo artifact
 

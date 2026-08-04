@@ -168,20 +168,26 @@ export const fitList = [
    com Quartos + Banheiros; o user adiciona ambientes custom via
    "+ Adicionar ambiente" (nome + classificação seca/molhada).
 
+   Duas tarifas, porque a produção tem duas etapas:
+     - imagem BASE: o render do ambiente modelado em 3D. Uma por unidade de
+       ambiente (2 quartos = 2 modelagens). É a cara.
+     - imagem de OPÇÃO: recorte de material/acabamento sobre a base. Barata.
+
    Cálculo por ambiente:
-     imgs = ambiente.quantidade × ambiente.componentes × opcoes[classe]
+     base   = ambiente.quantidade × BASE_IMAGES_PER_ROOM_UNIT
+     opção  = ambiente.quantidade × ambiente.componentes × opcoes[classe]
    Onde opcoes[classe] vem dos inputs globais de "Opções por componente"
    separados em secas vs molhadas.
 
    Referência histórica dos números do orçamento Tecer/Manawa (R01, 27/06/2026)
    quando as unidades assumiam 3 opções por componente:
      Sala 10 · Dorm 10 · Escrit 10 · Cozinha 19 · Lavabo 20 · Banho 23
-     Lavanderia 17 · Varanda 18
+     Área de Serviço 17 · Terraço 18
    Não é mais fonte primária — serve só de sanity check pros defaults.
    ============================================================ */
 
 /** Classe do ambiente decide qual multiplicador de opções usar. Áreas
-    molhadas (banho, cozinha, lavanderia) oferecem mais superfícies
+    molhadas (banho, cozinha, Área de Serviço) oferecem mais superfícies
     personalizáveis do que secas (quartos, sala). */
 export type RoomAreaType = "seca" | "molhada";
 
@@ -245,7 +251,7 @@ export const CUSTOM_ROOM_DEFAULTS = {
     chip adiciona o ambient com nome + classe pré-preenchidos + defaults de
     peso/quantidade/componentes (via CUSTOM_AMBIENTE_DEFAULTS) — user pode
     editar depois nos controles do tile. Bate com a lista histórica de
-    referência: Sala/Cozinha/Lavabo/Lavanderia/Varanda. Cobre 3 molhadas +
+    referência: Sala/Cozinha/Lavabo/Área de Serviço/Terraço. Cobre 3 molhadas +
     2 secas — as combinações mais comuns em apto residencial. */
 export const ROOM_PRESETS: readonly {
   readonly name: string;
@@ -254,8 +260,8 @@ export const ROOM_PRESETS: readonly {
   { name: "Sala", areaType: "seca" },
   { name: "Lavabo", areaType: "molhada" },
   { name: "Cozinha", areaType: "molhada" },
-  { name: "Lavanderia", areaType: "molhada" },
-  { name: "Varanda", areaType: "seca" },
+  { name: "Área de Serviço", areaType: "molhada" },
+  { name: "Terraço", areaType: "seca" },
 ];
 
 export type UnitTypeState = {
@@ -266,12 +272,146 @@ export type UnitTypeState = {
   impactedRooms: ImpactedRooms;
 };
 
+/** Imagens base por unidade de ambiente. Cada unidade é uma cena 3D própria:
+    2 quartos = 2 modelagens = 2 imagens base. */
+export const BASE_IMAGES_PER_ROOM_UNIT = 1;
+
+/* ------------------------------------------------------------------
+   Presets de porte do empreendimento
+
+   Ponto de partida rápido numa reunião: um clique substitui o estado
+   inteiro da calculadora (metragens, ambientes, variações e opções por
+   componente) e o vendedor customiza a partir dali. Diferente de
+   ROOM_PRESETS, que adiciona um ambiente avulso à metragem ativa.
+   ------------------------------------------------------------------ */
+
+export type ProjectSizePreset = {
+  id: string;
+  /** rótulo no chip */
+  name: string;
+  /** sublabel estrutural. Nunca um total de imagens: ele muda junto com as
+      opções por componente e desatualizaria sozinho. */
+  hint: string;
+  dryOptions: number;
+  wetOptions: number;
+  /** Factory: o state é mutável, cada aplicação precisa de objetos novos.
+      Atribui ids 1..N — a Calculadora reposiciona o contador de ids em cima
+      disso pra não colidir no "+ Adicionar" seguinte. */
+  buildUnitTypes: () => UnitTypeState[];
+};
+
+/** Ambientes de preset são todos de 1 unidade e removíveis (sem `locked`) —
+    o preset lista "Quarto 01" e "Quarto 02" como ambientes próprios em vez de
+    um "Quartos" com quantidade 2, pra que cada um possa ter componentes
+    diferentes. O peso sai da contagem de componentes, que é o que o tile está
+    de fato representando: ≤3 leve, 4-6 médio, 7+ pesado. */
+const room = (
+  id: string,
+  name: string,
+  areaType: RoomAreaType,
+  components: number,
+): RoomConfig => ({
+  id,
+  name,
+  areaType,
+  weight: components <= 3 ? "light" : components <= 6 ? "medium" : "heavy",
+  units: 1,
+  components,
+});
+
+/* Componentes por ambiente derivados da referência Tecer/Manawa do topo deste
+   bloco (contagem de imagens a 3 opções ÷ 3). Hall Privativo, Banheiro de
+   Serviço e Cozinha/Sala integrada não estão na referência — são estimativas. */
+const studioRooms = (): RoomConfig[] => [
+  room("cozinha-sala", "Cozinha/Sala", "molhada", 8),
+  room("quarto", "Quarto", "seca", 3),
+  room("banheiro", "Banheiro", "molhada", 8),
+  room("area-de-servico", "Área de Serviço", "molhada", 6),
+];
+
+const standardRooms = (): RoomConfig[] => [
+  room("cozinha", "Cozinha", "molhada", 6),
+  room("quarto-01", "Quarto 01", "seca", 3),
+  room("quarto-02", "Quarto 02", "seca", 3),
+  room("banheiro-01", "Banheiro 01", "molhada", 8),
+  room("banheiro-02", "Banheiro 02", "molhada", 8),
+  room("lavabo", "Lavabo", "molhada", 7),
+  room("area-de-servico", "Área de Serviço", "molhada", 6),
+  room("terraco", "Terraço", "seca", 6),
+  room("sala-de-estar", "Sala de Estar", "seca", 4),
+];
+
+const highEndRooms = (): RoomConfig[] => [
+  room("hall-privativo", "Hall Privativo", "seca", 3),
+  room("cozinha", "Cozinha", "molhada", 6),
+  room("quarto-01", "Quarto 01", "seca", 3),
+  room("quarto-02", "Quarto 02", "seca", 3),
+  room("quarto-03", "Quarto 03", "seca", 3),
+  room("quarto-04", "Quarto 04", "seca", 3),
+  room("banheiro-01", "Banheiro 01", "molhada", 8),
+  room("banheiro-02", "Banheiro 02", "molhada", 8),
+  room("banheiro-03", "Banheiro 03", "molhada", 8),
+  room("banheiro-04", "Banheiro 04", "molhada", 8),
+  room("banheiro-de-servico", "Banheiro de Serviço", "molhada", 5),
+  room("lavabo", "Lavabo", "molhada", 7),
+  room("area-de-servico", "Área de Serviço", "molhada", 6),
+  room("terraco", "Terraço", "seca", 6),
+  room("sala-de-estar", "Sala de Estar", "seca", 4),
+];
+
+/** Metragens de composição idêntica dentro de um preset — o vendedor
+    diferencia depois. `variants` conta a planta base junto: base + N extras.
+    Sem nenhum ambiente marcado como impactado as variações extras renderiam
+    0 imagens e os cards apareceriam vazios. */
+const sameUnitTypes = (
+  count: number,
+  rooms: () => RoomConfig[],
+  variants: number,
+  impacted: string[],
+): UnitTypeState[] =>
+  Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    rooms: rooms(),
+    variants,
+    impactedRooms: Object.fromEntries(impacted.map((id) => [id, true])),
+  }));
+
+export const PROJECT_SIZE_PRESETS: readonly ProjectSizePreset[] = [
+  {
+    id: "studio",
+    name: "Studio",
+    hint: "2 metragens · 4 ambientes",
+    dryOptions: 3,
+    wetOptions: 3,
+    buildUnitTypes: () => sameUnitTypes(2, studioRooms, 2, ["cozinha-sala"]),
+  },
+  {
+    id: "standard",
+    name: "Padrão",
+    hint: "3 metragens · 9 ambientes",
+    dryOptions: 3,
+    wetOptions: 3,
+    buildUnitTypes: () => sameUnitTypes(3, standardRooms, 3, ["sala-de-estar", "cozinha"]),
+  },
+  {
+    id: "high-end",
+    name: "Alto padrão",
+    hint: "4 metragens · 15 ambientes",
+    dryOptions: 3,
+    wetOptions: 3,
+    buildUnitTypes: () => sameUnitTypes(4, highEndRooms, 5, ["sala-de-estar", "cozinha"]),
+  },
+];
+
 export const ESTIMATE_DEFAULTS = {
   dryOptions: 3,
   wetOptions: 3,
-  /** Valor por imagem em R$. Não é editável na UI do cliente — só via painel
-      escondido (Ctrl+Alt+K). Ver Calculadora.tsx. */
-  pricePerImage: 28,
+  /** Valor em R$ da imagem base — o render do ambiente modelado em 3D.
+      Não é editável na UI do cliente, só via painel escondido (Ctrl+Alt+K). */
+  baseImagePrice: 84,
+  /** Valor em R$ da imagem de opção — recorte de material/acabamento sobre a
+      imagem base, por isso mais barata. Mesmo painel escondido. */
+  optionImagePrice: 28,
   initialUnitTypes: (): UnitTypeState[] => [
     {
       id: 1,
@@ -285,11 +425,14 @@ export const ESTIMATE_DEFAULTS = {
 export const ESTIMATE_RANGES = {
   units: { min: 0, max: 5 },
   components: { min: 1, max: 15 },
-  variants: { min: 1, max: 3 },
+  /** Máximo 5 = planta base + 4 variações extras, o que o preset Alto padrão
+      monta. O seletor de variações desenha uma pill por valor deste intervalo. */
+  variants: { min: 1, max: 5 },
   unitTypes: { min: 1, max: 6 },
   dryOptions: { min: 1, max: 6 },
   wetOptions: { min: 1, max: 8 },
-  pricePerImage: { min: 1, max: 999 },
+  baseImagePrice: { min: 1, max: 9999 },
+  optionImagePrice: { min: 1, max: 999 },
 };
 
 export type Plan = {

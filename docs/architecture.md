@@ -82,20 +82,42 @@ this repo renders `.module`; the selector matches nothing and can go.
 `CalculatorSlide` computes and publishes; `PricingSlide` edits the plan side;
 `EstimatedTotalSlide` only reads.
 
+Images come in two tiers, because production has two steps. Modelling a room in
+3D yields one **base image** per room unit; every finish option after that is a
+material crop over that render, so it is much cheaper. The math lives in
+`src/lib/estimate.ts` — a pure module, no React — and `CalculatorSlide` only
+renders it.
+
 ```
-unit types × rooms × components × options  ──► image count
-image count × price per image             ──► image cost      ─┐
-                                                                ├─► grand total
-months per plan × discounted monthly price ──► platform cost   ─┘
+unit types × rooms × units                 ──► base images   ─┐
+   … × components × options                ──► option images ─┤
+base × base price + option × option price  ──► image cost    ─┼─► grand total
+months per plan × discounted monthly price ──► platform cost ─┘
 ```
 
-At the default state this is **42 images / R$ 1.176** — the fastest smoke test
-that the calculator and the context wiring both still work.
+At the default state this is **45 images (3 base + 42 option) / R$ 1.428** — the
+fastest smoke test that the calculator and the context wiring both still work.
 
-`pricePerImage` (R$ 28) is not editable in the client-facing UI. It is behind a
-hidden admin panel on `Ctrl+Alt+K`, so a salesperson can adjust it live during a
-pitch. The handler matches on `e.code === "KeyK"`, not `e.key`, because Option on
-macOS rewrites `e.key` to a dead key.
+Watch the word "base": `ImageMix.base` is the 3D render tier, while a variant
+card's `mode: "main"` is the first floor-plan variant (Variação 01). They are
+orthogonal axes and the old code called the second one `base` too.
+
+Neither price is editable in the client-facing UI. Both (`baseImagePrice` R$ 84,
+`optionImagePrice` R$ 28) are behind a hidden admin panel on `Ctrl+Alt+K`, so a
+salesperson can adjust them live during a pitch. The handler matches on
+`e.code === "KeyK"`, not `e.key`, because Option on macOS rewrites `e.key` to a
+dead key.
+
+`PROJECT_SIZE_PRESETS` (Studio / Padrão / Alto padrão) replace the whole
+calculator state in one click. Applying one re-seeds `nextIdRef` past the ids the
+preset used; the highlight clears on the first edit, so a lit chip never claims a
+state the user has already changed.
+
+Preset rooms are one unit each and unlocked — the list says "Quarto 01" and
+"Quarto 02" rather than a "Quartos" with `units: 2`, so each can carry its own
+component count. `variants` counts the base plan: `variants: 5` is base plus four
+extras. The ceiling lives in `ESTIMATE_RANGES.variants` and the pill selector
+derives from it, so raising it again needs no JSX or CSS change.
 
 `CalculatorSlide` publishes into context from a `useEffect`. That is a deliberate
 sync of derived state between sibling sections; the alternative was lifting the

@@ -609,27 +609,29 @@ html.demo-locked body {
   flex-direction: column;
   gap: 20px;
 }
+/* Duas colunas, uma por campo. Era repeat(3, …) de quando o input de valor
+   por imagem morava aqui — ele migrou pro painel escondido e a terceira
+   coluna ficava vazia, encolhendo os dois steppers. */
 .deck .calc-global-bar {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   align-items: end;
 }
-.deck .calc-global-bar .calc-money,
 .deck .calc-global-bar .calc-stepper {
   width: 100%;
   max-width: 100%;
+  /* os 3 filhos do stepper são fixos (44 + 40 + 44) e sem flex-grow: sem
+     isso a pill estica e o número fica encostado à esquerda, com um vão
+     morto à direita. */
+  justify-content: space-between;
 }
-.deck .calc-global-bar .calc-money input {
-  width: 100%;
-  min-width: 0;
+.deck .calc-global-bar .calc-stepper-value {
+  flex: 1;
 }
 @media (max-width: 640px) {
   .deck .calc-global-bar {
-    grid-template-columns: 1fr 1fr;
-  }
-  .deck .calc-global-bar .calc-field:last-child {
-    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
   }
 }
 .deck .calc-field {
@@ -658,6 +660,67 @@ html.demo-locked body {
   color: var(--color-nuki-gray-7, #8c8c8c);
   margin: 4px 0 0;
   line-height: 1.4;
+}
+
+/* -------- Presets de porte --------
+   Ponto de partida da reunião: um clique reconfigura a calculadora inteira.
+   Mesma gramática do chip de ambiente (nome bold + sublabel uppercase), mas
+   com estado selecionado — aqui o clique afirma "é este porte", enquanto o
+   chip de ambiente só dispara uma ação e volta. */
+.deck .calc-preset-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.deck .calc-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-nuki-gray-divider, #f0f0f0);
+  background: var(--color-nuki-white, #fff);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s,
+    transform 0.15s;
+}
+.deck .calc-preset:hover {
+  border-color: var(--color-nuki-green-02, #047676);
+  background: rgba(4, 118, 118, 0.06);
+  transform: translateY(-1px);
+}
+.deck .calc-preset-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-nuki-black, #000);
+}
+.deck .calc-preset-hint {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: var(--color-nuki-gray-mid, #595959);
+}
+.deck .calc-preset.is-active {
+  background: var(--color-nuki-black, #000);
+  border-color: var(--color-nuki-black, #000);
+}
+.deck .calc-preset.is-active .calc-preset-name {
+  color: var(--color-nuki-white, #fff);
+}
+.deck .calc-preset.is-active .calc-preset-hint {
+  color: rgba(255, 255, 255, 0.6);
+}
+@media (max-width: 640px) {
+  .deck .calc-preset-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* -------- Tabs de metragens -------- */
@@ -1151,14 +1214,13 @@ html.demo-locked body {
   text-overflow: ellipsis;
 }
 
-/* pill group — tipologias, variação */
+/* pill group — variações. Uma coluna por pill, sem contagem fixa: o número de
+   variações sai de ESTIMATE_RANGES e já mudou de 3 pra 5 uma vez. */
 .deck .calc-pills {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 6px;
-}
-.deck .calc-pills-wide {
-  grid-template-columns: repeat(3, 1fr);
 }
 .deck .calc-pill {
   display: inline-flex;
@@ -1539,6 +1601,16 @@ html.demo-locked body {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.65);
   letter-spacing: 0.02em;
+}
+/* Quebra do total nas duas tarifas. Mais apagada que o label: é referência,
+   não headline. */
+.deck .calc-out-mix {
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.42);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 .deck .calc-out-divider {
   width: 1px;

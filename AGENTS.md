@@ -81,14 +81,17 @@ npm run check && npm run build
 
 `check` = typecheck + lint. There are no tests, deliberately — a static deck
 whose only logic is the estimate calculator has near-zero unit-test ROI. Do not
-scaffold a test framework. (If the pricing math is ever disputed in a sales call,
-extract it from `CalculatorSlide.tsx` into a pure module and test that one file.)
+scaffold a test framework. (The pricing math already lives in a pure module,
+`src/lib/estimate.ts` — if it is ever disputed in a sales call, that one file is
+the thing to test.)
 
 Most of this deck is browser behavior that typecheck cannot see. After any change
 to `DeckBehaviors`, the calculator or the demo slide, load `localhost:3000` and
 check: the gate, arrow-key navigation across all 13 anchors, the reveal stagger,
 the Inspetor iframe (including ESC from inside it), and the estimate propagating
-to the closing frame. At defaults it must read **42 imagens / R$ 1.176**.
+to the closing frame. At defaults it must read **45 imagens (3 base · 42 de
+opção) / R$ 1.428**. Also click each of the three porte presets — Studio 208,
+Padrão 678, Alto padrão 1.544 imagens.
 
 > Note for browser-driving agents: `useCountUp` animates with
 > `requestAnimationFrame`, which does not fire in a hidden tab. In a headless or

@@ -70,7 +70,7 @@ shipped unpatched. See `docs/demo-embedding.md`.
 3. Domain assigned.
 4. On the deployed URL: the gate appears; the password unlocks and survives a
    reload; arrow keys walk all 13 anchors; the Inspetor demo iframe loads and
-   ESC pressed *inside* it exits; the estimate reads 42 imagens / R$ 1.176 at
+   ESC pressed *inside* it exits; the estimate reads 45 imagens / R$ 1.428 at
    defaults.
 5. Network tab on a full scroll-through shows **zero** third-party requests. That
    is the whole reason this repo exists — if anything appears, something

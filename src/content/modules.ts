@@ -123,7 +123,7 @@ export const modules: ModuleData[] = [
       {
         title: "Começa pela planta ideal",
         description:
-          "O cliente filtra por preferência — quartos, suítes, varanda, cozinha — e já escolhe a tipologia que combina com o estilo de vida dele.",
+          "O cliente filtra por preferência — quartos, suítes, terraço, cozinha — e já escolhe a tipologia que combina com o estilo de vida dele.",
         shot: {
           base: "personaliza-planta",
           kind: "desktop",

@@ -5,117 +5,33 @@ import {
   buildDefaultRooms,
   noImpactedRooms,
   ROOM_PRESETS,
+  PROJECT_SIZE_PRESETS,
   ESTIMATE_DEFAULTS,
   ESTIMATE_RANGES,
   CUSTOM_ROOM_DEFAULTS,
+  type ProjectSizePreset,
   type RoomAreaType,
   type RoomConfig,
-  type RoomWeight,
   type UnitTypeState,
 } from "@/content/deck";
 import { Stepper } from "@/components/ui/Stepper";
 import { useCountUp } from "@/hooks/useCountUp";
 import { formatCurrency, clamp } from "@/lib/format";
+import {
+  computeEstimate,
+  estimateCost,
+  type ImageMix,
+  type RoomUnit,
+  type UnitTypeBreakdown,
+} from "@/lib/estimate";
 import { useEstimate } from "@/components/deck/EstimateProvider";
 
-/* ============ TIPOS AUXILIARES ============ */
-
-type RoomUnit = {
-  key: string;
-  label: string;
-  weight: RoomWeight;
-  images: number;
-};
-
-type UnitTypeBreakdown = {
-  /** Composição completa da metragem — os tiles da Variação 01 */
-  rooms: RoomUnit[];
-  /** Subset re-renderizado a cada variação extra — os tiles da Variação 02+ */
-  impactedRooms: RoomUnit[];
-  /** Imgs da composição base (Var 01) */
-  base: number;
-  /** Imgs re-renderizadas por variação extra (soma dos impactados) */
-  imagesPerExtraVariant: number;
-  /** Imgs de todas as variações extras somadas */
-  extraVariantImages: number;
-  /** Total da metragem (base + extrasTotal) */
-  total: number;
-};
-
-/* ============ HELPERS DE CÁLCULO ============ */
-
-function optionsForArea(areaType: RoomAreaType, dryOptions: number, wetOptions: number): number {
-  return areaType === "seca" ? dryOptions : wetOptions;
-}
-
-/** Rotula a n-ésima unidade de um ambiente. Se quantidade = 1, usa o nome
-    inteiro (Sala, Cozinha, Home Office...). Se quantidade > 1, usa a
-    primeira letra maiúscula + índice (Q1, Q2, B1, B2, S1...). */
-function roomUnitLabel(a: RoomConfig, i: number): string {
-  if (a.units === 1) return a.name;
-  const first = a.name.trim().charAt(0).toUpperCase() || "A";
-  return `${first}${i}`;
-}
-
-function buildRoomUnits(
-  m: UnitTypeState,
-  dryOptions: number,
-  wetOptions: number,
-): RoomUnit[] {
-  const list: RoomUnit[] = [];
-  m.rooms.forEach((a) => {
-    if (a.units <= 0) return;
-    const imgsPerUnit = a.components * optionsForArea(a.areaType, dryOptions, wetOptions);
-    for (let i = 1; i <= a.units; i++) {
-      list.push({
-        key: a.units === 1 ? a.id : `${a.id}-${i}`,
-        label: roomUnitLabel(a, i),
-        weight: a.weight,
-        images: imgsPerUnit,
-      });
-    }
-  });
-  return list;
-}
-
-/** Constrói os tiles de "ambientes impactados" — 1 unidade por ambient
-    marcado, na ordem em que aparecem na lista da metragem. É o que
-    aparece nos cards de Variação 02+, representando o subset que muda
-    entre variações. Usa os componentes definidos na config do ambient. */
-function buildImpactedRoomUnits(
-  m: UnitTypeState,
-  dryOptions: number,
-  wetOptions: number,
-): RoomUnit[] {
-  return m.rooms
-    .filter((a) => m.impactedRooms[a.id])
-    .map((a) => ({
-      key: `impacto-${a.id}`,
-      label: a.name,
-      weight: a.weight,
-      images: a.components * optionsForArea(a.areaType, dryOptions, wetOptions),
-    }));
-}
-
-function computeUnitType(
-  m: UnitTypeState,
-  dryOptions: number,
-  wetOptions: number,
-): UnitTypeBreakdown {
-  const rooms = buildRoomUnits(m, dryOptions, wetOptions);
-  const impactedRooms = buildImpactedRoomUnits(m, dryOptions, wetOptions);
-  const base = rooms.reduce((acc, a) => acc + a.images, 0);
-  const imagesPerExtraVariant = impactedRooms.reduce((acc, a) => acc + a.images, 0);
-  const extraVariantImages = (m.variants - 1) * imagesPerExtraVariant;
-  return {
-    rooms,
-    impactedRooms,
-    base,
-    imagesPerExtraVariant,
-    extraVariantImages,
-    total: base + extraVariantImages,
-  };
-}
+/* Uma pill por variação possível. Sai do range em vez de ser literal, senão o
+   seletor para em 3 e nenhum preset com mais variações fica editável. */
+const VARIANT_CHOICES = Array.from(
+  { length: ESTIMATE_RANGES.variants.max - ESTIMATE_RANGES.variants.min + 1 },
+  (_, i) => ESTIMATE_RANGES.variants.min + i,
+);
 
 /* ============ COMPONENTE PRINCIPAL ============ */
 
@@ -131,12 +47,16 @@ type AddRoomState =
 export function CalculatorSlide() {
   const [dryOptions, setOpcoesSecas] = useState(ESTIMATE_DEFAULTS.dryOptions);
   const [wetOptions, setOpcoesMolhadas] = useState(ESTIMATE_DEFAULTS.wetOptions);
-  const [pricePerImage, setPricePerImage] = useState(ESTIMATE_DEFAULTS.pricePerImage);
+  const [baseImagePrice, setBaseImagePrice] = useState(ESTIMATE_DEFAULTS.baseImagePrice);
+  const [optionImagePrice, setOptionImagePrice] = useState(ESTIMATE_DEFAULTS.optionImagePrice);
   const [unitTypes, setMetragens] = useState<UnitTypeState[]>(() =>
     ESTIMATE_DEFAULTS.initialUnitTypes(),
   );
   const [activeUnitTypeIndex, setMetragemAtiva] = useState(0);
   const [addingAmbiente, setAddingAmbiente] = useState<AddRoomState>(null);
+  /** Preset de porte aplicado por último. Volta pra null na primeira edição —
+      o chip aceso não pode afirmar um estado que o user já mexeu. */
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
   /** Painel escondido de config da apresentação. Toggle via Ctrl+Alt+K,
       fecha com ESC. Nunca visível ao cliente sem o atalho. */
   const [adminOpen, setAdminOpen] = useState(false);
@@ -166,9 +86,10 @@ export function CalculatorSlide() {
     return () => window.removeEventListener("keydown", onKey);
   }, [adminOpen]);
 
-  const unitTypeBreakdowns = unitTypes.map((m) => ({ m, calc: computeUnitType(m, dryOptions, wetOptions) }));
-  const imageCount = unitTypeBreakdowns.reduce((a, { calc }) => a + calc.total, 0);
-  const totalImageCost = imageCount * pricePerImage;
+  const { breakdowns, total: imageMix } = computeEstimate(unitTypes, { dryOptions, wetOptions });
+  const unitTypeBreakdowns = unitTypes.map((m, i) => ({ m, calc: breakdowns[i] }));
+  const imageCount = imageMix.total;
+  const totalImageCost = estimateCost(imageMix, { baseImagePrice, optionImagePrice });
 
   const imageCountDisplay = useCountUp(imageCount);
   const costDisplay = useCountUp(totalImageCost);
@@ -186,6 +107,39 @@ export function CalculatorSlide() {
 
   /* ============ MUTATORS ============ */
 
+  /* Todo caminho que altera as metragens passa por aqui, pra apagar o chip de
+     preset junto. Selecionar outra metragem NÃO passa — trocar de aba não é
+     editar, o preset continua descrevendo o estado. */
+  const mutate = (fn: (prev: UnitTypeState[]) => UnitTypeState[]) => {
+    setActivePresetId(null);
+    setMetragens(fn);
+  };
+
+  /* Aplica um preset de porte: substitui o estado inteiro da calculadora e
+     devolve o vendedor pra primeira metragem. `nextIdRef` precisa pular os
+     ids que o preset já usou — sem isso um "+ Adicionar" depois do Alto
+     padrão (ids 1 e 2) geraria um id 2 duplicado e quebraria as React keys. */
+  const applyPreset = (preset: ProjectSizePreset) => {
+    const next = preset.buildUnitTypes();
+    setMetragens(next);
+    nextIdRef.current = next.length + 1;
+    setMetragemAtiva(0);
+    setOpcoesSecas(preset.dryOptions);
+    setOpcoesMolhadas(preset.wetOptions);
+    setAddingAmbiente(null);
+    setActivePresetId(preset.id);
+  };
+
+  const changeDryOptions = (v: number) => {
+    setActivePresetId(null);
+    setOpcoesSecas(v);
+  };
+
+  const changeWetOptions = (v: number) => {
+    setActivePresetId(null);
+    setOpcoesMolhadas(v);
+  };
+
   /* Selecionar outra metragem também fecha um eventual form de add-ambient
      aberto — evita que o form migre pra metragem errada sem intenção. */
   const selectMetragem = (idx: number) => {
@@ -194,13 +148,11 @@ export function CalculatorSlide() {
   };
 
   const updateAtiva = (patch: Partial<UnitTypeState>) => {
-    setMetragens((prev) =>
-      prev.map((m, i) => (i === activeUnitTypeIndex ? { ...m, ...patch } : m)),
-    );
+    mutate((prev) => prev.map((m, i) => (i === activeUnitTypeIndex ? { ...m, ...patch } : m)));
   };
 
   const updateAmbiente = (id: string, patch: Partial<RoomConfig>) => {
-    setMetragens((prev) =>
+    mutate((prev) =>
       prev.map((m, i) =>
         i === activeUnitTypeIndex
           ? {
@@ -213,7 +165,7 @@ export function CalculatorSlide() {
   };
 
   const removeAmbiente = (id: string) => {
-    setMetragens((prev) =>
+    mutate((prev) =>
       prev.map((m, i) =>
         i === activeUnitTypeIndex
           ? {
@@ -244,7 +196,7 @@ export function CalculatorSlide() {
       units: CUSTOM_ROOM_DEFAULTS.units,
       components: CUSTOM_ROOM_DEFAULTS.components,
     };
-    setMetragens((prev) =>
+    mutate((prev) =>
       prev.map((m, i) =>
         i === activeUnitTypeIndex ? { ...m, rooms: [...m.rooms, updated] } : m,
       ),
@@ -258,7 +210,7 @@ export function CalculatorSlide() {
   };
 
   const toggleImpacto = (id: string) => {
-    setMetragens((prev) =>
+    mutate((prev) =>
       prev.map((m, i) =>
         i === activeUnitTypeIndex
           ? {
@@ -282,7 +234,7 @@ export function CalculatorSlide() {
       variants: 1,
       impactedRooms: noImpactedRooms(),
     };
-    setMetragens((prev) =>
+    mutate((prev) =>
       prev.length >= ESTIMATE_RANGES.unitTypes.max ? prev : [...prev, updated],
     );
     setMetragemAtiva(Math.min(unitTypes.length, ESTIMATE_RANGES.unitTypes.max - 1));
@@ -291,7 +243,7 @@ export function CalculatorSlide() {
 
   const removeMetragem = (idx: number) => {
     if (unitTypes.length <= ESTIMATE_RANGES.unitTypes.min) return;
-    setMetragens((prev) =>
+    mutate((prev) =>
       prev.length <= ESTIMATE_RANGES.unitTypes.min ? prev : prev.filter((_, i) => i !== idx),
     );
     setMetragemAtiva((prev) => {
@@ -324,22 +276,44 @@ export function CalculatorSlide() {
             </button>
           </div>
           <div className="calc-admin-field">
-            <label className="calc-admin-label" htmlFor="calc-admin-vpi">
-              Valor por imagem (R$)
+            <label className="calc-admin-label" htmlFor="calc-admin-base-price">
+              Valor da imagem base (R$)
             </label>
             <input
-              id="calc-admin-vpi"
+              id="calc-admin-base-price"
               type="number"
-              min={ESTIMATE_RANGES.pricePerImage.min}
-              max={ESTIMATE_RANGES.pricePerImage.max}
+              min={ESTIMATE_RANGES.baseImagePrice.min}
+              max={ESTIMATE_RANGES.baseImagePrice.max}
               step={1}
-              value={pricePerImage}
+              value={baseImagePrice}
               onChange={(e) =>
-                setPricePerImage(
+                setBaseImagePrice(
                   clamp(
                     parseInt(e.target.value, 10) || 1,
-                    ESTIMATE_RANGES.pricePerImage.min,
-                    ESTIMATE_RANGES.pricePerImage.max,
+                    ESTIMATE_RANGES.baseImagePrice.min,
+                    ESTIMATE_RANGES.baseImagePrice.max,
+                  ),
+                )
+              }
+            />
+          </div>
+          <div className="calc-admin-field">
+            <label className="calc-admin-label" htmlFor="calc-admin-option-price">
+              Valor da imagem de opção (R$)
+            </label>
+            <input
+              id="calc-admin-option-price"
+              type="number"
+              min={ESTIMATE_RANGES.optionImagePrice.min}
+              max={ESTIMATE_RANGES.optionImagePrice.max}
+              step={1}
+              value={optionImagePrice}
+              onChange={(e) =>
+                setOptionImagePrice(
+                  clamp(
+                    parseInt(e.target.value, 10) || 1,
+                    ESTIMATE_RANGES.optionImagePrice.min,
+                    ESTIMATE_RANGES.optionImagePrice.max,
                   ),
                 )
               }
@@ -357,13 +331,37 @@ export function CalculatorSlide() {
             <em>vai precisar.</em>
           </h2>
           <p className="lead reveal">
-            Configure cada metragem por ambiente — quantidade e componentes personalizáveis. Comece com quartos e banheiros e adicione o que faltar. A calculadora escala com o tamanho do seu catálogo de acabamentos.
+            Cada ambiente é modelado em 3D uma vez — dessa modelagem sai a <em>imagem base</em>. As opções de acabamento são recortes de material sobre ela, e por isso custam bem menos. Escolha um ponto de partida e ajuste ambiente por ambiente.
           </p>
         </div>
 
         <div className="calc-grid reveal">
           {/* ============ INPUTS ============ */}
           <div className="calc-inputs">
+            {/* Presets de porte — substituem o estado inteiro da calculadora */}
+            <div className="calc-field calc-presets">
+              <label className="calc-label calc-label-sm">Ponto de partida</label>
+              <div
+                className="calc-preset-list"
+                role="radiogroup"
+                aria-label="Porte do empreendimento"
+              >
+                {PROJECT_SIZE_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={activePresetId === preset.id}
+                    className={`calc-preset${activePresetId === preset.id ? " is-active" : ""}`}
+                    onClick={() => applyPreset(preset)}
+                  >
+                    <span className="calc-preset-name">{preset.name}</span>
+                    <span className="calc-preset-hint">{preset.hint}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Bar global */}
             <div className="calc-global-bar">
               <div className="calc-field">
@@ -372,7 +370,7 @@ export function CalculatorSlide() {
                   value={dryOptions}
                   min={ESTIMATE_RANGES.dryOptions.min}
                   max={ESTIMATE_RANGES.dryOptions.max}
-                  onChange={setOpcoesSecas}
+                  onChange={changeDryOptions}
                   ariaLabel="Opções por componente em áreas secas"
                 />
               </div>
@@ -382,7 +380,7 @@ export function CalculatorSlide() {
                   value={wetOptions}
                   min={ESTIMATE_RANGES.wetOptions.min}
                   max={ESTIMATE_RANGES.wetOptions.max}
-                  onChange={setOpcoesMolhadas}
+                  onChange={changeWetOptions}
                   ariaLabel="Opções por componente em áreas molhadas"
                 />
               </div>
@@ -465,8 +463,8 @@ export function CalculatorSlide() {
 
                 <div className="calc-field">
                   <label className="calc-label">Variações desta metragem</label>
-                  <div className="calc-pills calc-pills-wide" role="radiogroup" aria-label="Variações">
-                    {[1, 2, 3].map((n) => (
+                  <div className="calc-pills" role="radiogroup" aria-label="Variações">
+                    {VARIANT_CHOICES.map((n) => (
                       <button
                         key={n}
                         type="button"
@@ -486,7 +484,7 @@ export function CalculatorSlide() {
                     <div className="calc-axes-head">
                       <label className="calc-label">Ambientes impactados nas variações</label>
                       <p className="calc-axes-hint">
-                        1 unidade de cada ambiente marcado entra de novo na contagem por variação extra, usando os componentes configurados acima.
+                        Layout novo é modelagem nova: 1 unidade de cada ambiente marcado entra de novo na contagem por variação extra — com a imagem base dela e os componentes configurados acima.
                       </p>
                     </div>
                     <div className="calc-axes-grid">
@@ -529,6 +527,11 @@ export function CalculatorSlide() {
                   {imageCountDisplay.toLocaleString("pt-BR")}
                 </span>
                 <span className="calc-out-label">imagens necessárias</span>
+                {/* Sem useCountUp: legenda com número animado vira ruído. */}
+                <span className="calc-out-mix">
+                  {imageMix.base.toLocaleString("pt-BR")} base ·{" "}
+                  {imageMix.option.toLocaleString("pt-BR")} de opção
+                </span>
               </div>
               <div className="calc-out-divider" aria-hidden="true" />
               <div className="calc-out-block">
@@ -554,8 +557,12 @@ export function CalculatorSlide() {
               {activeBreakdown && (
                 <>
                   {" "}
-                  Metragem {String(activeUnitTypeIndex + 1).padStart(2, "0")}: {activeBreakdown.base} base
-                  {activeBreakdown.extraVariantImages > 0 && ` + ${activeBreakdown.extraVariantImages} das variações`}.
+                  Metragem {String(activeUnitTypeIndex + 1).padStart(2, "0")}:{" "}
+                  {activeBreakdown.total.total} imgs ({activeBreakdown.total.base} base ·{" "}
+                  {activeBreakdown.total.option} de opção)
+                  {activeBreakdown.extraVariants.total > 0 &&
+                    `, sendo ${activeBreakdown.extraVariants.total} das variações`}
+                  .
                 </>
               )}
             </p>
@@ -773,18 +780,20 @@ function UnitTypeGroup({
     >
       <header className="unit-type-group-head">
         <span className="unit-type-group-index">Metragem {String(index + 1).padStart(2, "0")}</span>
-        <span className="unit-type-group-images">{calc.total.toLocaleString("pt-BR")} imagens</span>
+        <span className="unit-type-group-images">
+          {calc.total.total.toLocaleString("pt-BR")} imagens
+        </span>
       </header>
       <div className="unit-type-group-cards">
         {Array.from({ length: unitType.variants }, (_, v) => {
-          const isBase = v === 0;
+          const isMain = v === 0;
           return (
             <VariantCard
               key={v}
               variantIndex={v + 1}
-              mode={isBase ? "base" : "extras"}
-              rooms={isBase ? calc.rooms : calc.impactedRooms}
-              images={isBase ? calc.base : calc.imagesPerExtraVariant}
+              mode={isMain ? "main" : "extras"}
+              rooms={isMain ? calc.rooms : calc.impactedRooms}
+              images={isMain ? calc.mainVariant : calc.perExtraVariant}
             />
           );
         })}
@@ -793,6 +802,9 @@ function UnitTypeGroup({
   );
 }
 
+/** `mode` distingue a Variação 01 (composição completa) das 02+ (só os
+    ambientes impactados). Nada a ver com "imagem base" — essa é uma das duas
+    tarifas e aparece em `images.base`. */
 function VariantCard({
   variantIndex,
   mode,
@@ -800,27 +812,31 @@ function VariantCard({
   images,
 }: {
   variantIndex: number;
-  mode: "base" | "extras";
+  mode: "main" | "extras";
   rooms: RoomUnit[];
-  images: number;
+  images: ImageMix;
 }) {
-  const isBase = mode === "base";
+  const isMain = mode === "main";
   return (
     <article className={`variant-card variant-card-${mode}`} role="listitem">
       <header className="variant-head">
         <span className="variant-index">
           Variação {String(variantIndex).padStart(2, "0")}
-          {!isBase && <span className="variant-tag">apenas ambientes impactados</span>}
+          {!isMain && <span className="variant-tag">apenas ambientes impactados</span>}
         </span>
         <span className="variant-images">
-          {isBase ? "" : "+"}
-          {images.toLocaleString("pt-BR")} imgs
+          {isMain ? "" : "+"}
+          {images.total.toLocaleString("pt-BR")} imgs
         </span>
       </header>
       {rooms.length > 0 ? (
         <div className="variant-room-grid">
           {rooms.map((a) => (
-            <div key={a.key} className={`room-tile weight-${a.weight}`}>
+            <div
+              key={a.key}
+              className={`room-tile weight-${a.weight}`}
+              title={`${a.label}: ${a.baseImages} base + ${a.optionImages} de opção`}
+            >
               <span className="room-tile-label">{a.label}</span>
               <span className="room-tile-images">{a.images}</span>
             </div>
@@ -828,7 +844,7 @@ function VariantCard({
         </div>
       ) : (
         <p className="variant-empty">
-          {isBase
+          {isMain
             ? "Nenhum ambiente adicionado. Suba as unidades acima."
             : "Nenhum ambiente marcado como impactado."}
         </p>

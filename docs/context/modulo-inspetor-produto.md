@@ -226,7 +226,7 @@ Accordion organizado por cômodo:
 - Suíte 2
 - Banheiro Social
 - Banheiro Suíte
-- Lavanderia
+- Área de Serviço
 - etc.
 Para cada cômodo (header do accordion):
 - Ícone do cômodo
