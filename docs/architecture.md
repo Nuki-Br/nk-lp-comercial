@@ -53,19 +53,21 @@ coupled by name to markup and CSS. Change one side, change the other.
 |---|---|
 | `[data-reveal-group]`, `.reveal` → `.in` | stagger-in on scroll, 90 ms apart |
 | `.slide`, `[data-tone]`, `.progress a[data-t]` | active-section tracking + palette flip |
+| `[data-nav-id]` | lets a section borrow another's progress dot (the demo slide borrows `inspetor`) |
 | `.slide` ids, in DOM order | the walkable list for keyboard navigation |
-| `.modulo-demo-slide[data-back-target]` | demo focus lock |
-| `html.demo-locked` | CSS scroll lock while a demo is open |
-| `postMessage` type `nuki-demo:esc` | ESC pressed *inside* the demo iframe |
+| `postMessage` type `nuki-demo:esc` | ESC pressed *inside* the demo iframe, re-emitted as the window event `nuki-demo:exit` |
 | `[data-parallax]` | background-numeral parallax fallback |
 | `.cm-hint` | the ← → hint, shown ~800 ms, hidden after ~5 s |
 
 Two details worth knowing:
 
 **The walkable list is derived from the DOM, not from `deckNav`.** That is
-deliberate: `#inspetor-demo` is reachable with the arrow keys but invisible in
-the progress nav, because it is a `.slide` with an id that has no `deckNav`
-entry. `deckNav` is the source of truth for the nav only.
+deliberate: `#inspetor-demo` is reachable with the arrow keys but has no dot of
+its own, because it is a `.slide` with an id that has no `deckNav` entry. It
+carries `data-nav-id="inspetor"` so the module's dot stays lit while the demo is
+on screen — without it the nav would go blank there. `deckNav` is the source of
+truth for the nav only, and **its order must match the DOM order** in
+`src/app/page.tsx`, or the dots walk backwards.
 
 **The ESC bridge is a two-part contract.** The iframe cannot bubble key events to
 the parent, so `scripts/prepare-inspetor-demo.mjs` injects a keydown listener

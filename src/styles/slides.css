@@ -245,7 +245,10 @@
   color: var(--color-nuki-black, #000);
 }
 .deck .module-demo-bar {
-  position: relative;
+  /* sticky, não relative: garante que "← Voltar / Seguir →" continue alcançável
+     mesmo enquanto o slide está a meio caminho do snap. */
+  position: sticky;
+  top: 0;
   z-index: 2;
   height: 44px;
   display: flex;
@@ -315,14 +318,25 @@
   overflow: hidden;
 }
 
-/* Demo lock — quando um `.module-demo-slide` está em foco (≥ 70% visível), o
-   ComercialScripts adiciona `.demo-locked` na html e bloqueia o scroll da
-   apresentação. Só × ou ESC saem. Não afeta o scroll DENTRO do iframe (outro
-   documento). */
-html.demo-locked,
-html.demo-locked body {
-  overflow: hidden;
+/* Snap do slide de demo — substitui o antigo `html.demo-locked`, que punha
+   `overflow: hidden` no html assim que o slide ficava 70% visível e congelava a
+   apresentação num offset arbitrário (a barra de saída chegava a ficar fora da
+   tela). Aqui o scroll nunca trava: o slide só encaixa alinhado.
+
+   `proximity` é deliberado — só participam elementos com `scroll-snap-align`, e
+   o default é `none`. Os demais slides são mais altos que a viewport e
+   continuam com scroll livre. `scroll-snap-stop: always` preserva a intenção
+   original (não passar batido pela demo) sem prender ninguém.
+
+   As duas regras são um par: mexer numa sem a outra desliga o snap em silêncio. */
+html {
+  scroll-snap-type: y proximity;
 }
+.deck .module-demo-slide {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
 .deck .module-demo-frame {
   position: absolute;
   inset: 0;
@@ -330,6 +344,53 @@ html.demo-locked body {
   height: 100%;
   border: 0;
   background: transparent;
+}
+/* Iframe inerte até o usuário entrar na demo. Sem isso a roda do mouse morre
+   sobre o iframe: o documento embedado tem `overscroll-behavior: none` e nenhum
+   scroller interno, então não rola nada nem repassa o evento pro deck. */
+.deck .module-demo-slide:not(.is-active) .module-demo-frame {
+  pointer-events: none;
+}
+
+/* Convite de ativação — cobre o palco enquanto a demo está inerte. */
+.deck .module-demo-activate {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  width: 100%;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+.deck .module-demo-activate-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid var(--color-nuki-gray-border, #d9d9d9);
+  border-radius: 999px;
+  background: var(--color-nuki-white, #fff);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  color: var(--color-nuki-gray-mid, #595959);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s,
+    transform 0.2s;
+}
+.deck .module-demo-activate:hover .module-demo-activate-pill,
+.deck .module-demo-activate:focus-visible .module-demo-activate-pill {
+  border-color: var(--color-nuki-green-02, #047676);
+  color: var(--color-nuki-black, #000);
+  transform: translateY(-1px);
 }
 
 /* Skeleton overlay — visível até o iframe disparar onLoad */
@@ -390,7 +451,8 @@ html.demo-locked body {
 }
 @media (max-width: 900px) {
   .deck .module-demo-frame,
-  .deck .module-demo-skeleton {
+  .deck .module-demo-skeleton,
+  .deck .module-demo-activate {
     display: none;
   }
   .deck .module-demo-mobile {

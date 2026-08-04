@@ -13,8 +13,10 @@ export const deckNav = [
   { id: "differentiators", label: "Diferenciais" },
   { id: "audience", label: "Pra quem serve" },
   { id: "cases", label: "Cases" },
-  { id: "calculator", label: "Estime o setup" },
+  /* Ordem tem que bater com a do DOM em src/app/page.tsx — pricing vem antes da
+     calculadora lá. Fora de ordem, os pontinhos do progresso andam pra trás. */
   { id: "pricing", label: "Plano & contato" },
+  { id: "calculator", label: "Estime o setup" },
   { id: "total", label: "Total estimado" },
 ] as const;
 

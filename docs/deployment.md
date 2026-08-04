@@ -51,7 +51,7 @@ password.
 
 ## The Inspetor demo artifact
 
-`public/demos/inspetor/index.html` (2.3 MB) is **committed**, not generated at
+`public/demos/inspetor/index.html` (5.7 MB) is **committed**, not generated at
 build time. `scripts/prepare-inspetor-demo.mjs` does not run in the Vercel build.
 
 If you change the patch script, regenerate and commit the output:

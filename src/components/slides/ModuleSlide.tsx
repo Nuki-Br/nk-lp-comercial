@@ -178,8 +178,14 @@ export function ModuleSlide({
                 type="button"
                 className="module-slide-cta reveal"
                 onClick={() => {
+                  const demoId = `${data.id}-demo`;
+                  // Entra já ativa: quem chega pelo CTA não paga o clique de
+                  // ativação do iframe (o ModuleDemoSlide escuta este evento).
+                  window.dispatchEvent(
+                    new CustomEvent("nuki-demo:activate", { detail: { id: demoId } }),
+                  );
                   document
-                    .getElementById(`${data.id}-demo`)
+                    .getElementById(demoId)
                     ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
               >

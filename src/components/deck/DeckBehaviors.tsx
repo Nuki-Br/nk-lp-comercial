@@ -7,13 +7,20 @@ import { useEffect } from "react";
  *
  * Cobre:
  * 1. Reveal/stagger — igual ao JourneyScripts, observa [data-reveal-group].
- * 2. Progress nav lateral — observa .cm-section e .module (Módulos reusa o
- *    JourneyModule, que renderiza .module com id próprio, então precisa dos dois).
+ * 2. Progress nav lateral — observa .slide e .module. Uma seção pode emprestar
+ *    o ponto de outra via [data-nav-id] (é como o slide de demo mantém o ponto
+ *    do módulo aceso, já que ele não existe no deckNav).
  * 3. Navegação por teclado — ←/PageUp/Shift+Espaço volta, →/PageDown/Espaço avança.
- *    Ancora nos ids do comercialNav pra respeitar a ordem oficial das partes.
- * 4. Sticky-device (troca de tela nos módulos) — mesmo padrão do JourneyScripts.
- * 5. Parallax do bgnum — fallback quando não há animation-timeline nativo.
- * 6. Dica flutuante das setas — aparece por 4s no load.
+ *    Deriva a lista walkable do DOM, não do deckNav.
+ * 4. Bridge do ESC vindo de dentro do iframe da demo: reemite o postMessage
+ *    `nuki-demo:esc` como o evento de janela `nuki-demo:exit`.
+ * 5. Sticky-device (troca de tela nos módulos) — mesmo padrão do JourneyScripts.
+ * 6. Parallax do bgnum — fallback quando não há animation-timeline nativo.
+ * 7. Dica flutuante das setas — aparece por 4s no load.
+ *
+ * O antigo scroll lock da demo (`html.demo-locked`) saiu: ele congelava a
+ * apresentação num offset arbitrário. O encaixe agora é `scroll-snap` no CSS, e
+ * a ativação da demo é do ModuleDemoSlide.
  */
 export function DeckBehaviors() {
   useEffect(() => {
@@ -58,7 +65,10 @@ export function DeckBehaviors() {
         es.forEach((e) => {
           if (!e.isIntersecting) return;
           const section = e.target as HTMLElement;
-          const id = section.id;
+          // `data-nav-id` deixa uma seção emprestar o ponto de outra. O slide de
+          // demo (`inspetor-demo`) não existe no deckNav, e sem isso o nav
+          // apagaria inteiro enquanto ele estivesse na tela.
+          const id = section.dataset.navId || section.id;
           document.querySelectorAll(".progress-nav a").forEach((a) => {
             a.classList.toggle("is-active", (a as HTMLElement).dataset.sectionId === id);
           });
@@ -118,55 +128,18 @@ export function DeckBehaviors() {
       );
     };
 
-    // Demo lock — quando um `.module-demo-slide` fica ≥ 70% no viewport, o
-    // usuário só pode sair via botão × ou tecla ESC. Setas, espaço, PageUp/Down,
-    // Home/End e scroll (via `html.demo-locked` no CSS) ficam bloqueados. Isso
-    // evita "sair sem querer" enquanto o prospect explora o produto real.
-    const demoLockState: { active: boolean; backTarget: string | null } = {
-      active: false,
-      backTarget: null,
-    };
-    const exitDemoLock = () => {
-      if (!demoLockState.backTarget) return;
-      const el = document.getElementById(demoLockState.backTarget);
-      if (!el) return;
-      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-    };
-    const demoIO = new IntersectionObserver(
-      (es) => {
-        es.forEach((e) => {
-          const target = (e.target as HTMLElement).dataset.backTarget || null;
-          if (e.isIntersecting && e.intersectionRatio >= 0.7) {
-            demoLockState.active = true;
-            demoLockState.backTarget = target;
-            document.documentElement.classList.add("demo-locked");
-          } else if (e.intersectionRatio < 0.3) {
-            // Desativa só se este era o demo ativo — evita conflito quando
-            // (no futuro) mais de um demo existir na página.
-            if (demoLockState.backTarget === target || !e.isIntersecting) {
-              demoLockState.active = false;
-              demoLockState.backTarget = null;
-              document.documentElement.classList.remove("demo-locked");
-            }
-          }
-        });
-      },
-      { threshold: [0, 0.3, 0.7, 1] },
-    );
-    document.querySelectorAll(".module-demo-slide").forEach((s) => demoIO.observe(s));
-    cleanups.push(() => {
-      demoIO.disconnect();
-      document.documentElement.classList.remove("demo-locked");
-    });
-
-    // Bridge de ESC vindo de DENTRO do iframe do Planner. O HTML injeta um
-    // keydown listener com { capture: true } que faz postMessage({type:'nuki-demo:esc'})
+    // Bridge de ESC vindo de DENTRO do iframe da demo. O HTML injeta um keydown
+    // listener com { capture: true } que faz postMessage({type:'nuki-demo:esc'})
     // pro parent. Isso resolve o "ESC não funciona quando foco está no iframe"
     // sem precisar de auto-scroll pro parent ou tricks de blur.
+    //
+    // O tipo `nuki-demo:esc` está assado no HTML committado — não renomear.
+    // Aqui ele só é reemitido como evento de janela; quem decide o que fazer é
+    // o ModuleDemoSlide, que é dono do estado de ativação.
     const onMessage = (e: MessageEvent) => {
       if (!e.data || typeof e.data !== "object") return;
-      if (e.data.type === "nuki-demo:esc" && demoLockState.active) {
-        exitDemoLock();
+      if (e.data.type === "nuki-demo:esc") {
+        window.dispatchEvent(new CustomEvent("nuki-demo:exit"));
       }
     };
     window.addEventListener("message", onMessage);
@@ -175,16 +148,8 @@ export function DeckBehaviors() {
     const onKey = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target)) return;
 
-      // Bonus quando demo está em foco: ESC também volta pro descritivo (além
-      // dos botões e da seta esquerda). Não bloqueia mais setas — nav global
-      // funciona normalmente inclusive dentro do demo. O scroll lock (via
-      // html.demo-locked no CSS) segue prevenindo saída por wheel/touch.
-      if (demoLockState.active && e.key === "Escape") {
-        e.preventDefault();
-        exitDemoLock();
-        return;
-      }
-
+      // ESC é do ModuleDemoSlide (só enquanto a demo está ativa) — aqui não se
+      // mexe. Setas seguem navegando o deck inteiro, inclusive sobre a demo.
       const partIds = getWalkableIds();
       const cur = currentPartIndex(partIds);
       if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)) {

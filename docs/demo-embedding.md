@@ -8,7 +8,7 @@ Este doc explica como integrar o HTML de um módulo (Planner / Personaliza / Ins
 
 | Papel                 | Localização                                             |
 | --------------------- | ------------------------------------------------------- |
-| HTML original         | `src/HTML/Nuki <NomeDoModulo>.html`                     |
+| HTML original         | `src/HTML/Nuki-<NomeDoModulo>-Embed.html`               |
 | Script de trim/unpack | `scripts/prepare-<slug>-demo.mjs`                       |
 | HTML pronto (público) | `public/demos/<slug>/index.html`                        |
 | Pattern React (data)  | `src/content/modules.ts` → `demoUrl`  |
@@ -17,7 +17,7 @@ Este doc explica como integrar o HTML de um módulo (Planner / Personaliza / Ins
 
 ## Como ler os HTMLs (importante)
 
-Os HTMLs são gerados pelo Claude Design em wrapper `__bundler`. **~1.5MB por arquivo, em ~185 linhas com linhas gigantes** (manifest + template em uma linha só). O `Read` do Claude Code estoura o token limit.
+Os HTMLs são gerados pelo Claude Design em wrapper `__bundler`. **Milhões de bytes em poucas centenas de linhas gigantes** (manifest + template em uma linha só) — o export atual do Inspetor tem 5,7 MB em ~400 linhas. O `Read` do Claude Code estoura o token limit.
 
 Formas seguras de inspecionar:
 
@@ -89,7 +89,59 @@ começam null e são setados por clique). No caso do Inspetor, o único patch é
 strip do `<TweaksPanel>` (rail de dev tooling do Claude Design que não deveria
 aparecer pro prospect).
 
-Referência: `scripts/prepare-inspetor-demo.mjs`.
+Referência histórica: essa variante descreve o export **anterior** do Inspetor
+(`src/HTML/Nuki Inspector - Protótipo (offline).html`). O export atual é a
+variante `x-dc` logo abaixo.
+
+## Variante: x-dc (Inspetor, export atual)
+
+O export atual do Inspetor (`src/HTML/Nuki-Inspetor-Embed.html`) vem de uma
+geração mais nova do Claude Design. Diferenças que importam:
+
+- O app é um `<script type="text/x-dc" data-dc-script data-props="…">` dentro do
+  template, com componente em classe (`class Component extends DCLogic`) — não
+  há `PrototypeFlow`, `function App` nem bloco `text/babel`.
+- Não há `<TweaksPanel>` — o rail de dev tooling sumiu, então **não existe patch
+  de conteúdo a aplicar**. O script pula o round-trip do template inteiro nesse
+  caso (ver abaixo).
+- `data-props` traz `$preview: { width: 390, height: 844 }`: o protótipo é
+  desenhado como app de celular. Na prática ele se vira bem num iframe largo —
+  renderiza uma coluna de 390px centrada (medido: `x = 445` num frame de 1280).
+- O documento externo vem cru: `<title>Bundled Page</title>` e `<html>` sem
+  `lang`. O script reescreve os dois — mas note que o loader troca o
+  `documentElement` no boot, então isso é cosmético e some em runtime.
+- Assets 100% self-contained (manifest base64, inclusive React via
+  `__bundler/ext_resources`). Nada de rede.
+
+### 🔴 Gotcha do `$` na string de substituição
+
+`TEMPLATE_RE` tem um grupo de captura. Passar uma **string** de substituição pro
+`String.replace` faz `$1` dentro dela expandir pro template capturado. O export
+x-dc contém exatamente um `$1` — na chamada de mascaramento de e-mail da tela de
+login, cujo segundo argumento é a string `"$1•••••"`.
+
+Resultado medido ao rodar a transformação antiga contra o arquivo novo:
+
+```
+OLD  dollarTokens: {}        bloat: 0        reparse: ok
+NEW  dollarTokens: {$1: 1}   bloat: 188000   reparse: FAILED
+     Bad control character in string literal in JSON at position 184010
+```
+
+188 KB de payload cru entram no meio da string JSON, o
+`<script type="__bundler/template">` deixa de parsear e a demo abre em branco —
+**e o script imprimia sucesso e saía com código 0**. Sempre usar um replacer
+*function*, que não interpreta `$`:
+
+```js
+html.replace(TEMPLATE_RE, () => `<script type="__bundler/template">${encoded}</script>`);
+```
+
+O script hoje ainda guarda contra isso de três formas: só reinjeta o template se
+algum patch mudou alguma coisa, aborta se a saída crescer muito além dos patches
+esperados, e faz `JSON.parse` do template que está prestes a escrever. Um
+template corrompido continua sendo HTML válido — esse re-parse é a única
+checagem que realmente pega o problema.
 
 ## Estrutura do trim script
 
@@ -113,9 +165,21 @@ Tudo já espera novos módulos:
 - `ModuloData.demoUrl?: string` — só setar em `modulos.data.ts` pro módulo alvo
 - `ModuleSlides.tsx` emite `<ModuloDemoSlide>` automaticamente quando `demoUrl` existe
 - `ModuleSlide.tsx` troca "Saiba mais" por CTA "▷ Explorar o {título}" quando `demoUrl` existe
-- `ModuleDemoSlide.tsx` — layout fullscreen (barra 44px + iframe), botões `← Voltar` e `Seguir →`, `data-back-target={data.id}` pro observer
-- `DeckBehaviors.tsx` observer em `.modulo-demo-slide` — pega qualquer demo novo, aplica scroll lock (`html.demo-locked`) via CSS
-- CSS `.modulo-demo-*` — cobre desktop + fallback mobile (<900px mostra "abrir em nova aba")
+- `ModuleDemoSlide.tsx` — layout fullscreen (barra 44px sticky + iframe), botões `← Voltar` e `Seguir →`, e o estado de ativação da demo
+- `DeckBehaviors.tsx` — reemite o postMessage `nuki-demo:esc` do iframe como o evento de janela `nuki-demo:exit`
+- CSS `.module-demo-*` — cobre desktop + fallback mobile (<900px mostra "abrir em nova aba")
+
+**Clique-para-ativar.** O iframe fica com `pointer-events: none` enquanto o slide
+não tem `.is-active`. Isso não é enfeite: o documento embedado tem
+`overscroll-behavior: none` e nenhum scroller interno, então um iframe vivo
+engole a roda do mouse sem rolar nada e sem repassar o evento — a apresentação
+parece travada. Inerte, o scroll atravessa. O CTA `▷ Explorar` dispara
+`nuki-demo:activate` com o id do demo, então quem chega por ele já entra ativo.
+
+**Encaixe do slide.** `.module-demo-slide` usa `scroll-snap-align: start` +
+`scroll-snap-stop: always`, com `scroll-snap-type: y proximity` na raiz. Nada de
+`overflow: hidden` — o antigo `html.demo-locked` congelava o deck num offset
+arbitrário e chegava a deixar a barra de saída fora da tela.
 
 **Falta só**: adicionar `<link rel="prefetch" href="/demos/<slug>/index.html" as="document" />` no `<div>` root de `page.tsx` pro novo demo (opcional mas melhora perceived perf).
 
@@ -135,7 +199,7 @@ Tudo já espera novos módulos:
 7. Em `src/content/modules.ts`, adicionar `demoUrl: "/demos/<slug>/index.html"` no módulo
 8. Em `src/app/page.tsx`, adicionar `<link rel="prefetch" ... />` do novo path
 9. `npx tsc --noEmit && npm run check`
-10. Abrir `/#<slug>` no browser, testar: CTA "▷ Explorar" abre, iframe carrega no item pré-selecionado, ← Voltar / Seguir → funcionam, ESC no iframe funciona (bridge), scroll lock ativo
+10. Abrir `/#<slug>` no browser, testar: CTA "▷ Explorar" abre já ativo, iframe carrega, ← Voltar / Seguir → funcionam, ESC no iframe funciona (bridge), o scroll atravessa a demo quando ela está inerte e o slide encaixa alinhado
 
 ## Gotchas
 

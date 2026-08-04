@@ -59,17 +59,29 @@ Components are `PascalCase.tsx`; everything else is `camelCase.ts`.
 - **Every `deckNav` entry needs a rendered element with that `id`.** Miss one and
   the progress nav loses a dot with no error. `src/content/deck.ts`.
 - **`DeckBehaviors` owns the DOM contract.** It queries `.slide`,
-  `[data-reveal-group]`, `[data-tone]`, `[data-parallax]`, `[data-back-target]`,
-  `[data-section-id]`, `.module-demo-slide`, and toggles `html.demo-locked`. Renaming any
-  of those means changing both the component and the CSS.
+  `[data-reveal-group]`, `[data-tone]`, `[data-parallax]`, `[data-section-id]`
+  and `[data-nav-id]`. Renaming any of those means changing both the component
+  and the CSS.
+- **The demo slide snaps; it does not lock.** `.module-demo-slide` carries
+  `scroll-snap-align: start` and the root carries `scroll-snap-type: y proximity`
+  — both in `src/styles/slides.css`, and they are a pair: drop one and the snap
+  dies silently. The previous `html.demo-locked` (`overflow: hidden`) froze the
+  deck at whatever offset the observer happened to fire on. Do not bring it back.
+- **The demo iframe is inert until activated.** `.module-demo-slide` without
+  `.is-active` sets `pointer-events: none` on the frame. This is load-bearing:
+  the embedded document has `overscroll-behavior: none` and no internal
+  scroller, so a live iframe swallows the wheel and the deck reads as frozen.
+  `ModuleDemoSlide` owns the state; the `▷ Explorar` CTA dispatches
+  `nuki-demo:activate` so the pitch path costs no extra click.
 - **`nuki-demo:esc` must not be renamed.** The postMessage type is baked into the
-  committed 2.3 MB `public/demos/inspetor/index.html`. Renaming the listener
+  committed 5.7 MB `public/demos/inspetor/index.html`. Renaming the listener
   without regenerating that file silently kills ESC-from-inside-the-iframe.
+  `DeckBehaviors` re-emits it as the window event `nuki-demo:exit`.
 - **Asset basenames are verbatim**, typo included (`vizualizador-planner`).
 - **`public/demos/inspetor/index.html` is a committed build artifact.** The patch
   script does not run in the Vercel build. Regenerate with
   `node scripts/prepare-inspetor-demo.mjs`; never hand-edit it, and never `Read`
-  it — it is 2.3 MB on a handful of enormous lines.
+  it — it is 5.7 MB on a handful of enormous lines.
 - Copy lives in `src/content/`, not in JSX. `CoverSlide` and `CasesSlide` still
   have inline copy; moving them out is welcome.
 

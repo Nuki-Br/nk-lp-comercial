@@ -117,7 +117,7 @@ worth a test at all.
 
 ## 8. Committed demo artifact
 
-`public/demos/inspetor/index.html` (2.3 MB) is committed rather than generated
+`public/demos/inspetor/index.html` (5.7 MB) is committed rather than generated
 during the build, because `scripts/prepare-inspetor-demo.mjs` is a manual step
 that patches a Claude Design export and would be fragile in CI. The cost is repo
 size; the benefit is that a stale patch regex cannot silently break a deploy.
