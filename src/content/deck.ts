@@ -443,15 +443,22 @@ export type Plan = {
   featured?: boolean;
 };
 
-/** Ciclo de cobrança — desconto aplicado sobre o preço mensal de cada plano. */
-export type BillingCycle = { id: string; label: string; discount: number };
+/** Ciclo de cobrança — desconto aplicado sobre o preço mensal de cada plano.
+    `minMonths` é o piso de meses que ativa o ciclo: o simulador deriva o ciclo
+    dos meses contratados, então o valor precisa viver aqui junto do desconto. */
+export type BillingCycle = {
+  id: string;
+  label: string;
+  discount: number;
+  minMonths: number;
+};
 
 /** Descontos progressivos por ciclo. Sem trimestral — só semestral (−5%)
-    e anual (−10%). */
+    e anual (−10%). Manter em ordem crescente de `minMonths`. */
 export const billingCycles: BillingCycle[] = [
-  { id: "mensal", label: "Mensal", discount: 0 },
-  { id: "semestral", label: "Semestral", discount: 0.05 },
-  { id: "anual", label: "Anual", discount: 0.1 },
+  { id: "mensal", label: "Mensal", discount: 0, minMonths: 1 },
+  { id: "semestral", label: "Semestral", discount: 0.05, minMonths: 6 },
+  { id: "anual", label: "Anual", discount: 0.1, minMonths: 12 },
 ];
 
 /** Modelo de precificação: um plano só, com todos os módulos inclusos.
