@@ -56,8 +56,9 @@ export function DeckBehaviors() {
       timeouts.forEach((t) => clearTimeout(t));
     });
 
-    // 2) Progress nav — .cm-section (seções da apresentação) + .module (Modulos reusa JourneyModule).
-    //    Reflete o tom do fundo da seção ativa no .progress via data-tone, pra
+    // 2) Progress nav — observa `.slide` (as seções do deck). `.module` é resquício
+    //    do JourneyModule do nk-lp e não casa com nada; ver docs/tech-debt.md.
+    //    Reflete o tom do fundo da seção ativa no `.progress-nav` via data-tone, pra
     //    paleta escura/clara do próprio nav responder ao contexto sem piscar.
     const progressEl = document.querySelector<HTMLElement>(".progress-nav");
     const navIO = new IntersectionObserver(
@@ -82,10 +83,10 @@ export function DeckBehaviors() {
     cleanups.push(() => navIO.disconnect());
 
     // 3) Navegação por teclado — deriva a lista walkable do DOM em runtime
-    // (todos os `.cm-section` com id, na ordem em que aparecem). Isso permite
-    // que seções como `#planner-demo` (que NÃO existem em comercialNav) sejam
-    // navegáveis por seta ← → mas continuem invisíveis no progress-nav lateral.
-    // comercialNav segue sendo a fonte da verdade só do progress-nav.
+    // (todo `.slide` com id, na ordem em que aparece). Isso permite que seções
+    // como `#inspetor-demo` (que NÃO existem em deckNav) sejam navegáveis por
+    // seta ← → mas continuem invisíveis no progress-nav lateral. deckNav segue
+    // sendo a fonte da verdade só do progress-nav.
     const getWalkableIds = (): string[] => {
       const nodes = document.querySelectorAll<HTMLElement>(".slide, .module");
       const ids: string[] = [];

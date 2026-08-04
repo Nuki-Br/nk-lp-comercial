@@ -1,5 +1,16 @@
+---
+audience: agent
+status: current
+verified_against: v1.0 strategic context document
+size: 84
+---
+
 # Nuki — Pivot de Produto e Modelo de Negócio
 ### Contexto Estratégico · v1.0
+
+> A **§4** deste documento é um resumo em bullets escrito de propósito para
+> consumo de IA. É o padrão que todo doc longo de contexto deve seguir: leia dez
+> linhas em vez de seiscentas.
  
 ---
  

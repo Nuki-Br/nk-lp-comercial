@@ -1,5 +1,17 @@
+---
+audience: both
+status: current
+verified_against: v2.0 · Junho 2026
+size: 412
+---
+
 # Nuki — Módulo de Planejamento e Orçamento
 ### Documento de Produto e Fluxo de Telas · v2.0 · Junho 2026
+
+> **Carregue sob demanda — 412 linhas.** Só leia se a tarefa for sobre as telas
+> do Planner. A **§4** traz um modelo conceitual de entidades; ele descreve o
+> produto Planner, **não** o schema deste repositório (esse fica em
+> `../data-model.md`). Não confunda os dois.
  
 ---
  

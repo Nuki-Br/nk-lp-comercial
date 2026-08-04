@@ -1,3 +1,10 @@
+---
+audience: both
+status: current
+verified_against: the context docs themselves
+size: 56
+---
+
 # Contexto de produto e negócio
 
 Estes documentos são a **fonte da verdade** sobre o que a Nuki é, o que vende e

@@ -1,3 +1,19 @@
+---
+audience: both
+status: partially-superseded
+verified_against: pasted strategy document, undated
+size: 205
+---
+
+# Nuki — visão geral de produto
+
+> **Documento colado, sem versão nem data.** Preserve a redação original: editá-lo
+> destrói a única coisa que ele tem, que é a proveniência.
+>
+> **A §7 (modelo de implantação por projeto) antecede o pivô** para SaaS
+> recorrente por empreendimento ativo. Onde ela conflitar com
+> `pivot-modelo-negocio.md`, o pivô vence.
+
 ## 1. Visão Geral
  
 A Nuki é uma plataforma SaaS voltada para construtoras e incorporadoras que organiza, profissionaliza e centraliza a etapa de personalização de acabamentos das unidades imobiliárias.

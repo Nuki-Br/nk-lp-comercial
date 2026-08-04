@@ -1,7 +1,40 @@
+---
+audience: agent
+status: current
+verified_against: the decisions themselves; ADRs 9+ record the proposal-app build
+size: 300
+---
+
 # Decisions
 
 Short records of why things are the way they are, so nobody has to re-litigate
 them from scratch.
+
+**Amending, not rewriting.** When a decision is superseded, the original body
+stays exactly as written and gains an `> **Amended by ADR N**` line. An ADR is a
+record of what was believed and why at a point in time; editing the body destroys
+the only thing it was for.
+
+| # | Decision | Status |
+|---|---|---|
+| 1 | Split out of nk-lp | current |
+| 2 | No analytics at all | amended by 10 |
+| 3 | The deck is the root route | amended by 9 |
+| 4 | English identifiers, pt-BR copy | current |
+| 5 | Anchor ids are English | current |
+| 6 | One `.deck` scope | current |
+| 7 | No test framework | amended by 12 |
+| 8 | Committed demo artifact | current |
+| 9 | The deck moves to `/fast` and stays code-driven | current |
+| 10 | First-party tracking is not analytics | current |
+| 11 | A dependency allowlist replaces the fixed three | current |
+| 12 | Tests return, scoped to money, passwords and time | current |
+| 13 | Config is one JSONB delta plus a publish snapshot | current |
+| 14 | `node:crypto` over an auth library | current |
+| 15 | Proxy is optimistic; the DAL is authoritative | current |
+| 16 | Biome for format and lint, ESLint kept for Next rules | current |
+| 17 | Two root layouts | current |
+| 18 | V2 is typed in V1 and built later | current |
 
 ## 1. Split out of nk-lp
 
@@ -19,6 +52,9 @@ to "fix" it.
 
 ## 2. No analytics at all
 
+> **Amended by ADR 10.** The ban on third-party telemetry stands and is absolute.
+> First-party proposal tracking is carved out.
+
 **Context.** The deck previously fired Clarity events (`comercial_unlocked`,
 `demo_opened`) and Vercel pageviews.
 
@@ -31,6 +67,9 @@ exactly `next`, `react`, `react-dom`, which makes any reintroduction a visible
 property from the landing page — otherwise this whole migration was pointless.
 
 ## 3. The deck is the root route
+
+> **Amended by ADR 9.** The deck now lives at `/fast`; `/` redirects to `/admin`.
+> The 307-not-308 reasoning below still applies to both redirects.
 
 **Context.** It lived at `/comercial`.
 
@@ -95,9 +134,12 @@ renders must appear in a CSS selector. Before, 157 rendered / 156 styled / 1
 orphan; after, 155 rendered / 154 styled / the same orphan, renamed. The drop of
 exactly 2 is accounted for — `jornada`+`comercial` collapsed to `deck`, and
 `on`+`ativa` collapsed to `is-active`. Method written up in
-`docs/pending-css-rename.md`.
+`docs/tech-debt.md`.
 
 ## 7. No test framework
+
+> **Amended by ADR 12.** This decision was right and its premise expired. The
+> insight that browser behavior is not worth unit-testing survives verbatim.
 
 **Decision.** No Vitest, no Jest, no Playwright.
 
@@ -121,3 +163,238 @@ worth a test at all.
 during the build, because `scripts/prepare-inspetor-demo.mjs` is a manual step
 that patches a Claude Design export and would be fragile in CI. The cost is repo
 size; the benefit is that a stale patch regex cannot silently break a deploy.
+
+---
+
+The records below cover the move from a single static deck to a proposal app.
+
+## 9. The deck moves to `/fast` and stays code-driven
+
+**Context.** `/` has to become the admin panel, but the team still needs a deck
+they can open in thirty seconds for an unplanned pitch.
+
+**Decision.** The existing deck moves to `/fast`, keeps its current
+`AccessGate` — shared password, client-side, `localStorage` — and stays driven by
+`src/content/` with **no database dependency at all**.
+
+**Consequence.** `/fast` works when Supabase is down, which is the point: a live
+client meeting is the worst possible moment to discover a hosted dependency is
+unavailable. The cost is that `/fast` keeps the known weakness — the gate is
+client-side, so the full HTML including pricing is in the payload for anyone who
+fetches the page. That was accepted knowingly. It stays `noindex` three ways
+(`next.config.ts` header, layout metadata, `public/robots.txt`); keep all three.
+
+`/comercial` now redirects to `/fast` rather than `/`, or shared pitch links
+would land prospects on a login screen.
+
+**Rejected:** putting `/fast` behind admin auth. It closes the leak and costs the
+offline guarantee. The guarantee won.
+
+## 10. First-party tracking is not analytics
+
+**Context.** The product needs to know when a client opened a proposal, how often
+and where their attention went. ADR 2 bans telemetry in absolute language, and
+`AGENTS.md` named `sendBeacon` specifically.
+
+**Decision.** Narrow the rule to what it always meant. Third-party telemetry
+stays banned without exception. First-party engagement data, written to our own
+Postgres, from our own origin, about a proposal we issued to a named client, is
+allowed — and only inside the `/p/[slug]` render path.
+
+The test is three questions, not an API list: does the request leave our origin;
+is the collector reachable from `/fast` or `/admin`; does it add a vendor SDK.
+
+**Consequence.** `sendBeacon` stays banned by name — honouring the letter of the
+old rule costs nothing, because `fetch(url, {keepalive: true})` is the same
+underlying mechanism and is strictly better here: it can set a JSON content type
+and **read the response**, which the sequence-acknowledgement protocol needs.
+
+The verification ADR 2 implied still holds exactly: a full scroll-through shows
+zero third-party requests. CI greps the built client chunks for non-allowlisted
+origins so the promise is mechanical rather than remembered.
+
+## 11. A dependency allowlist replaces the fixed three
+
+**Context.** "Runtime dependencies are exactly `next`, `react`, `react-dom`" was
+stated as an absolute. Its own rationale in ADR 2 gives the real purpose: it
+makes any reintroduction of analytics *a visible `package.json` diff*.
+
+**Decision.** Replace the count with a table: an allowlist, a ban list, and the
+requirement that any addition ships an ADR in the same commit.
+
+**Consequence.** Three additions — `@supabase/supabase-js`, `@supabase/ssr`,
+`zod`. Everything a library would normally be reached for is instead in the
+standard library or the database, and the ban list says so by name so the
+question is not re-opened: `node:crypto` for scrypt and HMAC, `Intl` for dates
+and currency, `crypto.randomUUID()`, a table and an indexed `count(*)` for rate
+limiting, a table and CSS bars for charts.
+
+`zod` is confined to `src/server/schemas/`, every file opening with
+`import "server-only"`, so it can never enter a client bundle — a build error if
+anyone tries.
+
+**The tripwire is unaffected.** Adding an analytics SDK is still a one-line diff
+that a reviewer cannot miss.
+
+## 12. Tests return, scoped to money, passwords and time
+
+**Context.** ADR 7 reasoned from "a static deck whose only logic is the estimate
+calculator". The repo now contains pricing driven by database config, password
+hashing, signed-cookie expiry, and an access-control boundary.
+
+**The evidence is in this repo's own history.** `AGENTS.md` asserted preset
+totals of 208 / 678 / 1.544 while the code produced 284 / 507 / 738, and the same
+numbers were restated in two other files. A ten-line test would have caught it
+the day the preset compositions changed.
+
+**Decision.** Vitest, dev-dependency, with a written ceiling. Tested: the
+estimate math (the four canonical scenarios, count and cost), the `DeckConfig`
+JSON round trip, password hash/verify, cookie validity and tampering, and the
+DAL decision table with its fetcher injected so CI needs no database.
+
+**Consequence.** `npm run check` gains a test run. Slide components, snapshots,
+`DeckBehaviors`, the demo iframe, keyboard nav and reveal observers stay untested
+— ADR 7's real insight, that these are browser behaviors unit tests would not
+catch, is correct and survives.
+
+**RLS is the honest gap.** Vitest cannot cover it. Rather than fake a test, the
+posture is stated: RLS is defense in depth, not the primary control — public
+proposal reads go through the DAL with the service key *after* cookie
+verification. `supabase/tests/rls.sql` is checked in to run against a branch by
+hand. If RLS ever becomes the primary control, it needs a real harness and this
+ADR needs revisiting.
+
+## 13. Config is one JSONB delta plus a publish snapshot
+
+**Context.** Per-proposal customization could be normalized tables (a row per
+slide, per plan, per billing cycle) or a JSON document.
+
+**Decision.** `DeckConfig` is a single TypeScript type and the contract between
+all three build stages. `proposals.config_override` stores a **delta** over the
+defaults; `proposals.config_snapshot` stores the **resolved config, frozen at
+publish**. Only entities — clients, proposals, credentials, sessions — get tables.
+
+**Why a delta.** An untouched proposal *is* `buildDefaultDeck()`, so "renders
+identically to the deck" becomes the identity `resolve(base, null) === base`
+rather than a property maintained by hand. Copy fixes in `src/content/` reach
+unpublished drafts for free.
+
+**Why also a snapshot.** A sent proposal is a commercial document. It must not
+change because someone edited a default price two months later. The delta is what
+the admin edits; the snapshot is what the client sees.
+
+**Why not normalized config tables.** They would make the schema the contract
+instead of the type, which breaks the staged build: stage 1 could no longer
+define the shape by proving it renders. They also bring transactional reorders
+with deferrable constraints — real surface for an agent to get subtly wrong.
+
+**Consequence, accepted.** Cross-proposal reporting on plan prices is a JSONB
+query rather than a `SELECT` over a column. At this volume that is fine. Deltas
+are keyed by node **id**, never by array index, so reordering cannot scramble
+patches; unknown ids are dropped rather than throwing, so a rollback does not 500
+a live pitch.
+
+## 14. `node:crypto` over an auth library
+
+**Decision.** scrypt (N=16384, r=8, explicit 64 MiB `maxmem`) for password
+hashing, `timingSafeEqual` for comparison, and HMAC-SHA256 for the access cookie.
+No bcrypt, no argon2, no JWT package.
+
+**Rationale.** The Edge constraint that would have forced Web Crypto does not
+exist: Next 16 Proxy runs on Node and cannot be configured otherwise. scrypt is
+memory-hard and in the standard library. bcrypt silently truncates at 72 bytes.
+argon2 means a native binary in a Vercel bundle for a marginal gain. `pgcrypto`
+would send the plaintext to the database, where an error can log it.
+
+The cookie is signed, not encrypted — the payload is not secret, only
+unforgeable — and there is no third party to interoperate with, so a JWT library
+would be twenty lines of `createHmac` wrapped in a dependency.
+
+**Consequence.** `maxmem` must be set explicitly: N=16384/r=8 needs 16 MiB and
+Node's 32 MiB default is close enough to trip `ERR_CRYPTO_INVALID_SCRYPT_PARAMS`
+under concurrency. Passwords are `.normalize("NFKC")`-ed before hashing, or an
+accented character typed on iOS will not match the same character typed on macOS.
+
+**Password recall.** The product decision is that a salesperson can re-read a
+proposal's password months later, so the plaintext is stored in Supabase Vault,
+readable only by the service client. Verification still runs against the scrypt
+hash, never against the stored plaintext. The trade is explicit: a database dump
+exposes client passwords. Show-once-and-reroll was offered and declined.
+
+## 15. Proxy is optimistic; the DAL is authoritative
+
+**Context.** The obvious design is "check the session in middleware".
+
+**Decision.** Two things make that wrong here. First, in Next 16 the file is
+`proxy.ts`, not `middleware.ts` — a `middleware.ts` file is silently never
+executed. Second, Next's own guide states that Proxy "should not be used as a
+full session management or authorization solution", and that Proxy matchers skip
+Server Functions, so a matcher edit can remove coverage from an action with no
+error.
+
+Proxy therefore covers `/admin/**` only, does a cheap `getClaims()` for token
+refresh and an optimistic redirect, and decides nothing about content.
+`/p/[slug]` is not proxied at all: a database round-trip there would double every
+request's latency and still have to be re-checked in the page.
+
+**Consequence.** `requireAdmin()` is called at the top of every admin page,
+action and route handler — layout-only gating is a known hole. It uses
+`getUser()`, wrapped in React `cache()`, because a deactivated teammate must lose
+access on the next page load rather than whenever their token happens to expire.
+Authorization reads the `admin_users` table, never `user_metadata`, which the
+user can edit themselves.
+
+## 16. Biome for format and lint, ESLint kept for Next rules
+
+**Decision.** Biome owns formatting, import organization and the fast lint pass.
+`eslint.config.mjs` is stripped to `eslint-config-next/core-web-vitals` only,
+with every stylistic and TypeScript rule off so the two never fight.
+
+**Rationale, including what is lost.** Biome 2.x covers the hooks rules and some
+Next rules, but does not reimplement `no-html-link-for-pages`, `no-sync-scripts`,
+`no-unwanted-polyfillio` or several core-web-vitals rules. Dropping ESLint
+entirely loses them silently. Revisit when Biome's Next domain matures.
+
+**Consequence.** Two landmines, both configured rather than remembered:
+`files.includes` must exclude `public/demos/**`, `src/HTML/**` and `.next/**`, or
+the formatter is pointed at a 5.7 MB single-line artifact; and CSS formatting is
+**off**, because reformatting 3,366 lines of stylesheet produces a diff nobody
+can review against a requirement of "visual identity preserved exactly". Both are
+recorded in `tech-debt.md` as separately shippable.
+
+## 17. Two root layouts
+
+**Decision.** `src/app/(deck)/layout.tsx` and `src/app/(admin)/layout.tsx` are
+both root layouts. `src/app/layout.tsx` and `src/app/page.tsx` are deleted; `/`
+becomes a redirect in `next.config.ts`.
+
+**Rationale.** Next uses React's stylesheet support and does not remove
+stylesheets on client-side navigation. With one root layout, navigating from a
+proposal to `/admin` leaves `slides.css` attached — including the `<html>`-level
+`scroll-snap-type` rule and the unscoped `.gate*` block. Separate roots force a
+full page load at the boundary, which makes the isolation provable instead of
+hoped for.
+
+**Consequence.** Tailwind's preflight compiles into both layout chunks; only one
+loads per route. Manrope is extracted to a single module so two `next/font` calls
+do not produce two font instances. `favicon.ico` stays at the top level of
+`src/app/` — route groups do not relocate it. Deleting the old root layout and
+page must happen in one commit: a page with no root layout above it is a build
+error.
+
+## 18. V2 is typed in V1 and built later
+
+**Context.** V2 is per-slide copy overrides and bespoke client-specific slides.
+Building it now would double the admin surface before anyone has used V1.
+
+**Decision.** Make V2 additive by construction, then do not build it. Concretely,
+these must be true in V1: the slide union is open and the registry's `default`
+arm returns `null` rather than throwing, so a config written by a newer deploy
+degrades instead of 500-ing a live pitch; overrides are keyed by stable node ids;
+nothing outside the registry switches on `kind`; and slide metadata carries an
+admin-facing field schema rather than just a label.
+
+**The one V1 cost worth paying.** Every human-visible string should move into
+config in V1 — including the ones the V1 admin never exposes. If `CasesSlide`'s
+logo list and `CalculatorSlide`'s inline labels are still module imports when V1
+ships, V2 has to re-open all ten slide files. One pass now, two passes later.

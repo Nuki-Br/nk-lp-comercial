@@ -1,4 +1,18 @@
-# Nuki Inspetor - Documento de Produto e Fluxo
+---
+audience: both
+status: current
+verified_against: pasted product document, unversioned and undated
+size: 628
+---
+
+# Nuki Inspetor — Documento de Produto e Fluxo
+
+> **Carregue sob demanda — 628 linhas, o maior do repositório.** Só leia se a
+> tarefa for sobre as telas do Inspetor. Sem versão nem data, ao contrário dos
+> docs do Planner; trate as afirmações como do momento em que foi colado.
+>
+> O que costuma ser procurado: **§3** telas, **§5** modo offline e sincronização
+> (a restrição que define o produto — canteiro de obra), **§6** segurança.
  
 ## 1. Visão Geral do Produto
  

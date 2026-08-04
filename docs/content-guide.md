@@ -1,7 +1,22 @@
+---
+audience: human
+status: current
+verified_against: src/content/deck.ts, src/content/modules.ts
+size: 120
+---
+
 # Editando o conteúdo do deck
 
 Este guia é pra quem quer ajustar a apresentação sem mexer em código —
 trocar uma frase, corrigir um preço, mudar o desconto de um ciclo.
+
+> **O que você edita aqui são os _padrões_.** Eles alimentam o deck de pitch
+> rápido em `/fast` e servem de ponto de partida pra toda proposta nova. Os
+> valores de uma proposta já criada pra um cliente são editados no painel
+> `/admin`, ficam no banco, e **não mudam** quando você edita estes arquivos.
+>
+> Se a proposta já foi publicada, ela guarda uma cópia congelada — mexer aqui não
+> altera um documento que o cliente já recebeu. É de propósito.
 
 ## As duas regras
 

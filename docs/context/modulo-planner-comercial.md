@@ -1,5 +1,16 @@
+---
+audience: human
+status: current
+verified_against: v1.1 · Junho 2026
+size: 176
+---
+
 # Nuki — Módulo de Planejamento e Orçamento
 ### Documento Comercial Interno · v1.1 · Junho 2026
+
+> **Carregue sob demanda.** Só leia se a tarefa for sobre argumentação de vendas
+> do Planner. A **§8 ("o que não é")** é o antídoto contra inventar capacidade
+> que o produto não tem.
  
 ---
  

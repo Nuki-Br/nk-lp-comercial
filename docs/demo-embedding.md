@@ -1,8 +1,18 @@
-# Padrão: demo interativa dos módulos no /comercial
+---
+audience: agent
+status: current
+verified_against: scripts/prepare-inspetor-demo.mjs
+size: 213
+---
 
-Este doc explica como integrar o HTML de um módulo (Planner / Personaliza / Inspetor) como demo interativa dentro do slide de `/comercial`. Foi escrito depois da integração do **Planner** — o mesmo passo-a-passo vale pra adicionar os outros.
+# Padrão: demo interativa dos módulos no deck
 
-> **Status atual.** As demos do **Planner** e do **Personaliza** foram aposentadas: os produtos estão no ar e os slides linkam direto pra eles (`links` em `modulos.data.ts` → `planner.nukibr.com`, `admin.nukibr.com`, `structa.nukibr.com`). `scripts/prepare-planner-demo.mjs` e `public/demos/planner/` foram removidos junto. **O único demo vivo é o Inspetor** — e `scripts/prepare-inspetor-demo.mjs` é a referência de código deste doc. O padrão segue válido pra módulos sem produto público acessível ao prospect. Trechos abaixo que citam o Planner são exemplos históricos dos patches, não arquivos existentes.
+> **Carregue sob demanda.** 213 linhas. Só leia se for embutir uma demo nova —
+> os gotchas medidos aqui custaram caro e não cabem num resumo.
+
+Este doc explica como integrar o HTML de um módulo (Planner / Personaliza / Inspetor) como demo interativa dentro de um slide do deck. Foi escrito depois da integração do **Planner** — o mesmo passo-a-passo vale pra adicionar os outros.
+
+> **Status atual.** As demos do **Planner** e do **Personaliza** foram aposentadas: os produtos estão no ar e os slides linkam direto pra eles (`links` em `src/content/modules.ts` → `planner.nukibr.com`, `admin.nukibr.com`, `structa.nukibr.com`). `scripts/prepare-planner-demo.mjs` e `public/demos/planner/` foram removidos junto. **O único demo vivo é o Inspetor** — e `scripts/prepare-inspetor-demo.mjs` é a referência de código deste doc. O padrão segue válido pra módulos sem produto público acessível ao prospect. Trechos abaixo que citam o Planner são exemplos históricos dos patches, não arquivos existentes.
 
 ## Convenção de paths
 
@@ -162,8 +172,8 @@ Contadores de patches aplicados no fim do script — se algum for 0, avisa (rege
 
 Tudo já espera novos módulos:
 
-- `ModuloData.demoUrl?: string` — só setar em `modulos.data.ts` pro módulo alvo
-- `ModuleSlides.tsx` emite `<ModuloDemoSlide>` automaticamente quando `demoUrl` existe
+- `ModuleData.demoUrl?: string` — só setar em `src/content/modules.ts` pro módulo alvo
+- `ModuleSlides.tsx` emite `<ModuleDemoSlide>` automaticamente quando `demoUrl` existe
 - `ModuleSlide.tsx` troca "Saiba mais" por CTA "▷ Explorar o {título}" quando `demoUrl` existe
 - `ModuleDemoSlide.tsx` — layout fullscreen (barra 44px sticky + iframe), botões `← Voltar` e `Seguir →`, e o estado de ativação da demo
 - `DeckBehaviors.tsx` — reemite o postMessage `nuki-demo:esc` do iframe como o evento de janela `nuki-demo:exit`
@@ -197,9 +207,9 @@ arbitrário e chegava a deixar a barra de saída fora da tela.
 5. Rodar: `node scripts/prepare-<slug>-demo.mjs`
 6. Verificar contadores no output: os 3 patches devem sair como 1 cada. Se 0, revisa regex
 7. Em `src/content/modules.ts`, adicionar `demoUrl: "/demos/<slug>/index.html"` no módulo
-8. Em `src/app/page.tsx`, adicionar `<link rel="prefetch" ... />` do novo path
+8. No layout raiz do grupo `(deck)`, adicionar `<link rel="prefetch" ... />` do novo path
 9. `npx tsc --noEmit && npm run check`
-10. Abrir `/#<slug>` no browser, testar: CTA "▷ Explorar" abre já ativo, iframe carrega, ← Voltar / Seguir → funcionam, ESC no iframe funciona (bridge), o scroll atravessa a demo quando ela está inerte e o slide encaixa alinhado
+10. Abrir `/fast#<slug>` no browser, testar: CTA "▷ Explorar" abre já ativo, iframe carrega, ← Voltar / Seguir → funcionam, ESC no iframe funciona (bridge), o scroll atravessa a demo quando ela está inerte e o slide encaixa alinhado
 
 ## Gotchas
 
