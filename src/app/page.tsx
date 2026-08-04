@@ -1,44 +1,42 @@
-import { Footer } from "@/components/footer";
+import { Footer } from "@/components/layout/Footer";
+import { DeckBehaviors, EstimateProvider, ProgressNav } from "@/components/deck";
 import {
-  Capa,
-  Problema,
-  OQueEANuki,
-  Modulos,
-  Diferenciais,
-  PublicoAlvo,
-  Cases,
-  Calculadora,
-  CTA,
-  TotalEstimado,
-  CalculadoraProvider,
-  ComercialProgressNav,
-  ComercialScripts,
-} from "@/components/comercial";
+  AudienceSlide,
+  CalculatorSlide,
+  CasesSlide,
+  CoverSlide,
+  DifferentiatorsSlide,
+  EstimatedTotalSlide,
+  ModuleSlides,
+  PricingSlide,
+  ProblemSlide,
+  WhatIsNukiSlide,
+} from "@/components/slides";
 
-export default function ComercialPage() {
+export default function DeckPage() {
   return (
     <div className="jornada comercial flex min-h-screen flex-col">
-      <ComercialProgressNav />
+      <ProgressNav />
       <main className="flex flex-1 flex-col">
-        <Capa />
-        <Problema />
-        <OQueEANuki />
-        <Modulos />
-        <Diferenciais />
-        <PublicoAlvo />
-        <Cases />
-        {/* Provider engloba CTA + Calculadora + TotalEstimado — o CTA edita os
-            meses/ciclo, a Calculadora publica imagens/custo, e o TotalEstimado
-            (frame de fechamento) só lê os dois. Sem prop drilling entre
-            seções irmãs. */}
-        <CalculadoraProvider>
-          <CTA />
-          <Calculadora />
-          <TotalEstimado />
-        </CalculadoraProvider>
+        <CoverSlide />
+        <ProblemSlide />
+        <WhatIsNukiSlide />
+        <ModuleSlides />
+        <DifferentiatorsSlide />
+        <AudienceSlide />
+        <CasesSlide />
+        {/* O provider engloba os três: o PricingSlide edita meses e ciclo, o
+            CalculatorSlide publica imagens e custo, e o EstimatedTotalSlide
+            (frame de fechamento) só lê os derivados. Evita prop drilling
+            entre seções irmãs. */}
+        <EstimateProvider>
+          <PricingSlide />
+          <CalculatorSlide />
+          <EstimatedTotalSlide />
+        </EstimateProvider>
       </main>
       <Footer />
-      <ComercialScripts />
+      <DeckBehaviors />
       <div className="cm-hint" aria-hidden="true">
         Use <kbd>←</kbd> <kbd>→</kbd> para navegar
       </div>

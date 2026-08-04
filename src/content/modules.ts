@@ -8,29 +8,29 @@
  * Assets continuam vindo de `/public/jornada/*.webp` (compartilhados).
  */
 
-export type ShotKind = "desktop" | "phone";
+export type ScreenshotKind = "desktop" | "phone";
 
-export type ModuloShot = {
+export type ModuleScreenshot = {
   /** nome-base do asset em /public/jornada (sem sufixo de largura/extensão) */
   base: string;
-  kind: ShotKind;
+  kind: ScreenshotKind;
   alt: string;
 };
 
-export type ModuloBeat = {
+export type ModuleBeat = {
   title: string;
   description: string;
-  shot: ModuloShot;
+  shot: ModuleScreenshot;
 };
 
-export type ModuloHighlight = {
+export type ModuleHighlight = {
   target: number;
   prefix?: string;
   suffix?: string;
   label: string;
 };
 
-export type ModuloData = {
+export type ModuleData = {
   /** id da âncora (#planner/#personaliza/#inspetor) — casa com comercialNav */
   id: string;
   tag: string;
@@ -41,10 +41,10 @@ export type ModuloData = {
       {strong}", aria-labels, alt-texts) — mantém strings curtas e naturais. */
   title: { pre: string; strong: string };
   /** intro curta que aparece no topo da coluna esquerda */
-  descricao: string;
-  beats: ModuloBeat[];
-  highlights: ModuloHighlight[];
-  saibaMaisHref: string;
+  description: string;
+  beats: ModuleBeat[];
+  highlights: ModuleHighlight[];
+  learnMoreHref: string;
   /** Opcional. CTAs que abrem o produto real em nova aba. Tem precedência sobre
       `demoUrl` e sobre o "Saiba mais" — quando o módulo já tem app público no ar,
       mandar o prospect pro produto vale mais que qualquer demo embutida. */
@@ -62,14 +62,14 @@ export type ModuloData = {
   videoUrl?: string;
 };
 
-export const modulos: ModuloData[] = [
+export const modules: ModuleData[] = [
   {
     id: "planner",
     tag: "Fase 01 — Planejamento",
     title: { pre: "Conheça o", strong: "Planner" },
-    descricao:
+    description:
       "Estrutura o memorial e forma o custo antes da venda começar — o que hoje leva 3 a 4 meses em planilhas. Catálogo, tipologias e preços na plataforma, com a construtora colaborando por link e rastreabilidade total.",
-    saibaMaisHref: "https://nukibr.com/recursos/controle-analise",
+    learnMoreHref: "https://nukibr.com/recursos/controle-analise",
     links: [{ label: "Explorar o Planner", href: "https://planner.nukibr.com/" }],
     beats: [
       {
@@ -112,9 +112,9 @@ export const modulos: ModuloData[] = [
     id: "personaliza",
     tag: "Fase 02 — Personalização",
     title: { pre: "Descubra o", strong: "Personaliza" },
-    descricao:
+    description:
       "Seu cliente escolhe os acabamentos vendo o impacto técnico e financeiro na hora — e cada decisão vira aditivo digital, receita no dashboard e insumo pronto para a obra. Tudo puxando o que o Planner já produziu.",
-    saibaMaisHref: "https://nukibr.com/recursos/personalizacao",
+    learnMoreHref: "https://nukibr.com/recursos/personalizacao",
     links: [
       { label: "Conheça o Personaliza", href: "https://admin.nukibr.com/" },
       { label: "Visão do cliente", href: "https://structa.nukibr.com/" },
@@ -170,9 +170,9 @@ export const modulos: ModuloData[] = [
     id: "inspetor",
     tag: "Fase 03 — Entrega",
     title: { pre: "Entenda o", strong: "Inspetor" },
-    descricao:
+    description:
       "A vistoria sai do papel e ganha rastreabilidade. Checklist automático das escolhas do cliente, foto e conformidade item a item, relatório pronto no fim da inspeção — retrabalho de obra custa 10x mais quando aparece na entrega.",
-    saibaMaisHref: "https://nukibr.com/recursos/controle-analise",
+    learnMoreHref: "https://nukibr.com/recursos/controle-analise",
     demoUrl: "/demos/inspetor/index.html",
     beats: [
       {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ModuloData } from "./modulos.data";
+import type { ModuleData } from "@/content/modules";
 
 /**
  * Slide fullscreen com a demo interativa do módulo dentro de um iframe.
@@ -25,7 +25,7 @@ import type { ModuloData } from "./modulos.data";
  * dispara. MVP usa só o botão × Voltar. Fase 2 pode injetar postMessage no HTML
  * do Planner pra mandar 'demo:back' pro pai.
  */
-export function ModuloDemoSlide({ data }: { data: ModuloData }) {
+export function ModuleDemoSlide({ data }: { data: ModuleData }) {
   const [loaded, setLoaded] = useState(false);
 
   if (!data.demoUrl) return null;

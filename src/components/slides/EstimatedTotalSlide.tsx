@@ -1,7 +1,8 @@
 "use client";
 
-import { useCountUp, currency } from "./calc-shared";
-import { usePlanoSimulador } from "./CalculadoraContext";
+import { useCountUp } from "@/hooks/useCountUp";
+import { formatCurrency } from "@/lib/format";
+import { useEstimate } from "@/components/deck/EstimateProvider";
 
 /**
  * Frame de fechamento da apresentação — consolida o que o prospect configurou
@@ -11,12 +12,12 @@ import { usePlanoSimulador } from "./CalculadoraContext";
  * Vive depois da Calculadora de propósito: é a última coisa antes do footer, e
  * o gradiente da seção costura o branco da Calculadora com o cinza do footer.
  */
-export function TotalEstimado() {
-  const { totals, custoPlataforma, totalMeses, totalGeral } = usePlanoSimulador();
+export function EstimatedTotalSlide() {
+  const { totals, platformCost, totalMonths, grandTotal } = useEstimate();
 
-  const custoImagensDisplay = useCountUp(totals.custoImagens);
-  const custoPlataformaDisplay = useCountUp(custoPlataforma);
-  const totalGeralDisplay = useCountUp(totalGeral);
+  const imageCostDisplay = useCountUp(totals.imageCost);
+  const platformCostDisplay = useCountUp(platformCost);
+  const grandTotalDisplay = useCountUp(grandTotal);
 
   return (
     <section className="cm-section total-estimado" id="total" data-reveal-group="">
@@ -36,27 +37,27 @@ export function TotalEstimado() {
             <div className="total-estimado-line">
               <span className="total-estimado-line-label">Setup de imagens</span>
               <span className="total-estimado-line-value">
-                {currency(custoImagensDisplay)}
+                {formatCurrency(imageCostDisplay)}
               </span>
               <span className="total-estimado-line-hint">
-                {totals.imagensTotal.toLocaleString("pt-BR")} imagens estimadas
+                {totals.imageCount.toLocaleString("pt-BR")} imagens estimadas
               </span>
             </div>
             <div className="total-estimado-line">
               <span className="total-estimado-line-label">Plataforma</span>
               <span className="total-estimado-line-value">
-                {currency(custoPlataformaDisplay)}
+                {formatCurrency(platformCostDisplay)}
               </span>
               <span className="total-estimado-line-hint">
-                {totalMeses === 0
+                {totalMonths === 0
                   ? "configure os meses em Plano & contato"
-                  : `${totalMeses} ${totalMeses === 1 ? "mês" : "meses"} de operação Nuki`}
+                  : `${totalMonths} ${totalMonths === 1 ? "mês" : "meses"} de operação Nuki`}
               </span>
             </div>
             <div className="total-estimado-total">
               <span className="total-estimado-total-label">Total</span>
               <span className="total-estimado-total-value">
-                {currency(totalGeralDisplay)}
+                {formatCurrency(grandTotalDisplay)}
               </span>
             </div>
           </div>

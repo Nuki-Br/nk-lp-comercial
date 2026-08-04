@@ -38,7 +38,7 @@ function unlockStore() {
  * no localStorage — em reloads seguintes o conteúdo aparece direto, sem pedir
  * senha de novo.
  */
-export function ComercialGate({ children }: { children: React.ReactNode }) {
+export function AccessGate({ children }: { children: React.ReactNode }) {
   const unlocked = useSyncExternalStore(
     subscribe,
     getSnapshot,

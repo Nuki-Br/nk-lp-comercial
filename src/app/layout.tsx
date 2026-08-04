@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
-import { ComercialGate } from "@/components/comercial/ComercialGate";
-import "./globals.css";
-import "./jornada.css";
-import "./comercial.css";
+import { AccessGate } from "@/components/deck/AccessGate";
+import "@/styles/globals.css";
+import "@/styles/deck.css";
+import "@/styles/slides.css";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -54,7 +54,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${manrope.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-nuki-cinza-claro text-nuki-preto">
-        <ComercialGate>{children}</ComercialGate>
+        <AccessGate>{children}</AccessGate>
       </body>
     </html>
   );

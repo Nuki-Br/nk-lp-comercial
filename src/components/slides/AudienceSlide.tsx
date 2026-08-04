@@ -1,6 +1,6 @@
-import { personas, fitList } from "./comercial.data";
+import { personas, fitList } from "@/content/deck";
 
-export function PublicoAlvo() {
+export function AudienceSlide() {
   return (
     <section className="cm-section publico" id="publico" data-reveal-group="">
       <div className="cm-wrap">
@@ -17,13 +17,13 @@ export function PublicoAlvo() {
 
         <div className="personas">
           {personas.map((p) => (
-            <article className="persona reveal" key={p.nome}>
+            <article className="persona reveal" key={p.name}>
               <span className="role">{p.role}</span>
-              <h3>{p.nome}</h3>
+              <h3>{p.name}</h3>
               <p className="rot">Foco</p>
               <p className="foco">{p.foco}</p>
               <p className="rot">Dor típica</p>
-              <p className="dor">{p.dor}</p>
+              <p className="dor">{p.pain}</p>
             </article>
           ))}
         </div>

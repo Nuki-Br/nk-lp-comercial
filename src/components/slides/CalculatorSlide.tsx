@@ -2,74 +2,76 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  buildDefaultAmbientes,
-  emptyImpacto,
-  AMBIENTE_PRESETS,
-  CALC_DEFAULTS,
-  CALC_RANGES,
-  CUSTOM_AMBIENTE_DEFAULTS,
-  type AmbienteClasse,
-  type AmbienteConfig,
-  type AmbientePeso,
-  type MetragemState,
-} from "./comercial.data";
-import { Stepper, useCountUp, currency, clamp } from "./calc-shared";
-import { useCalculadoraTotals } from "./CalculadoraContext";
+  buildDefaultRooms,
+  noImpactedRooms,
+  ROOM_PRESETS,
+  ESTIMATE_DEFAULTS,
+  ESTIMATE_RANGES,
+  CUSTOM_ROOM_DEFAULTS,
+  type RoomAreaType,
+  type RoomConfig,
+  type RoomWeight,
+  type UnitTypeState,
+} from "@/content/deck";
+import { Stepper } from "@/components/ui/Stepper";
+import { useCountUp } from "@/hooks/useCountUp";
+import { formatCurrency, clamp } from "@/lib/format";
+import { useEstimate } from "@/components/deck/EstimateProvider";
 
 /* ============ TIPOS AUXILIARES ============ */
 
-type Ambiente = {
+type RoomUnit = {
   key: string;
   label: string;
-  peso: AmbientePeso;
-  imagens: number;
+  weight: RoomWeight;
+  images: number;
 };
 
-type MetragemCalc = {
+type UnitTypeBreakdown = {
   /** Composição completa da metragem — os tiles da Variação 01 */
-  ambientes: Ambiente[];
+  rooms: RoomUnit[];
   /** Subset re-renderizado a cada variação extra — os tiles da Variação 02+ */
-  impactados: Ambiente[];
+  impactedRooms: RoomUnit[];
   /** Imgs da composição base (Var 01) */
   base: number;
   /** Imgs re-renderizadas por variação extra (soma dos impactados) */
-  extrasPorVariacao: number;
+  imagesPerExtraVariant: number;
   /** Imgs de todas as variações extras somadas */
-  extrasTotal: number;
+  extraVariantImages: number;
   /** Total da metragem (base + extrasTotal) */
   total: number;
 };
 
 /* ============ HELPERS DE CÁLCULO ============ */
 
-function opcoesFor(classe: AmbienteClasse, opcoesSecas: number, opcoesMolh: number): number {
-  return classe === "seca" ? opcoesSecas : opcoesMolh;
+function optionsForArea(areaType: RoomAreaType, dryOptions: number, wetOptions: number): number {
+  return areaType === "seca" ? dryOptions : wetOptions;
 }
 
 /** Rotula a n-ésima unidade de um ambiente. Se quantidade = 1, usa o nome
     inteiro (Sala, Cozinha, Home Office...). Se quantidade > 1, usa a
     primeira letra maiúscula + índice (Q1, Q2, B1, B2, S1...). */
-function labelForUnit(a: AmbienteConfig, i: number): string {
-  if (a.quantidade === 1) return a.nome;
-  const first = a.nome.trim().charAt(0).toUpperCase() || "A";
+function roomUnitLabel(a: RoomConfig, i: number): string {
+  if (a.units === 1) return a.name;
+  const first = a.name.trim().charAt(0).toUpperCase() || "A";
   return `${first}${i}`;
 }
 
-function buildAmbientes(
-  m: MetragemState,
-  opcoesSecas: number,
-  opcoesMolh: number,
-): Ambiente[] {
-  const list: Ambiente[] = [];
-  m.ambientes.forEach((a) => {
-    if (a.quantidade <= 0) return;
-    const imgsPerUnit = a.componentes * opcoesFor(a.classe, opcoesSecas, opcoesMolh);
-    for (let i = 1; i <= a.quantidade; i++) {
+function buildRoomUnits(
+  m: UnitTypeState,
+  dryOptions: number,
+  wetOptions: number,
+): RoomUnit[] {
+  const list: RoomUnit[] = [];
+  m.rooms.forEach((a) => {
+    if (a.units <= 0) return;
+    const imgsPerUnit = a.components * optionsForArea(a.areaType, dryOptions, wetOptions);
+    for (let i = 1; i <= a.units; i++) {
       list.push({
-        key: a.quantidade === 1 ? a.id : `${a.id}-${i}`,
-        label: labelForUnit(a, i),
-        peso: a.peso,
-        imagens: imgsPerUnit,
+        key: a.units === 1 ? a.id : `${a.id}-${i}`,
+        label: roomUnitLabel(a, i),
+        weight: a.weight,
+        images: imgsPerUnit,
       });
     }
   });
@@ -80,38 +82,38 @@ function buildAmbientes(
     marcado, na ordem em que aparecem na lista da metragem. É o que
     aparece nos cards de Variação 02+, representando o subset que muda
     entre variações. Usa os componentes definidos na config do ambient. */
-function buildImpactados(
-  m: MetragemState,
-  opcoesSecas: number,
-  opcoesMolh: number,
-): Ambiente[] {
-  return m.ambientes
-    .filter((a) => m.impactoAmbientes[a.id])
+function buildImpactedRoomUnits(
+  m: UnitTypeState,
+  dryOptions: number,
+  wetOptions: number,
+): RoomUnit[] {
+  return m.rooms
+    .filter((a) => m.impactedRooms[a.id])
     .map((a) => ({
       key: `impacto-${a.id}`,
-      label: a.nome,
-      peso: a.peso,
-      imagens: a.componentes * opcoesFor(a.classe, opcoesSecas, opcoesMolh),
+      label: a.name,
+      weight: a.weight,
+      images: a.components * optionsForArea(a.areaType, dryOptions, wetOptions),
     }));
 }
 
-function calcularMetragem(
-  m: MetragemState,
-  opcoesSecas: number,
-  opcoesMolh: number,
-): MetragemCalc {
-  const ambientes = buildAmbientes(m, opcoesSecas, opcoesMolh);
-  const impactados = buildImpactados(m, opcoesSecas, opcoesMolh);
-  const base = ambientes.reduce((acc, a) => acc + a.imagens, 0);
-  const extrasPorVariacao = impactados.reduce((acc, a) => acc + a.imagens, 0);
-  const extrasTotal = (m.variacoes - 1) * extrasPorVariacao;
+function computeUnitType(
+  m: UnitTypeState,
+  dryOptions: number,
+  wetOptions: number,
+): UnitTypeBreakdown {
+  const rooms = buildRoomUnits(m, dryOptions, wetOptions);
+  const impactedRooms = buildImpactedRoomUnits(m, dryOptions, wetOptions);
+  const base = rooms.reduce((acc, a) => acc + a.images, 0);
+  const imagesPerExtraVariant = impactedRooms.reduce((acc, a) => acc + a.images, 0);
+  const extraVariantImages = (m.variants - 1) * imagesPerExtraVariant;
   return {
-    ambientes,
-    impactados,
+    rooms,
+    impactedRooms,
     base,
-    extrasPorVariacao,
-    extrasTotal,
-    total: base + extrasTotal,
+    imagesPerExtraVariant,
+    extraVariantImages,
+    total: base + extraVariantImages,
   };
 }
 
@@ -121,24 +123,24 @@ function calcularMetragem(
     - null: botão colapsado
     - picker: mostra os 5 chips de preset + "Personalizado"
     - custom: mostra o form de nome + classe (fluxo antigo) */
-type AddingState =
+type AddRoomState =
   | null
   | { mode: "picker" }
-  | { mode: "custom"; nome: string; classe: AmbienteClasse };
+  | { mode: "custom"; name: string; areaType: RoomAreaType };
 
-export function Calculadora() {
-  const [opcoesSecas, setOpcoesSecas] = useState(CALC_DEFAULTS.opcoesSecas);
-  const [opcoesMolhadas, setOpcoesMolhadas] = useState(CALC_DEFAULTS.opcoesMolhadas);
-  const [precoPorImagem, setPrecoPorImagem] = useState(CALC_DEFAULTS.precoPorImagem);
-  const [metragens, setMetragens] = useState<MetragemState[]>(() =>
-    CALC_DEFAULTS.metragensIniciais(),
+export function CalculatorSlide() {
+  const [dryOptions, setOpcoesSecas] = useState(ESTIMATE_DEFAULTS.dryOptions);
+  const [wetOptions, setOpcoesMolhadas] = useState(ESTIMATE_DEFAULTS.wetOptions);
+  const [pricePerImage, setPricePerImage] = useState(ESTIMATE_DEFAULTS.pricePerImage);
+  const [unitTypes, setMetragens] = useState<UnitTypeState[]>(() =>
+    ESTIMATE_DEFAULTS.initialUnitTypes(),
   );
-  const [metragemAtiva, setMetragemAtiva] = useState(0);
-  const [addingAmbiente, setAddingAmbiente] = useState<AddingState>(null);
+  const [activeUnitTypeIndex, setMetragemAtiva] = useState(0);
+  const [addingAmbiente, setAddingAmbiente] = useState<AddRoomState>(null);
   /** Painel escondido de config da apresentação. Toggle via Ctrl+Alt+K,
       fecha com ESC. Nunca visível ao cliente sem o atalho. */
   const [adminOpen, setAdminOpen] = useState(false);
-  const nextIdRef = useRef(metragens.length + 1);
+  const nextIdRef = useRef(unitTypes.length + 1);
   const nextCustomIdRef = useRef(1);
 
   /* Listener global do atalho do painel escondido. Ctrl+Alt+K (Control+Option+K
@@ -164,23 +166,23 @@ export function Calculadora() {
     return () => window.removeEventListener("keydown", onKey);
   }, [adminOpen]);
 
-  const metragensCalc = metragens.map((m) => ({ m, calc: calcularMetragem(m, opcoesSecas, opcoesMolhadas) }));
-  const imagensTotal = metragensCalc.reduce((a, { calc }) => a + calc.total, 0);
-  const custoTotal = imagensTotal * precoPorImagem;
+  const unitTypeBreakdowns = unitTypes.map((m) => ({ m, calc: computeUnitType(m, dryOptions, wetOptions) }));
+  const imageCount = unitTypeBreakdowns.reduce((a, { calc }) => a + calc.total, 0);
+  const totalImageCost = imageCount * pricePerImage;
 
-  const imagensDisplay = useCountUp(imagensTotal);
-  const custoDisplay = useCountUp(custoTotal);
+  const imageCountDisplay = useCountUp(imageCount);
+  const costDisplay = useCountUp(totalImageCost);
 
-  const ativa = metragens[metragemAtiva];
-  const ativaCalc = metragensCalc[metragemAtiva]?.calc;
+  const isActive = unitTypes[activeUnitTypeIndex];
+  const activeBreakdown = unitTypeBreakdowns[activeUnitTypeIndex]?.calc;
 
   /* Publica os totais no context pra CTA compor o "Total consolidado".
      Sync intencional de estado derivado entre seções irmãs; alternativa
      seria lift-up completo do state da Calculadora — refactor grande demais. */
-  const { setTotals } = useCalculadoraTotals();
+  const { setTotals } = useEstimate();
   useEffect(() => {
-    setTotals({ imagensTotal, custoImagens: custoTotal });
-  }, [imagensTotal, custoTotal, setTotals]);
+    setTotals({ imageCount, imageCost: totalImageCost });
+  }, [imageCount, totalImageCost, setTotals]);
 
   /* ============ MUTATORS ============ */
 
@@ -191,19 +193,19 @@ export function Calculadora() {
     setAddingAmbiente(null);
   };
 
-  const updateAtiva = (patch: Partial<MetragemState>) => {
+  const updateAtiva = (patch: Partial<UnitTypeState>) => {
     setMetragens((prev) =>
-      prev.map((m, i) => (i === metragemAtiva ? { ...m, ...patch } : m)),
+      prev.map((m, i) => (i === activeUnitTypeIndex ? { ...m, ...patch } : m)),
     );
   };
 
-  const updateAmbiente = (id: string, patch: Partial<AmbienteConfig>) => {
+  const updateAmbiente = (id: string, patch: Partial<RoomConfig>) => {
     setMetragens((prev) =>
       prev.map((m, i) =>
-        i === metragemAtiva
+        i === activeUnitTypeIndex
           ? {
               ...m,
-              ambientes: m.ambientes.map((a) => (a.id === id ? { ...a, ...patch } : a)),
+              rooms: m.rooms.map((a) => (a.id === id ? { ...a, ...patch } : a)),
             }
           : m,
       ),
@@ -213,12 +215,12 @@ export function Calculadora() {
   const removeAmbiente = (id: string) => {
     setMetragens((prev) =>
       prev.map((m, i) =>
-        i === metragemAtiva
+        i === activeUnitTypeIndex
           ? {
               ...m,
-              ambientes: m.ambientes.filter((a) => a.id !== id),
-              impactoAmbientes: Object.fromEntries(
-                Object.entries(m.impactoAmbientes).filter(([k]) => k !== id),
+              rooms: m.rooms.filter((a) => a.id !== id),
+              impactedRooms: Object.fromEntries(
+                Object.entries(m.impactedRooms).filter(([k]) => k !== id),
               ),
             }
           : m,
@@ -230,21 +232,21 @@ export function Calculadora() {
       {nome, classe} — usado tanto pelos presets quanto pelo custom form.
       Peso/quantidade/componentes vêm dos defaults; user edita nos controles
       do tile depois. */
-  const addAmbient = (nome: string, classe: AmbienteClasse) => {
-    const trimmed = nome.trim();
+  const addAmbient = (name: string, areaType: RoomAreaType) => {
+    const trimmed = name.trim();
     if (!trimmed) return;
     const id = `custom-${nextCustomIdRef.current++}`;
-    const novo: AmbienteConfig = {
+    const updated: RoomConfig = {
       id,
-      nome: trimmed,
-      classe,
-      peso: CUSTOM_AMBIENTE_DEFAULTS.peso,
-      quantidade: CUSTOM_AMBIENTE_DEFAULTS.quantidade,
-      componentes: CUSTOM_AMBIENTE_DEFAULTS.componentes,
+      name: trimmed,
+      areaType,
+      weight: CUSTOM_ROOM_DEFAULTS.weight,
+      units: CUSTOM_ROOM_DEFAULTS.units,
+      components: CUSTOM_ROOM_DEFAULTS.components,
     };
     setMetragens((prev) =>
       prev.map((m, i) =>
-        i === metragemAtiva ? { ...m, ambientes: [...m.ambientes, novo] } : m,
+        i === activeUnitTypeIndex ? { ...m, rooms: [...m.rooms, updated] } : m,
       ),
     );
     setAddingAmbiente(null);
@@ -252,16 +254,16 @@ export function Calculadora() {
 
   const confirmAddAmbiente = () => {
     if (addingAmbiente?.mode !== "custom") return;
-    addAmbient(addingAmbiente.nome, addingAmbiente.classe);
+    addAmbient(addingAmbiente.name, addingAmbiente.areaType);
   };
 
   const toggleImpacto = (id: string) => {
     setMetragens((prev) =>
       prev.map((m, i) =>
-        i === metragemAtiva
+        i === activeUnitTypeIndex
           ? {
               ...m,
-              impactoAmbientes: { ...m.impactoAmbientes, [id]: !m.impactoAmbientes[id] },
+              impactedRooms: { ...m.impactedRooms, [id]: !m.impactedRooms[id] },
             }
           : m,
       ),
@@ -272,25 +274,25 @@ export function Calculadora() {
      closure do render, então cliques em sequência antes do commit leriam um
      length velho e furariam o teto (8 cliques rápidos = 9 metragens). */
   const addMetragem = () => {
-    if (metragens.length >= CALC_RANGES.metragens.max) return;
+    if (unitTypes.length >= ESTIMATE_RANGES.unitTypes.max) return;
     const id = nextIdRef.current++;
-    const nova: MetragemState = {
+    const updated: UnitTypeState = {
       id,
-      ambientes: buildDefaultAmbientes(),
-      variacoes: 1,
-      impactoAmbientes: emptyImpacto(),
+      rooms: buildDefaultRooms(),
+      variants: 1,
+      impactedRooms: noImpactedRooms(),
     };
     setMetragens((prev) =>
-      prev.length >= CALC_RANGES.metragens.max ? prev : [...prev, nova],
+      prev.length >= ESTIMATE_RANGES.unitTypes.max ? prev : [...prev, updated],
     );
-    setMetragemAtiva(Math.min(metragens.length, CALC_RANGES.metragens.max - 1));
+    setMetragemAtiva(Math.min(unitTypes.length, ESTIMATE_RANGES.unitTypes.max - 1));
     setAddingAmbiente(null);
   };
 
   const removeMetragem = (idx: number) => {
-    if (metragens.length <= CALC_RANGES.metragens.min) return;
+    if (unitTypes.length <= ESTIMATE_RANGES.unitTypes.min) return;
     setMetragens((prev) =>
-      prev.length <= CALC_RANGES.metragens.min ? prev : prev.filter((_, i) => i !== idx),
+      prev.length <= ESTIMATE_RANGES.unitTypes.min ? prev : prev.filter((_, i) => i !== idx),
     );
     setMetragemAtiva((prev) => {
       if (prev > idx) return prev - 1;
@@ -328,16 +330,16 @@ export function Calculadora() {
             <input
               id="calc-admin-vpi"
               type="number"
-              min={CALC_RANGES.precoPorImagem.min}
-              max={CALC_RANGES.precoPorImagem.max}
+              min={ESTIMATE_RANGES.pricePerImage.min}
+              max={ESTIMATE_RANGES.pricePerImage.max}
               step={1}
-              value={precoPorImagem}
+              value={pricePerImage}
               onChange={(e) =>
-                setPrecoPorImagem(
+                setPricePerImage(
                   clamp(
                     parseInt(e.target.value, 10) || 1,
-                    CALC_RANGES.precoPorImagem.min,
-                    CALC_RANGES.precoPorImagem.max,
+                    ESTIMATE_RANGES.pricePerImage.min,
+                    ESTIMATE_RANGES.pricePerImage.max,
                   ),
                 )
               }
@@ -367,9 +369,9 @@ export function Calculadora() {
               <div className="calc-field">
                 <label className="calc-label calc-label-sm">Opções por componente · secas</label>
                 <Stepper
-                  value={opcoesSecas}
-                  min={CALC_RANGES.opcoesSecas.min}
-                  max={CALC_RANGES.opcoesSecas.max}
+                  value={dryOptions}
+                  min={ESTIMATE_RANGES.dryOptions.min}
+                  max={ESTIMATE_RANGES.dryOptions.max}
                   onChange={setOpcoesSecas}
                   ariaLabel="Opções por componente em áreas secas"
                 />
@@ -377,9 +379,9 @@ export function Calculadora() {
               <div className="calc-field">
                 <label className="calc-label calc-label-sm">Opções por componente · molhadas</label>
                 <Stepper
-                  value={opcoesMolhadas}
-                  min={CALC_RANGES.opcoesMolhadas.min}
-                  max={CALC_RANGES.opcoesMolhadas.max}
+                  value={wetOptions}
+                  min={ESTIMATE_RANGES.wetOptions.min}
+                  max={ESTIMATE_RANGES.wetOptions.max}
                   onChange={setOpcoesMolhadas}
                   ariaLabel="Opções por componente em áreas molhadas"
                 />
@@ -388,12 +390,12 @@ export function Calculadora() {
 
             {/* Tabs de metragens */}
             <div className="calc-metragem-tabs" role="tablist" aria-label="Metragens do empreendimento">
-              {metragens.map((m, i) => (
+              {unitTypes.map((m, i) => (
                 <div
                   key={m.id}
-                  className={`calc-metragem-tab${i === metragemAtiva ? " on" : ""}`}
+                  className={`calc-metragem-tab${i === activeUnitTypeIndex ? " on" : ""}`}
                   role="tab"
-                  aria-selected={i === metragemAtiva}
+                  aria-selected={i === activeUnitTypeIndex}
                 >
                   <button
                     type="button"
@@ -402,7 +404,7 @@ export function Calculadora() {
                   >
                     Metragem {String(i + 1).padStart(2, "0")}
                   </button>
-                  {metragens.length > CALC_RANGES.metragens.min && (
+                  {unitTypes.length > ESTIMATE_RANGES.unitTypes.min && (
                     <button
                       type="button"
                       className="calc-metragem-tab-x"
@@ -417,7 +419,7 @@ export function Calculadora() {
                   )}
                 </div>
               ))}
-              {metragens.length < CALC_RANGES.metragens.max && (
+              {unitTypes.length < ESTIMATE_RANGES.unitTypes.max && (
                 <button
                   type="button"
                   className="calc-metragem-add"
@@ -430,16 +432,16 @@ export function Calculadora() {
             </div>
 
             {/* Painel da metragem ativa */}
-            {ativa && (
+            {isActive && (
               <div className="calc-metragem-panel">
                 <div className="calc-ambient-rows">
                   <p className="calc-label calc-ambient-rows-head">Ambientes personalizáveis</p>
-                  {ativa.ambientes.map((a) => (
-                    <AmbientRow
+                  {isActive.rooms.map((a) => (
+                    <RoomRow
                       key={a.id}
-                      ambiente={a}
-                      onQuantidadeChange={(v) => updateAmbiente(a.id, { quantidade: v })}
-                      onComponentesChange={(v) => updateAmbiente(a.id, { componentes: v })}
+                      room={a}
+                      onQuantidadeChange={(v) => updateAmbiente(a.id, { units: v })}
+                      onComponentesChange={(v) => updateAmbiente(a.id, { components: v })}
                       onRemove={() => removeAmbiente(a.id)}
                     />
                   ))}
@@ -447,9 +449,9 @@ export function Calculadora() {
                   <AddAmbienteControl
                     state={addingAmbiente}
                     onOpen={() => setAddingAmbiente({ mode: "picker" })}
-                    onSelectPreset={(preset) => addAmbient(preset.nome, preset.classe)}
+                    onSelectPreset={(preset) => addAmbient(preset.name, preset.areaType)}
                     onSelectCustom={() =>
-                      setAddingAmbiente({ mode: "custom", nome: "", classe: "molhada" })
+                      setAddingAmbiente({ mode: "custom", name: "", areaType: "molhada" })
                     }
                     onChange={(patch) =>
                       setAddingAmbiente((prev) =>
@@ -469,9 +471,9 @@ export function Calculadora() {
                         key={n}
                         type="button"
                         role="radio"
-                        aria-checked={n === ativa.variacoes}
-                        className={`calc-pill${n === ativa.variacoes ? " on" : ""}`}
-                        onClick={() => updateAtiva({ variacoes: n })}
+                        aria-checked={n === isActive.variants}
+                        className={`calc-pill${n === isActive.variants ? " on" : ""}`}
+                        onClick={() => updateAtiva({ variants: n })}
                       >
                         {n}
                       </button>
@@ -479,7 +481,7 @@ export function Calculadora() {
                   </div>
                 </div>
 
-                {ativa.variacoes > 1 && (
+                {isActive.variants > 1 && (
                   <div className="calc-field calc-axes">
                     <div className="calc-axes-head">
                       <label className="calc-label">Ambientes impactados nas variações</label>
@@ -488,15 +490,15 @@ export function Calculadora() {
                       </p>
                     </div>
                     <div className="calc-axes-grid">
-                      {ativa.ambientes.map((a) => (
+                      {isActive.rooms.map((a) => (
                         <label key={a.id} className="calc-axis">
                           <input
                             type="checkbox"
-                            checked={!!ativa.impactoAmbientes[a.id]}
+                            checked={!!isActive.impactedRooms[a.id]}
                             onChange={() => toggleImpacto(a.id)}
                           />
                           <span className="calc-axis-box" aria-hidden="true" />
-                          <span className="calc-axis-title">{a.nome}</span>
+                          <span className="calc-axis-title">{a.name}</span>
                         </label>
                       ))}
                     </div>
@@ -509,13 +511,13 @@ export function Calculadora() {
           {/* ============ VISUAL + OUTPUT ============ */}
           <div className="calc-visual">
             <div className="calc-cards">
-              {metragensCalc.map(({ m, calc }, mIdx) => (
-                <MetragemGroup
+              {unitTypeBreakdowns.map(({ m, calc }, mIdx) => (
+                <UnitTypeGroup
                   key={m.id}
                   index={mIdx}
-                  metragem={m}
+                  unitType={m}
                   calc={calc}
-                  ativa={mIdx === metragemAtiva}
+                  isActive={mIdx === activeUnitTypeIndex}
                   onSelect={() => selectMetragem(mIdx)}
                 />
               ))}
@@ -524,13 +526,13 @@ export function Calculadora() {
             <div className="calc-output">
               <div className="calc-out-block">
                 <span className="calc-out-value">
-                  {imagensDisplay.toLocaleString("pt-BR")}
+                  {imageCountDisplay.toLocaleString("pt-BR")}
                 </span>
                 <span className="calc-out-label">imagens necessárias</span>
               </div>
               <div className="calc-out-divider" aria-hidden="true" />
               <div className="calc-out-block">
-                <span className="calc-out-value">{currency(custoDisplay)}</span>
+                <span className="calc-out-value">{formatCurrency(costDisplay)}</span>
                 <span className="calc-out-label">setup de imagens estimado</span>
               </div>
             </div>
@@ -548,12 +550,12 @@ export function Calculadora() {
             </aside>
 
             <p className="calc-note">
-              {metragens.length} {metragens.length === 1 ? "metragem" : "metragens"} · escala {opcoesSecas}/{opcoesMolhadas} opções por componente (secas/molhadas).
-              {ativaCalc && (
+              {unitTypes.length} {unitTypes.length === 1 ? "metragem" : "metragens"} · escala {dryOptions}/{wetOptions} opções por componente (secas/molhadas).
+              {activeBreakdown && (
                 <>
                   {" "}
-                  Metragem {String(metragemAtiva + 1).padStart(2, "0")}: {ativaCalc.base} base
-                  {ativaCalc.extrasTotal > 0 && ` + ${ativaCalc.extrasTotal} das variações`}.
+                  Metragem {String(activeUnitTypeIndex + 1).padStart(2, "0")}: {activeBreakdown.base} base
+                  {activeBreakdown.extraVariantImages > 0 && ` + ${activeBreakdown.extraVariantImages} das variações`}.
                 </>
               )}
             </p>
@@ -567,25 +569,25 @@ export function Calculadora() {
 
 /* ============ SUB-COMPONENTES ============ */
 
-function AmbientRow({
-  ambiente,
+function RoomRow({
+  room,
   onQuantidadeChange,
   onComponentesChange,
   onRemove,
 }: {
-  ambiente: AmbienteConfig;
+  room: RoomConfig;
   onQuantidadeChange: (v: number) => void;
   onComponentesChange: (v: number) => void;
   onRemove: () => void;
 }) {
-  const zerada = ambiente.quantidade <= 0;
+  const isEmpty = room.units <= 0;
   return (
-    <div className={`calc-ambient-row${zerada ? " zerada" : ""}`}>
+    <div className={`calc-ambient-row${isEmpty ? " zerada" : ""}`}>
       <span className="calc-ambient-row-name">
-        {ambiente.nome}
-        {!ambiente.locked && (
-          <span className="calc-ambient-row-classe" aria-label={`Classificação: ${ambiente.classe}`}>
-            {ambiente.classe === "seca" ? "seca" : "molhada"}
+        {room.name}
+        {!room.locked && (
+          <span className="calc-ambient-row-classe" aria-label={`Classificação: ${room.areaType}`}>
+            {room.areaType === "seca" ? "seca" : "molhada"}
           </span>
         )}
       </span>
@@ -593,30 +595,30 @@ function AmbientRow({
         <div className="calc-micro-field">
           <span className="calc-micro-label">unidades</span>
           <Stepper
-            value={ambiente.quantidade}
-            min={CALC_RANGES.quantidade.min}
-            max={CALC_RANGES.quantidade.max}
+            value={room.units}
+            min={ESTIMATE_RANGES.units.min}
+            max={ESTIMATE_RANGES.units.max}
             onChange={onQuantidadeChange}
-            ariaLabel={`Unidades de ${ambiente.nome}`}
+            ariaLabel={`Unidades de ${room.name}`}
           />
         </div>
         <div className="calc-micro-field">
           <span className="calc-micro-label">componentes</span>
           <Stepper
-            value={ambiente.componentes}
-            min={CALC_RANGES.componentes.min}
-            max={CALC_RANGES.componentes.max}
+            value={room.components}
+            min={ESTIMATE_RANGES.components.min}
+            max={ESTIMATE_RANGES.components.max}
             onChange={onComponentesChange}
-            ariaLabel={`Componentes por ${ambiente.nome}`}
+            ariaLabel={`Componentes por ${room.name}`}
           />
         </div>
-        {!ambiente.locked && (
+        {!room.locked && (
           <button
             type="button"
             className="calc-ambient-remove"
             onClick={onRemove}
-            aria-label={`Remover ${ambiente.nome}`}
-            title={`Remover ${ambiente.nome}`}
+            aria-label={`Remover ${room.name}`}
+            title={`Remover ${room.name}`}
           >
             ×
           </button>
@@ -635,11 +637,11 @@ function AddAmbienteControl({
   onConfirm,
   onCancel,
 }: {
-  state: AddingState;
+  state: AddRoomState;
   onOpen: () => void;
-  onSelectPreset: (preset: (typeof AMBIENTE_PRESETS)[number]) => void;
+  onSelectPreset: (preset: (typeof ROOM_PRESETS)[number]) => void;
   onSelectCustom: () => void;
-  onChange: (patch: Partial<{ nome: string; classe: AmbienteClasse }>) => void;
+  onChange: (patch: Partial<{ name: string; areaType: RoomAreaType }>) => void;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -658,16 +660,16 @@ function AddAmbienteControl({
       <div className="calc-add-ambient-picker" role="group" aria-label="Escolher ambiente">
         <p className="calc-add-ambient-picker-label">Escolha um ambiente:</p>
         <div className="calc-add-ambient-preset-list">
-          {AMBIENTE_PRESETS.map((preset) => (
+          {ROOM_PRESETS.map((preset) => (
             <button
-              key={preset.nome}
+              key={preset.name}
               type="button"
-              className={`calc-add-ambient-preset calc-add-ambient-preset-${preset.classe}`}
+              className={`calc-add-ambient-preset calc-add-ambient-preset-${preset.areaType}`}
               onClick={() => onSelectPreset(preset)}
             >
-              <span className="calc-add-ambient-preset-nome">{preset.nome}</span>
+              <span className="calc-add-ambient-preset-nome">{preset.name}</span>
               <span className="calc-add-ambient-preset-classe">
-                {preset.classe === "seca" ? "seca" : "molhada"}
+                {preset.areaType === "seca" ? "seca" : "molhada"}
               </span>
             </button>
           ))}
@@ -687,15 +689,15 @@ function AddAmbienteControl({
   }
 
   /* Passo 2 (só se user escolheu "Personalizado"): form de nome + classe. */
-  const canConfirm = state.nome.trim().length > 0;
+  const canConfirm = state.name.trim().length > 0;
   return (
     <div className="calc-add-ambient-form" role="group" aria-label="Adicionar ambiente personalizado">
       <input
         type="text"
         className="calc-add-ambient-input"
         placeholder="Nome do ambiente (ex: Home Office)"
-        value={state.nome}
-        onChange={(e) => onChange({ nome: e.target.value })}
+        value={state.name}
+        onChange={(e) => onChange({ name: e.target.value })}
         onKeyDown={(e) => {
           if (e.key === "Enter" && canConfirm) onConfirm();
           if (e.key === "Escape") onCancel();
@@ -707,18 +709,18 @@ function AddAmbienteControl({
         <button
           type="button"
           role="radio"
-          aria-checked={state.classe === "seca"}
-          className={`calc-pill${state.classe === "seca" ? " on" : ""}`}
-          onClick={() => onChange({ classe: "seca" })}
+          aria-checked={state.areaType === "seca"}
+          className={`calc-pill${state.areaType === "seca" ? " on" : ""}`}
+          onClick={() => onChange({ areaType: "seca" })}
         >
           Seca
         </button>
         <button
           type="button"
           role="radio"
-          aria-checked={state.classe === "molhada"}
-          className={`calc-pill${state.classe === "molhada" ? " on" : ""}`}
-          onClick={() => onChange({ classe: "molhada" })}
+          aria-checked={state.areaType === "molhada"}
+          className={`calc-pill${state.areaType === "molhada" ? " on" : ""}`}
+          onClick={() => onChange({ areaType: "molhada" })}
         >
           Molhada
         </button>
@@ -740,17 +742,17 @@ function AddAmbienteControl({
   );
 }
 
-function MetragemGroup({
+function UnitTypeGroup({
   index,
-  metragem,
+  unitType,
   calc,
-  ativa,
+  isActive,
   onSelect,
 }: {
   index: number;
-  metragem: MetragemState;
-  calc: MetragemCalc;
-  ativa: boolean;
+  unitType: UnitTypeState;
+  calc: UnitTypeBreakdown;
+  isActive: boolean;
   onSelect: () => void;
 }) {
   const handleKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -761,10 +763,10 @@ function MetragemGroup({
   };
   return (
     <div
-      className={`metragem-group${ativa ? " ativa" : ""}`}
+      className={`metragem-group${isActive ? " ativa" : ""}`}
       role="button"
       tabIndex={0}
-      aria-pressed={ativa}
+      aria-pressed={isActive}
       aria-label={`Editar Metragem ${String(index + 1).padStart(2, "0")}`}
       onClick={onSelect}
       onKeyDown={handleKey}
@@ -774,15 +776,15 @@ function MetragemGroup({
         <span className="metragem-group-imgs">{calc.total.toLocaleString("pt-BR")} imagens</span>
       </header>
       <div className="metragem-group-cards">
-        {Array.from({ length: metragem.variacoes }, (_, v) => {
+        {Array.from({ length: unitType.variants }, (_, v) => {
           const isBase = v === 0;
           return (
-            <TipologiaCard
+            <VariantCard
               key={v}
-              variacaoIdx={v + 1}
+              variantIndex={v + 1}
               mode={isBase ? "base" : "extras"}
-              ambientes={isBase ? calc.ambientes : calc.impactados}
-              imagens={isBase ? calc.base : calc.extrasPorVariacao}
+              rooms={isBase ? calc.rooms : calc.impactedRooms}
+              images={isBase ? calc.base : calc.imagesPerExtraVariant}
             />
           );
         })}
@@ -791,36 +793,36 @@ function MetragemGroup({
   );
 }
 
-function TipologiaCard({
-  variacaoIdx,
+function VariantCard({
+  variantIndex,
   mode,
-  ambientes,
-  imagens,
+  rooms,
+  images,
 }: {
-  variacaoIdx: number;
+  variantIndex: number;
   mode: "base" | "extras";
-  ambientes: Ambiente[];
-  imagens: number;
+  rooms: RoomUnit[];
+  images: number;
 }) {
   const isBase = mode === "base";
   return (
     <article className={`tipologia-card tipologia-card-${mode}`} role="listitem">
       <header className="tipologia-head">
         <span className="tipologia-idx">
-          Variação {String(variacaoIdx).padStart(2, "0")}
+          Variação {String(variantIndex).padStart(2, "0")}
           {!isBase && <span className="tipologia-tag">apenas ambientes impactados</span>}
         </span>
         <span className="tipologia-imgs">
           {isBase ? "" : "+"}
-          {imagens.toLocaleString("pt-BR")} imgs
+          {images.toLocaleString("pt-BR")} imgs
         </span>
       </header>
-      {ambientes.length > 0 ? (
+      {rooms.length > 0 ? (
         <div className="tipologia-grid">
-          {ambientes.map((a) => (
-            <div key={a.key} className={`ambient-tile peso-${a.peso}`}>
+          {rooms.map((a) => (
+            <div key={a.key} className={`ambient-tile peso-${a.weight}`}>
               <span className="ambient-label">{a.label}</span>
-              <span className="ambient-imgs">{a.imagens}</span>
+              <span className="ambient-imgs">{a.images}</span>
             </div>
           ))}
         </div>

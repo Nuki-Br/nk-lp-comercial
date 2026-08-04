@@ -1,6 +1,6 @@
-import { problemaCards } from "./comercial.data";
+import { problemCards } from "@/content/deck";
 
-export function Problema() {
+export function ProblemSlide() {
   return (
     <section className="cm-section problema" id="problema" data-reveal-group="">
       <div className="cm-wrap">
@@ -16,12 +16,12 @@ export function Problema() {
         </div>
 
         <div className="cards">
-          {problemaCards.map((c) => (
+          {problemCards.map((c) => (
             <article className="card reveal" key={c.step}>
               <span className="step">{c.step}</span>
-              <h3>{c.titulo}</h3>
-              <p>{c.descricao}</p>
-              <p className="dor">{c.dor}</p>
+              <h3>{c.title}</h3>
+              <p>{c.description}</p>
+              <p className="dor">{c.pain}</p>
             </article>
           ))}
         </div>

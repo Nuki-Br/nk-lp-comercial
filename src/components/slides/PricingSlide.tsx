@@ -1,18 +1,20 @@
 "use client";
 
-import { planos, ciclosCobranca } from "./comercial.data";
-import { Stepper, currency, precoComDesconto } from "./calc-shared";
-import { usePlanoSimulador } from "./CalculadoraContext";
+import { plans, billingCycles } from "@/content/deck";
+import { Stepper } from "@/components/ui/Stepper";
+import { formatCurrency } from "@/lib/format";
+import { discountedMonthlyPrice } from "@/lib/pricing";
+import { useEstimate } from "@/components/deck/EstimateProvider";
 
-const MESES_MAX = 24;
+const MAX_MONTHS = 24;
 
-export function CTA() {
+export function PricingSlide() {
   /* Meses/ciclo vivem no CalculadoraProvider — o CTA edita, a seção
      #total (TotalEstimado, depois da Calculadora) lê os derivados. */
-  const { meses, setMeses, ciclo, setCiclo } = usePlanoSimulador();
+  const { months, setMonths, cycle, setCycle } = useEstimate();
 
   const updateMeses = (idx: number, v: number) => {
-    setMeses((prev) => prev.map((m, i) => (i === idx ? v : m)));
+    setMonths((prev) => prev.map((m, i) => (i === idx ? v : m)));
   };
 
   return (
@@ -29,45 +31,45 @@ export function CTA() {
         </div>
 
         <div className="ciclo-toggle reveal" role="tablist" aria-label="Ciclo de cobrança">
-          {ciclosCobranca.map((c) => (
+          {billingCycles.map((c) => (
             <button
               key={c.id}
               type="button"
               role="tab"
-              aria-selected={c.id === ciclo.id}
-              className={`ciclo-toggle-btn${c.id === ciclo.id ? " on" : ""}`}
-              onClick={() => setCiclo(c)}
+              aria-selected={c.id === cycle.id}
+              className={`ciclo-toggle-btn${c.id === cycle.id ? " on" : ""}`}
+              onClick={() => setCycle(c)}
             >
               {c.label}
-              {c.desconto > 0 && (
-                <span className="ciclo-toggle-off">−{Math.round(c.desconto * 100)}%</span>
+              {c.discount > 0 && (
+                <span className="ciclo-toggle-off">−{Math.round(c.discount * 100)}%</span>
               )}
             </button>
           ))}
         </div>
 
         <div className="planos">
-          {planos.map((p, i) => {
-            const precoMesFinal = precoComDesconto(p.precoMes, ciclo.desconto);
-            const subtotal = (meses[i] ?? 0) * precoMesFinal;
+          {plans.map((p, i) => {
+            const finalMonthlyPrice = discountedMonthlyPrice(p.monthlyPrice, cycle.discount);
+            const subtotal = (months[i] ?? 0) * finalMonthlyPrice;
             return (
-              <article className={`plano reveal${p.destaque ? " destaque" : ""}`} key={p.n}>
+              <article className={`plano reveal${p.featured ? " destaque" : ""}`} key={p.n}>
                 <span className="n">{p.n}</span>
                 <ul>
-                  {p.itens.map((it) => (
+                  {p.items.map((it) => (
                     <li key={it}>{it}</li>
                   ))}
                 </ul>
                 <div className="preco">
-                  {ciclo.desconto > 0 && (
-                    <span className="preco-antigo">{currency(p.precoMes)}</span>
+                  {cycle.discount > 0 && (
+                    <span className="preco-antigo">{formatCurrency(p.monthlyPrice)}</span>
                   )}
-                  <span className="preco-valor">{currency(precoMesFinal)}/mês</span>
+                  <span className="preco-valor">{formatCurrency(finalMonthlyPrice)}/mês</span>
                   <span className="un">
                     por empreendimento
-                    {ciclo.desconto > 0 && (
+                    {cycle.discount > 0 && (
                       <span className="preco-badge">
-                        −{Math.round(ciclo.desconto * 100)}%
+                        −{Math.round(cycle.discount * 100)}%
                       </span>
                     )}
                   </span>
@@ -75,14 +77,14 @@ export function CTA() {
                 <div className="cta-plano-simulador">
                   <span className="cta-plano-simulador-label">Meses na plataforma</span>
                   <Stepper
-                    value={meses[i] ?? 0}
+                    value={months[i] ?? 0}
                     min={0}
-                    max={MESES_MAX}
+                    max={MAX_MONTHS}
                     onChange={(v) => updateMeses(i, v)}
                     ariaLabel={`Meses no ${p.n}`}
                   />
-                  <span className={`cta-plano-simulador-sub${(meses[i] ?? 0) > 0 ? " on" : ""}`}>
-                    {(meses[i] ?? 0) > 0 ? currency(subtotal) : "—"}
+                  <span className={`cta-plano-simulador-sub${(months[i] ?? 0) > 0 ? " on" : ""}`}>
+                    {(months[i] ?? 0) > 0 ? formatCurrency(subtotal) : "—"}
                   </span>
                 </div>
               </article>

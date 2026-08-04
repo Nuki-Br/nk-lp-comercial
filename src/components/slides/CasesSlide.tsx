@@ -8,7 +8,7 @@ const logos = [
   { name: "Mampei", file: "/carrossel-logos/mampei-logo.png", width: 200, height: 30 },
 ];
 
-export function Cases() {
+export function CasesSlide() {
   return (
     <section className="cm-section cases" id="cases" data-reveal-group="">
       <div className="cm-wrap">

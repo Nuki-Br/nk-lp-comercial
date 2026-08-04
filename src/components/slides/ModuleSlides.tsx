@@ -1,7 +1,7 @@
 import { Fragment } from "react";
-import { ModuloSlide } from "./ModuloSlide";
-import { ModuloDemoSlide } from "./ModuloDemoSlide";
-import { modulos } from "./modulos.data";
+import { ModuleSlide } from "./ModuleSlide";
+import { ModuleDemoSlide } from "./ModuleDemoSlide";
+import { modules } from "@/content/modules";
 
 /**
  * Renderiza os 3 módulos (Planner, Personaliza, Inspetor) como slides estáticos
@@ -15,13 +15,13 @@ import { modulos } from "./modulos.data";
  *
  * Home continua com JourneyModule intocado — a linguagem scrollytelling fica lá.
  */
-export function Modulos() {
+export function ModuleSlides() {
   return (
     <>
-      {modulos.map((data, index) => (
+      {modules.map((data, index) => (
         <Fragment key={data.id}>
-          <ModuloSlide data={data} index={index} />
-          {data.demoUrl && <ModuloDemoSlide data={data} />}
+          <ModuleSlide data={data} index={index} />
+          {data.demoUrl && <ModuleDemoSlide data={data} />}
         </Fragment>
       ))}
     </>

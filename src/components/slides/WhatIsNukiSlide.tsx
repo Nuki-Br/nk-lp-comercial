@@ -1,6 +1,6 @@
-import { fluxoModulos } from "./comercial.data";
+import { moduleFlow } from "@/content/deck";
 
-export function OQueEANuki() {
+export function WhatIsNukiSlide() {
   return (
     <section className="cm-section o-que-e" id="o-que-e" data-reveal-group="">
       <div className="cm-wrap">
@@ -16,11 +16,11 @@ export function OQueEANuki() {
         </div>
 
         <div className="fluxo reveal">
-          {fluxoModulos.map((m) => (
-            <div className="step" key={m.nome}>
-              <span className="fase">{m.fase}</span>
-              <span className="nome">{m.nome}</span>
-              <p className="desc">{m.descricao}</p>
+          {moduleFlow.map((m) => (
+            <div className="step" key={m.name}>
+              <span className="fase">{m.phase}</span>
+              <span className="nome">{m.name}</span>
+              <p className="desc">{m.description}</p>
             </div>
           ))}
         </div>

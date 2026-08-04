@@ -15,7 +15,7 @@ import { useEffect } from "react";
  * 5. Parallax do bgnum — fallback quando não há animation-timeline nativo.
  * 6. Dica flutuante das setas — aparece por 4s no load.
  */
-export function ComercialScripts() {
+export function DeckBehaviors() {
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const cleanups: Array<() => void> = [];

@@ -1,6 +1,6 @@
-import { diferenciais } from "./comercial.data";
+import { differentiators } from "@/content/deck";
 
-export function Diferenciais() {
+export function DifferentiatorsSlide() {
   return (
     <section className="cm-section diferenciais" id="diferenciais" data-tone="dark" data-reveal-group="">
       <div className="cm-wrap">
@@ -15,11 +15,11 @@ export function Diferenciais() {
         </div>
 
         <div className="grid">
-          {diferenciais.map((d) => (
+          {differentiators.map((d) => (
             <article className="item reveal" key={d.n}>
               <span className="n">{d.n}</span>
-              <h3>{d.titulo}</h3>
-              <p>{d.descricao}</p>
+              <h3>{d.title}</h3>
+              <p>{d.description}</p>
             </article>
           ))}
         </div>

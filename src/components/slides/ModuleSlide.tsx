@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import type { ModuloData, ModuloShot } from "./modulos.data";
+import type { ModuleData, ModuleScreenshot } from "@/content/modules";
 
 const AUTO_ADVANCE_MS = 5000;
 
@@ -28,14 +28,14 @@ const AUTO_ADVANCE_MS = 5000;
  * "Saiba mais" da página de recurso. Quando o módulo já tem produto público,
  * mandar o prospect pro app real vale mais do que qualquer demo.
  */
-export function ModuloSlide({
+export function ModuleSlide({
   data,
   index,
 }: {
-  data: ModuloData;
+  data: ModuleData;
   index: number;
 }) {
-  const [beatAtivo, setBeatAtivo] = useState(0);
+  const [activeBeat, setActiveBeat] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   /* Timer dos beats só roda quando a seção está de fato visível — evita gastar
      ciclos (e "queimar" beats) enquanto o módulo está fora da viewport. */
@@ -60,12 +60,12 @@ export function ModuloSlide({
     if (reduce || isPaused || !isVisible || data.beats.length <= 1) return;
 
     const timer = window.setInterval(() => {
-      setBeatAtivo((prev) => (prev + 1) % data.beats.length);
+      setActiveBeat((prev) => (prev + 1) % data.beats.length);
     }, AUTO_ADVANCE_MS);
     return () => window.clearInterval(timer);
   }, [isPaused, isVisible, data.beats.length]);
 
-  const beat = data.beats[beatAtivo];
+  const beat = data.beats[activeBeat];
   const isPhone = data.beats[0]?.shot.kind === "phone";
   const panelId = `${data.id}-panel`;
 
@@ -106,7 +106,7 @@ export function ModuloSlide({
               <span className="modulo-slide-h2-pre">{data.title.pre}</span>{" "}
               <strong>{data.title.strong}</strong>
             </h2>
-            <p className="lead reveal">{data.descricao}</p>
+            <p className="lead reveal">{data.description}</p>
 
             <ul
               className="modulo-slide-tabs reveal"
@@ -119,11 +119,11 @@ export function ModuloSlide({
                     type="button"
                     role="tab"
                     id={`${data.id}-tab-${i}`}
-                    aria-selected={i === beatAtivo}
+                    aria-selected={i === activeBeat}
                     aria-controls={panelId}
-                    tabIndex={i === beatAtivo ? 0 : -1}
-                    className={`modulo-slide-tab${i === beatAtivo ? " on" : ""}`}
-                    onClick={() => setBeatAtivo(i)}
+                    tabIndex={i === activeBeat ? 0 : -1}
+                    className={`modulo-slide-tab${i === activeBeat ? " on" : ""}`}
+                    onClick={() => setActiveBeat(i)}
                   >
                     <span className="modulo-slide-tab-num">
                       Beat {String(i + 1).padStart(2, "0")}
@@ -138,7 +138,7 @@ export function ModuloSlide({
               className="modulo-slide-detail"
               id={panelId}
               role="tabpanel"
-              aria-labelledby={`${data.id}-tab-${beatAtivo}`}
+              aria-labelledby={`${data.id}-tab-${activeBeat}`}
             >
               <p key={beat.description} className="modulo-slide-detail-desc">
                 {beat.description}
@@ -189,7 +189,7 @@ export function ModuloSlide({
                 Explorar o {data.title.strong}
               </button>
             ) : (
-              <a className="modulo-slide-link reveal" href={data.saibaMaisHref}>
+              <a className="modulo-slide-link reveal" href={data.learnMoreHref}>
                 Saiba mais <span aria-hidden="true">→</span>
               </a>
             )}
@@ -214,10 +214,10 @@ export function ModuloSlide({
           <div className="modulo-slide-shot">
             <div className="modulo-slide-shot-stage">
               {data.beats.map((b, i) => (
-                <ShotSlot
+                <ScreenshotSlot
                   key={b.shot.base}
                   shot={b.shot}
-                  active={i === beatAtivo}
+                  active={i === activeBeat}
                   eager={i === 0}
                 />
               ))}
@@ -235,12 +235,12 @@ export function ModuloSlide({
  * transition de CSS, sem remount. Cópia enxuta do <Shot> do JourneyModule com
  * srcSet + sizes adaptados ao layout novo (fixed max-width por tipo).
  */
-function ShotSlot({
+function ScreenshotSlot({
   shot,
   active,
   eager,
 }: {
-  shot: ModuloShot;
+  shot: ModuleScreenshot;
   active: boolean;
   eager: boolean;
 }) {
