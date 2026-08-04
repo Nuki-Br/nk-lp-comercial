@@ -34,6 +34,7 @@ Quase tudo vive em dois arquivos: `src/content/deck.ts` e `src/content/modules.t
 | **Preço do plano** | `content/deck.ts` | `plans` → `monthlyPrice` |
 | O que está incluso no plano | `content/deck.ts` | `plans` → `items` |
 | **Ciclos e descontos** | `content/deck.ts` | `billingCycles` → `discount` |
+| **Meses que ativam cada ciclo** | `content/deck.ts` | `billingCycles` → `minMonths` |
 | Defaults da calculadora | `content/deck.ts` | `ESTIMATE_DEFAULTS` |
 | Limites dos campos da calculadora | `content/deck.ts` | `ESTIMATE_RANGES` |
 | **Preço da imagem base** | `content/deck.ts` | `ESTIMATE_DEFAULTS.baseImagePrice` |
@@ -56,6 +57,12 @@ desconto.
 
 **`monthlyPrice` é número puro, sem "R$" e sem ponto.** `1150`, não `"R$ 1.150"`.
 A formatação em reais é automática.
+
+**O ciclo não é escolhido, é consequência dos meses.** Quem sobe o simulador até
+6 meses cai no Semestral e até 12 cai no Anual sozinho — o toggle só reflete
+isso. `minMonths` é o piso de cada ciclo, e a lista precisa ficar em ordem
+crescente. Clicar num ciclo é o atalho na direção inversa: preenche o simulador
+com o piso dele.
 
 **Títulos partidos em duas partes.** Alguns títulos têm `pre` e `strong` — o
 `strong` sai em negrito e é reaproveitado sozinho em botões e textos alternativos.

@@ -1992,7 +1992,7 @@ html {
   padding: 4px;
   width: fit-content;
   max-width: 100%;
-  margin: 0 auto 4vh;
+  margin: 0 auto 12px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -2029,6 +2029,17 @@ html {
 }
 .deck .pricing .billing-cycle-btn.is-active .billing-cycle-off {
   background: var(--color-nuki-green-02, #047676);
+}
+/* O ciclo é derivado dos meses do simulador, então o toggle muda sozinho —
+   sem esta linha o salesperson lê isso como bug. */
+.deck .pricing .billing-cycle-hint {
+  max-width: 58ch;
+  margin: 0 auto 4vh;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: balance;
 }
 /* Mobile: o pill único quebra feio em 2 linhas — vira grid 2×2 full-width com
    cantos arredondados (retângulo, não pílula) e botões centralizados. */

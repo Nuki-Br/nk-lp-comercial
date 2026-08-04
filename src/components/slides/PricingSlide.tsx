@@ -10,8 +10,9 @@ const MAX_MONTHS = 36;
 
 export function PricingSlide() {
   /* Meses/ciclo vivem no CalculadoraProvider — o CTA edita, a seção
-     #total (TotalEstimado, depois da Calculadora) lê os derivados. */
-  const { months, setMonths, cycle, setCycle } = useEstimate();
+     #total (TotalEstimado, depois da Calculadora) lê os derivados. O `cycle`
+     vem derivado dos meses: subir o stepper até 6 já acende o Semestral aqui. */
+  const { months, setMonths, cycle, selectCycle } = useEstimate();
 
   const updateMeses = (idx: number, v: number) => {
     setMonths((prev) => prev.map((m, i) => (i === idx ? v : m)));
@@ -38,7 +39,7 @@ export function PricingSlide() {
               role="tab"
               aria-selected={c.id === cycle.id}
               className={`billing-cycle-btn${c.id === cycle.id ? " is-active" : ""}`}
-              onClick={() => setCycle(c)}
+              onClick={() => selectCycle(c)}
             >
               {c.label}
               {c.discount > 0 && (
@@ -47,6 +48,10 @@ export function PricingSlide() {
             </button>
           ))}
         </div>
+
+        <p className="billing-cycle-hint reveal">
+          O desconto acompanha o compromisso: a partir de 6 meses o Semestral entra sozinho, e a partir de 12 meses, o Anual.
+        </p>
 
         <div className="plans">
           {plans.map((p, i) => {

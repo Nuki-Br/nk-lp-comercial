@@ -115,7 +115,24 @@ slide was already 850 lines. If the pricing is ever disputed in a sales call,
 that single file is now the thing to test, and it is the only file in the repo
 worth a test at all.
 
-## 8. Committed demo artifact
+## 8. The billing cycle is derived, not selected
+
+**Decision.** `EstimateProvider` has no `cycle` state. The cycle is computed from
+the contracted months (`cycleForMonths` in `src/lib/pricing.ts`, thresholds in
+`billingCycles[].minMonths`), and the toggle in `PricingSlide` renders that
+result. Clicking a cycle writes months, not cycle.
+
+**Rationale.** The discount is the counterpart of the commitment, so the two were
+never independent. As separate state they could disagree — 12 months contracted
+while the toggle said "Mensal", quoting full price for a commitment that earns
+−10% — and the prospect sees both numbers on the same frame. Deriving one from
+the other makes that state unrepresentable instead of merely unlikely.
+
+**Consequence.** `selectCycle` only writes `months[0]`. That is correct while
+`plans` has a single entry; if the tiers come back, the distribution across tiers
+has to be decided before the toggle means anything again.
+
+## 9. Committed demo artifact
 
 `public/demos/inspetor/index.html` (5.7 MB) is committed rather than generated
 during the build, because `scripts/prepare-inspetor-demo.mjs` is a manual step
