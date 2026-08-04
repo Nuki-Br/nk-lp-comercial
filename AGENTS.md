@@ -102,8 +102,8 @@ to `DeckBehaviors`, the calculator or the demo slide, load `localhost:3000` and
 check: the gate, arrow-key navigation across all 13 anchors, the reveal stagger,
 the Inspetor iframe (including ESC from inside it), and the estimate propagating
 to the closing frame. At defaults it must read **45 imagens (3 base · 42 de
-opção) / R$ 1.428**. Also click each of the three porte presets — Studio 208,
-Padrão 678, Alto padrão 1.544 imagens.
+opção) / R$ 1.428**. Also click each of the three porte presets — Studio 284
+(R$ 8.736), Padrão 507 (R$ 15.876), Alto padrão 738 (R$ 23.184).
 
 > Note for browser-driving agents: `useCountUp` animates with
 > `requestAnimationFrame`, which does not fire in a hidden tab. In a headless or

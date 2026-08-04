@@ -22,8 +22,8 @@ export default function DeckPage() {
         <ProblemSlide />
         <WhatIsNukiSlide />
         <ModuleSlides />
-        <DifferentiatorsSlide />
-        <AudienceSlide />
+        {/* <DifferentiatorsSlide /> */}
+        {/* <AudienceSlide /> */}
         <CasesSlide />
         {/* O provider engloba os três: o PricingSlide edita meses e ciclo, o
             CalculatorSlide publica imagens e custo, e o EstimatedTotalSlide

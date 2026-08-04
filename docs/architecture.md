@@ -115,11 +115,18 @@ calculator state in one click. Applying one re-seeds `nextIdRef` past the ids th
 preset used; the highlight clears on the first edit, so a lit chip never claims a
 state the user has already changed.
 
-Preset rooms are one unit each and unlocked — the list says "Quarto 01" and
-"Quarto 02" rather than a "Quartos" with `units: 2`, so each can carry its own
-component count. `variants` counts the base plan: `variants: 5` is base plus four
-extras. The ceiling lives in `ESTIMATE_RANGES.variants` and the pill selector
-derives from it, so raising it again needs no JSX or CSS change.
+Preset rooms are unlocked, and repeats collapse into `units` — "Quartos ×3", not
+three "Quarto 0N" rows. Same image count either way, but the left panel has to
+stay readable in a live pitch. `variants` counts the base plan: `variants: 3` is
+base plus two extras. The ceiling lives in `ESTIMATE_RANGES.variants` and the
+pill selector derives from it, so raising it needs no JSX or CSS change.
+
+The presets are calibrated to land near R$ 9k / 16k / 23k, which is a commercial
+target rather than a derived number. Note that at 3 options per component and a
+base image priced at exactly 3× an option image, the cost collapses to
+`84 × metragens × [(Σcomponents + rooms) + extras × (Σimpacted + |impacted|)]` —
+handy for re-calibrating, but it stops holding the moment either of those two
+conditions changes.
 
 `CalculatorSlide` publishes into context from a `useEffect`. That is a deliberate
 sync of derived state between sibling sections; the alternative was lifting the

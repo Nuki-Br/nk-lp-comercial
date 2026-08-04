@@ -302,63 +302,56 @@ export type ProjectSizePreset = {
   buildUnitTypes: () => UnitTypeState[];
 };
 
-/** Ambientes de preset são todos de 1 unidade e removíveis (sem `locked`) —
-    o preset lista "Quarto 01" e "Quarto 02" como ambientes próprios em vez de
-    um "Quartos" com quantidade 2, pra que cada um possa ter componentes
-    diferentes. O peso sai da contagem de componentes, que é o que o tile está
-    de fato representando: ≤3 leve, 4-6 médio, 7+ pesado. */
+/** Ambientes de preset são removíveis (sem `locked`) e repetições viram
+    `units` em vez de linhas separadas: "Quartos ×3", não "Quarto 01/02/03".
+    A contagem de imagens é a mesma, mas o painel esquerdo fica legível numa
+    reunião. O peso sai da contagem de componentes, que é o que o tile está de
+    fato representando: ≤3 leve, 4-6 médio, 7+ pesado. */
 const room = (
   id: string,
   name: string,
   areaType: RoomAreaType,
   components: number,
+  units = 1,
 ): RoomConfig => ({
   id,
   name,
   areaType,
   weight: components <= 3 ? "light" : components <= 6 ? "medium" : "heavy",
-  units: 1,
+  units,
   components,
 });
 
 /* Componentes por ambiente derivados da referência Tecer/Manawa do topo deste
-   bloco (contagem de imagens a 3 opções ÷ 3). Hall Privativo, Banheiro de
-   Serviço e Cozinha/Sala integrada não estão na referência — são estimativas. */
+   bloco (contagem de imagens a 3 opções ÷ 3). Hall Privativo e Cozinha/Sala
+   integrada não estão na referência — são estimativas. */
 const studioRooms = (): RoomConfig[] => [
   room("cozinha-sala", "Cozinha/Sala", "molhada", 8),
   room("quarto", "Quarto", "seca", 3),
   room("banheiro", "Banheiro", "molhada", 8),
   room("area-de-servico", "Área de Serviço", "molhada", 6),
+  room("terraco", "Terraço", "seca", 6),
 ];
 
 const standardRooms = (): RoomConfig[] => [
   room("cozinha", "Cozinha", "molhada", 6),
-  room("quarto-01", "Quarto 01", "seca", 3),
-  room("quarto-02", "Quarto 02", "seca", 3),
-  room("banheiro-01", "Banheiro 01", "molhada", 8),
-  room("banheiro-02", "Banheiro 02", "molhada", 8),
+  room("sala-de-estar", "Sala de Estar", "seca", 4),
+  room("quartos", "Quartos", "seca", 3, 2),
+  room("banheiro", "Banheiro", "molhada", 8),
   room("lavabo", "Lavabo", "molhada", 7),
   room("area-de-servico", "Área de Serviço", "molhada", 6),
   room("terraco", "Terraço", "seca", 6),
-  room("sala-de-estar", "Sala de Estar", "seca", 4),
 ];
 
 const highEndRooms = (): RoomConfig[] => [
   room("hall-privativo", "Hall Privativo", "seca", 3),
   room("cozinha", "Cozinha", "molhada", 6),
-  room("quarto-01", "Quarto 01", "seca", 3),
-  room("quarto-02", "Quarto 02", "seca", 3),
-  room("quarto-03", "Quarto 03", "seca", 3),
-  room("quarto-04", "Quarto 04", "seca", 3),
-  room("banheiro-01", "Banheiro 01", "molhada", 8),
-  room("banheiro-02", "Banheiro 02", "molhada", 8),
-  room("banheiro-03", "Banheiro 03", "molhada", 8),
-  room("banheiro-04", "Banheiro 04", "molhada", 8),
-  room("banheiro-de-servico", "Banheiro de Serviço", "molhada", 5),
+  room("sala-de-estar", "Sala de Estar", "seca", 4),
+  room("quartos", "Quartos", "seca", 3, 3),
+  room("banheiros", "Banheiros", "molhada", 8, 2),
   room("lavabo", "Lavabo", "molhada", 7),
   room("area-de-servico", "Área de Serviço", "molhada", 6),
   room("terraco", "Terraço", "seca", 6),
-  room("sala-de-estar", "Sala de Estar", "seca", 4),
 ];
 
 /** Metragens de composição idêntica dentro de um preset — o vendedor
@@ -382,26 +375,28 @@ export const PROJECT_SIZE_PRESETS: readonly ProjectSizePreset[] = [
   {
     id: "studio",
     name: "Studio",
-    hint: "2 metragens · 4 ambientes",
+    hint: "2 metragens · 5 ambientes",
     dryOptions: 3,
     wetOptions: 3,
-    buildUnitTypes: () => sameUnitTypes(2, studioRooms, 2, ["cozinha-sala"]),
+    /* Terraço junto da Cozinha/Sala nos impactados: integrar ou fechar a
+       varanda é a variação de planta clássica de studio. */
+    buildUnitTypes: () => sameUnitTypes(2, studioRooms, 2, ["cozinha-sala", "terraco"]),
   },
   {
     id: "standard",
     name: "Padrão",
-    hint: "3 metragens · 9 ambientes",
+    hint: "3 metragens · 7 ambientes",
     dryOptions: 3,
     wetOptions: 3,
-    buildUnitTypes: () => sameUnitTypes(3, standardRooms, 3, ["sala-de-estar", "cozinha"]),
+    buildUnitTypes: () => sameUnitTypes(3, standardRooms, 2, ["sala-de-estar", "cozinha"]),
   },
   {
     id: "high-end",
     name: "Alto padrão",
-    hint: "4 metragens · 15 ambientes",
+    hint: "3 metragens · 8 ambientes",
     dryOptions: 3,
     wetOptions: 3,
-    buildUnitTypes: () => sameUnitTypes(4, highEndRooms, 5, ["sala-de-estar", "cozinha"]),
+    buildUnitTypes: () => sameUnitTypes(3, highEndRooms, 3, ["sala-de-estar", "cozinha"]),
   },
 ];
 
@@ -427,8 +422,9 @@ export const ESTIMATE_DEFAULTS = {
 export const ESTIMATE_RANGES = {
   units: { min: 0, max: 5 },
   components: { min: 1, max: 15 },
-  /** Máximo 5 = planta base + 4 variações extras, o que o preset Alto padrão
-      monta. O seletor de variações desenha uma pill por valor deste intervalo. */
+  /** Máximo 5 = planta base + 4 variações extras. Os presets param em 3; o
+      resto é folga pra configuração manual numa reunião. O seletor de variações
+      desenha uma pill por valor deste intervalo, então mexer aqui basta. */
   variants: { min: 1, max: 5 },
   unitTypes: { min: 1, max: 6 },
   dryOptions: { min: 1, max: 6 },
