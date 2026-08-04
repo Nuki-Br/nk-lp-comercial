@@ -26,18 +26,18 @@ qualquer uma com `/#ancora`.
 
 | # | Slide | Componente | Âncora | Copy em |
 |---|---|---|---|---|
-| 1 | Capa | `CoverSlide` | `#capa` | no componente |
-| 2 | O problema | `ProblemSlide` | `#problema` | `content/deck.ts` |
-| 3 | O que é a Nuki | `WhatIsNukiSlide` | `#o-que-e` | `content/deck.ts` |
+| 1 | Capa | `CoverSlide` | `#cover` | no componente |
+| 2 | O problema | `ProblemSlide` | `#problem` | `content/deck.ts` |
+| 3 | O que é a Nuki | `WhatIsNukiSlide` | `#what-is-nuki` | `content/deck.ts` |
 | 4 | Planner | `ModuleSlides` | `#planner` | `content/modules.ts` |
 | 5 | Personaliza | `ModuleSlides` | `#personaliza` | `content/modules.ts` |
 | 6 | Inspetor | `ModuleSlides` | `#inspetor` | `content/modules.ts` |
 | 7 | Demo do Inspetor | `ModuleDemoSlide` | `#inspetor-demo` | protótipo em iframe |
-| 8 | Diferenciais | `DifferentiatorsSlide` | `#diferenciais` | `content/deck.ts` |
-| 9 | Pra quem serve | `AudienceSlide` | `#publico` | `content/deck.ts` |
+| 8 | Diferenciais | `DifferentiatorsSlide` | `#differentiators` | `content/deck.ts` |
+| 9 | Pra quem serve | `AudienceSlide` | `#audience` | `content/deck.ts` |
 | 10 | Cases | `CasesSlide` | `#cases` | no componente |
-| 11 | Plano & contato | `PricingSlide` | `#cta` | `content/deck.ts` |
-| 12 | Estime o setup | `CalculatorSlide` | `#calculadora` | `content/deck.ts` |
+| 11 | Plano & contato | `PricingSlide` | `#pricing` | `content/deck.ts` |
+| 12 | Estime o setup | `CalculatorSlide` | `#calculator` | `content/deck.ts` |
 | 13 | Total estimado | `EstimatedTotalSlide` | `#total` | no componente |
 
 Navegação: `←` `→`, `PageUp` / `PageDown`, `Espaço`, `Home` / `End`, ou os pontos

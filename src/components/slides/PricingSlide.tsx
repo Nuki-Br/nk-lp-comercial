@@ -18,7 +18,7 @@ export function PricingSlide() {
   };
 
   return (
-    <section className="cm-section cta" id="cta" data-tone="dark" data-reveal-group="">
+    <section className="cm-section cta" id="pricing" data-tone="dark" data-reveal-group="">
       <div className="cm-wrap">
         <div className="cm-head">
           <p className="tag reveal">Plano & contato</p>

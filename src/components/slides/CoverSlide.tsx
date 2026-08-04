@@ -4,7 +4,7 @@ const HOME_URL = "https://nukibr.com";
 
 export function CoverSlide() {
   return (
-    <section className="cm-section capa" id="capa" data-tone="dark" data-reveal-group="">
+    <section className="cm-section capa" id="cover" data-tone="dark" data-reveal-group="">
       <a href={HOME_URL} className="cm-back" aria-label="Voltar para a home">
         <ChevronLeftIcon className="cm-back-icon" />
       </a>

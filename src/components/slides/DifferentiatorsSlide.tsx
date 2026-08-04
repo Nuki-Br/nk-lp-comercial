@@ -2,7 +2,7 @@ import { differentiators } from "@/content/deck";
 
 export function DifferentiatorsSlide() {
   return (
-    <section className="cm-section diferenciais" id="diferenciais" data-tone="dark" data-reveal-group="">
+    <section className="cm-section diferenciais" id="differentiators" data-tone="dark" data-reveal-group="">
       <div className="cm-wrap">
         <div className="cm-head">
           <p className="tag reveal">Diferenciais</p>

@@ -2,7 +2,7 @@ import { moduleFlow } from "@/content/deck";
 
 export function WhatIsNukiSlide() {
   return (
-    <section className="cm-section o-que-e" id="o-que-e" data-reveal-group="">
+    <section className="cm-section o-que-e" id="what-is-nuki" data-reveal-group="">
       <div className="cm-wrap">
         <div className="cm-head">
           <p className="tag reveal">O que é a Nuki</p>

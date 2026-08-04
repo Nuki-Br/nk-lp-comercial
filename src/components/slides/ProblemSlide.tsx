@@ -2,7 +2,7 @@ import { problemCards } from "@/content/deck";
 
 export function ProblemSlide() {
   return (
-    <section className="cm-section problema" id="problema" data-reveal-group="">
+    <section className="cm-section problema" id="problem" data-reveal-group="">
       <div className="cm-wrap">
         <div className="cm-head">
           <p className="tag reveal">O problema</p>

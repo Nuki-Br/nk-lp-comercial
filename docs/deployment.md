@@ -23,8 +23,12 @@ the deck off the open web, not a real secret.
 
 The deck used to live at `/comercial` inside `nk-lp`. `next.config.ts` redirects
 `/comercial` → `/` with **307, not 308** — browsers cache permanent redirects
-aggressively and a wrong one is painful to undo. A 307 also preserves the
-`#hash`, so `/comercial#calculadora` lands on the right slide.
+aggressively and a wrong one is painful to undo.
+
+The 307 preserves the `#hash`, so `/comercial#planner` still lands on the Planner
+slide. The seven anchors that were renamed to English do not survive
+(`#calculadora` → `#calculator`, and friends): the fragment arrives but matches
+nothing, so the page opens at the top instead of erroring. See `docs/decisions.md`.
 
 > **This does not rescue links people already shared.** Those point at
 > `nukibr.com/comercial`, which is still served by `nk-lp`. Until someone adds a

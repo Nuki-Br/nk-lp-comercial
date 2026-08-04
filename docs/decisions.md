@@ -56,19 +56,23 @@ comments are then structurally untouchable. Object-literal *keys* are still
 identifiers, so third-party option bags (`Intl`, `fetch`, React props) need a
 denylist.
 
-## 5. Anchor ids stay Portuguese
+## 5. Anchor ids are English, except product names
 
-**Decision.** Class names and identifiers went English; the `#capa`, `#problema`,
-`#o-que-e` anchors did not.
+**Decision.** `#capa` → `#cover`, `#problema` → `#problem`, `#o-que-e` →
+`#what-is-nuki`, `#diferenciais` → `#differentiators`, `#publico` → `#audience`,
+`#calculadora` → `#calculator`, `#cta` → `#pricing`.
 
-**Rationale.** A URL fragment is user-facing surface, closer to copy than to
-code, and salespeople deep-link `#calculadora` mid-pitch. Three of the twelve
-(`#planner`, `#personaliza`, `#inspetor`) are product names and were never
-Portuguese in the first place. No CSS keys off an id, so keeping them costs
-nothing structurally.
+`#planner`, `#personaliza`, `#inspetor`, `#inspetor-demo`, `#cases` and `#total`
+are unchanged — they are product names or already English.
 
-**Status.** This contradicts the original migration plan, which called for
-renaming them. Revisit deliberately if at all.
+**Consequence.** Deep links shared before the split (`/comercial#calculadora`)
+land on the deck but do not scroll to the section. Nothing keys off an id in
+CSS, so the rename was structurally free; the only cost is those stale
+fragments.
+
+**Counter-argument, considered and rejected:** a URL fragment is user-facing
+surface and closer to copy than to code, which would argue for pt-BR. Consistency
+with the rest of the codebase won.
 
 ## 6. `.deck` scope collapse — not done
 

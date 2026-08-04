@@ -348,7 +348,7 @@ export function CalculatorSlide() {
           <p className="calc-admin-hint">Ctrl+Alt+K abre/fecha · ESC fecha</p>
         </div>
       )}
-    <section className="cm-section calculadora" id="calculadora" data-reveal-group="">
+    <section className="cm-section calculadora" id="calculator" data-reveal-group="">
       <div className="cm-wrap">
         <div className="cm-head">
           <p className="tag reveal">Estime o setup</p>

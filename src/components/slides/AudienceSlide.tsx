@@ -2,7 +2,7 @@ import { personas, fitList } from "@/content/deck";
 
 export function AudienceSlide() {
   return (
-    <section className="cm-section publico" id="publico" data-reveal-group="">
+    <section className="cm-section publico" id="audience" data-reveal-group="">
       <div className="cm-wrap">
         <div className="cm-head">
           <p className="tag reveal">Pra quem serve</p>

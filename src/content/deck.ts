@@ -4,17 +4,17 @@
    estrutura das seções serve como base. */
 
 export const deckNav = [
-  { id: "capa", label: "Capa" },
-  { id: "problema", label: "O problema" },
-  { id: "o-que-e", label: "O que é a Nuki" },
+  { id: "cover", label: "Capa" },
+  { id: "problem", label: "O problema" },
+  { id: "what-is-nuki", label: "O que é a Nuki" },
   { id: "planner", label: "Planner" },
   { id: "personaliza", label: "Personaliza" },
   { id: "inspetor", label: "Inspetor" },
-  { id: "diferenciais", label: "Diferenciais" },
-  { id: "publico", label: "Pra quem serve" },
+  { id: "differentiators", label: "Diferenciais" },
+  { id: "audience", label: "Pra quem serve" },
   { id: "cases", label: "Cases" },
-  { id: "calculadora", label: "Estime o setup" },
-  { id: "cta", label: "Plano & contato" },
+  { id: "calculator", label: "Estime o setup" },
+  { id: "pricing", label: "Plano & contato" },
   { id: "total", label: "Total estimado" },
 ] as const;
 
