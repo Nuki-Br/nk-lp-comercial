@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import type { ModuleData, ModuleScreenshot } from "@/content/modules";
 
 const AUTO_ADVANCE_MS = 5000;
@@ -28,13 +28,7 @@ const AUTO_ADVANCE_MS = 5000;
  * "Saiba mais" da página de recurso. Quando o módulo já tem produto público,
  * mandar o prospect pro app real vale mais do que qualquer demo.
  */
-export function ModuleSlide({
-  data,
-  index,
-}: {
-  data: ModuleData;
-  index: number;
-}) {
+export function ModuleSlide({ data, index }: { data: ModuleData; index: number }) {
   const [activeBeat, setActiveBeat] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   /* Timer dos beats só roda quando a seção está de fato visível — evita gastar
@@ -45,10 +39,9 @@ export function ModuleSlide({
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      { threshold: 0.35 },
-    );
+    const io = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), {
+      threshold: 0.35,
+    });
     io.observe(el);
     return () => io.disconnect();
   }, []);

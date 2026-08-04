@@ -131,26 +131,20 @@ export const personas: Persona[] = [
   {
     role: "Persona 01",
     name: "Coordenadora de Personalização",
-    foco:
-      "Organização e controle do processo, redução de retrabalho, visibilidade em tempo real do andamento das unidades.",
-    pain:
-      "Processos manuais sem padronização, falta de rastreabilidade das escolhas, pressão da obra e da diretoria.",
+    foco: "Organização e controle do processo, redução de retrabalho, visibilidade em tempo real do andamento das unidades.",
+    pain: "Processos manuais sem padronização, falta de rastreabilidade das escolhas, pressão da obra e da diretoria.",
   },
   {
     role: "Persona 02",
     name: "Diretor / CEO",
-    foco:
-      "Eficiência operacional e margem, diferenciação de mercado, escalabilidade sem aumento de headcount, governança e redução de risco.",
-    pain:
-      "Retrabalho invisível que come margem, disputas jurídicas, tecnologia como vantagem competitiva ainda não capturada.",
+    foco: "Eficiência operacional e margem, diferenciação de mercado, escalabilidade sem aumento de headcount, governança e redução de risco.",
+    pain: "Retrabalho invisível que come margem, disputas jurídicas, tecnologia como vantagem competitiva ainda não capturada.",
   },
   {
     role: "Persona 03",
     name: "Supervisor de Obra",
-    foco:
-      "Clareza sobre o que precisa ser corrigido, documentação que sustenta decisões técnicas, comunicação limpa com o pós-venda.",
-    pain:
-      "Recebe comunicados vagos sobre o que corrigir, sem registro formal do que foi aprovado ou rejeitado.",
+    foco: "Clareza sobre o que precisa ser corrigido, documentação que sustenta decisões técnicas, comunicação limpa com o pós-venda.",
+    pain: "Recebe comunicados vagos sobre o que corrigir, sem registro formal do que foi aprovado ou rejeitado.",
   },
 ];
 

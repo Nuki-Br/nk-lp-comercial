@@ -2,7 +2,12 @@ import { differentiators } from "@/content/deck";
 
 export function DifferentiatorsSlide() {
   return (
-    <section className="slide differentiators" id="differentiators" data-tone="dark" data-reveal-group="">
+    <section
+      className="slide differentiators"
+      id="differentiators"
+      data-tone="dark"
+      data-reveal-group=""
+    >
       <div className="slide-inner">
         <div className="section-head">
           <p className="tag reveal">Diferenciais</p>
@@ -10,7 +15,8 @@ export function DifferentiatorsSlide() {
             O que faz a Nuki ser <em>a escolha certa.</em>
           </h2>
           <p className="lead reveal">
-            Seis pontos que separam a Nuki de qualquer solução parcial — ferramentas isoladas, planilhas ou build interno.
+            Seis pontos que separam a Nuki de qualquer solução parcial — ferramentas isoladas,
+            planilhas ou build interno.
           </p>
         </div>
 

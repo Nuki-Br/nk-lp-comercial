@@ -14,8 +14,8 @@
 
    Run: node scripts/check-docs.mjs        (exits 1 on any failure) */
 
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, resolve, dirname } from "node:path";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -50,7 +50,6 @@ const FUTURE_FILES = new Set([
   "tracking.md",
   "admin-guide.md",
   "proxy.ts",
-  "biome.json",
   "dal.ts",
   "validate.ts",
   "password.ts",

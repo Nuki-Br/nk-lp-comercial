@@ -107,9 +107,9 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
   const navigate = (dir: -1 | 1) => {
     if (typeof document === "undefined") return;
     setActive(false);
-    const walkable = Array.from(
-      document.querySelectorAll<HTMLElement>(".slide, .module"),
-    ).filter((el) => el.id);
+    const walkable = Array.from(document.querySelectorAll<HTMLElement>(".slide, .module")).filter(
+      (el) => el.id,
+    );
     const currentIdx = walkable.findIndex((el) => el.id === demoId);
     if (currentIdx === -1) return;
     const target = walkable[currentIdx + dir];
@@ -191,7 +191,8 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
         <div className="module-demo-mobile" role="note">
           <p className="module-demo-mobile-title">Demo funciona melhor no desktop</p>
           <p className="module-demo-mobile-body">
-            O {data.title.strong} foi feito pra tela larga. No celular, abra em uma nova aba pra explorar com espaço.
+            O {data.title.strong} foi feito pra tela larga. No celular, abra em uma nova aba pra
+            explorar com espaço.
           </p>
           <a
             className="module-demo-mobile-link"
@@ -208,5 +209,4 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
 }
 
 const prefersReducedMotion = () =>
-  typeof window !== "undefined" &&
-  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;

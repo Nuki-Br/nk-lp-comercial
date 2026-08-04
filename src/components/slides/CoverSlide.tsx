@@ -11,12 +11,11 @@ export function CoverSlide() {
       <div className="slide-inner">
         <p className="kicker reveal">Apresentação comercial · 2026</p>
         <h1 className="reveal">
-          Agora, a jornada completa —{" "}
-          <em>do custo à entrega.</em>
+          Agora, a jornada completa — <em>do custo à entrega.</em>
         </h1>
         <p className="lead reveal">
-          A Nuki organiza, profissionaliza e centraliza o ciclo completo de personalização de acabamentos —
-          do planejamento de custo do memorial à validação em obra.
+          A Nuki organiza, profissionaliza e centraliza o ciclo completo de personalização de
+          acabamentos — do planejamento de custo do memorial à validação em obra.
         </p>
         <div className="meta reveal">
           <span>Planner</span>

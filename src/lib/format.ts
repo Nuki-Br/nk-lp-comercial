@@ -6,5 +6,4 @@ export const formatCurrency = (n: number) =>
     maximumFractionDigits: 0,
   });
 
-export const clamp = (v: number, min: number, max: number) =>
-  Math.max(min, Math.min(max, v));
+export const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));

@@ -1,22 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useEstimate } from "@/components/deck/EstimateProvider";
+import { Stepper } from "@/components/ui/Stepper";
 import {
   buildDefaultRooms,
-  noImpactedRooms,
-  ROOM_PRESETS,
-  PROJECT_SIZE_PRESETS,
+  CUSTOM_ROOM_DEFAULTS,
   ESTIMATE_DEFAULTS,
   ESTIMATE_RANGES,
-  CUSTOM_ROOM_DEFAULTS,
+  noImpactedRooms,
+  PROJECT_SIZE_PRESETS,
   type ProjectSizePreset,
+  ROOM_PRESETS,
   type RoomAreaType,
   type RoomConfig,
   type UnitTypeState,
 } from "@/content/deck";
-import { Stepper } from "@/components/ui/Stepper";
 import { useCountUp } from "@/hooks/useCountUp";
-import { formatCurrency, clamp } from "@/lib/format";
 import {
   computeEstimate,
   estimateCost,
@@ -24,7 +24,7 @@ import {
   type RoomUnit,
   type UnitTypeBreakdown,
 } from "@/lib/estimate";
-import { useEstimate } from "@/components/deck/EstimateProvider";
+import { clamp, formatCurrency } from "@/lib/format";
 
 /* Uma pill por variação possível. Sai do range em vez de ser literal, senão o
    seletor para em 3 e nenhum preset com mais variações fica editável. */
@@ -197,9 +197,7 @@ export function CalculatorSlide() {
       components: CUSTOM_ROOM_DEFAULTS.components,
     };
     mutate((prev) =>
-      prev.map((m, i) =>
-        i === activeUnitTypeIndex ? { ...m, rooms: [...m.rooms, updated] } : m,
-      ),
+      prev.map((m, i) => (i === activeUnitTypeIndex ? { ...m, rooms: [...m.rooms, updated] } : m)),
     );
     setAddingAmbiente(null);
   };
@@ -234,9 +232,7 @@ export function CalculatorSlide() {
       variants: 1,
       impactedRooms: noImpactedRooms(),
     };
-    mutate((prev) =>
-      prev.length >= ESTIMATE_RANGES.unitTypes.max ? prev : [...prev, updated],
-    );
+    mutate((prev) => (prev.length >= ESTIMATE_RANGES.unitTypes.max ? prev : [...prev, updated]));
     setMetragemAtiva(Math.min(unitTypes.length, ESTIMATE_RANGES.unitTypes.max - 1));
     setAddingAmbiente(null);
   };
@@ -259,11 +255,7 @@ export function CalculatorSlide() {
   return (
     <>
       {adminOpen && (
-        <div
-          className="calc-admin-panel"
-          role="dialog"
-          aria-label="Configuração da apresentação"
-        >
+        <div className="calc-admin-panel" role="dialog" aria-label="Configuração da apresentação">
           <div className="calc-admin-header">
             <span className="calc-admin-title">Config apresentação</span>
             <button
@@ -322,254 +314,266 @@ export function CalculatorSlide() {
           <p className="calc-admin-hint">Ctrl+Alt+K abre/fecha · ESC fecha</p>
         </div>
       )}
-    <section className="slide calculator" id="calculator" data-reveal-group="">
-      <div className="slide-inner">
-        <div className="section-head">
-          <p className="tag reveal">Estime o setup</p>
-          <h2 className="reveal">
-            Descubra quantas imagens seu empreendimento{" "}
-            <em>vai precisar.</em>
-          </h2>
-          <p className="lead reveal">
-            Cada ambiente é modelado em 3D uma vez — dessa modelagem sai a <em>imagem base</em>. As opções de acabamento são recortes de material sobre ela, e por isso custam bem menos. Escolha um ponto de partida e ajuste ambiente por ambiente.
-          </p>
-        </div>
+      <section className="slide calculator" id="calculator" data-reveal-group="">
+        <div className="slide-inner">
+          <div className="section-head">
+            <p className="tag reveal">Estime o setup</p>
+            <h2 className="reveal">
+              Descubra quantas imagens seu empreendimento <em>vai precisar.</em>
+            </h2>
+            <p className="lead reveal">
+              Cada ambiente é modelado em 3D uma vez — dessa modelagem sai a <em>imagem base</em>.
+              As opções de acabamento são recortes de material sobre ela, e por isso custam bem
+              menos. Escolha um ponto de partida e ajuste ambiente por ambiente.
+            </p>
+          </div>
 
-        <div className="calc-grid reveal">
-          {/* ============ INPUTS ============ */}
-          <div className="calc-inputs">
-            {/* Presets de porte — substituem o estado inteiro da calculadora */}
-            <div className="calc-field calc-presets">
-              <label className="calc-label calc-label-sm">Ponto de partida</label>
-              <div
-                className="calc-preset-list"
-                role="radiogroup"
-                aria-label="Porte do empreendimento"
-              >
-                {PROJECT_SIZE_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={activePresetId === preset.id}
-                    className={`calc-preset${activePresetId === preset.id ? " is-active" : ""}`}
-                    onClick={() => applyPreset(preset)}
-                  >
-                    <span className="calc-preset-name">{preset.name}</span>
-                    <span className="calc-preset-hint">{preset.hint}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Bar global */}
-            <div className="calc-global-bar">
-              <div className="calc-field">
-                <label className="calc-label calc-label-sm">Opções por componente · secas</label>
-                <Stepper
-                  value={dryOptions}
-                  min={ESTIMATE_RANGES.dryOptions.min}
-                  max={ESTIMATE_RANGES.dryOptions.max}
-                  onChange={changeDryOptions}
-                  ariaLabel="Opções por componente em áreas secas"
-                />
-              </div>
-              <div className="calc-field">
-                <label className="calc-label calc-label-sm">Opções por componente · molhadas</label>
-                <Stepper
-                  value={wetOptions}
-                  min={ESTIMATE_RANGES.wetOptions.min}
-                  max={ESTIMATE_RANGES.wetOptions.max}
-                  onChange={changeWetOptions}
-                  ariaLabel="Opções por componente em áreas molhadas"
-                />
-              </div>
-            </div>
-
-            {/* Tabs de metragens */}
-            <div className="calc-unit-type-tabs" role="tablist" aria-label="Metragens do empreendimento">
-              {unitTypes.map((m, i) => (
+          <div className="calc-grid reveal">
+            {/* ============ INPUTS ============ */}
+            <div className="calc-inputs">
+              {/* Presets de porte — substituem o estado inteiro da calculadora */}
+              <div className="calc-field calc-presets">
+                <label className="calc-label calc-label-sm">Ponto de partida</label>
                 <div
-                  key={m.id}
-                  className={`calc-unit-type-tab${i === activeUnitTypeIndex ? " is-active" : ""}`}
-                  role="tab"
-                  aria-selected={i === activeUnitTypeIndex}
+                  className="calc-preset-list"
+                  role="radiogroup"
+                  aria-label="Porte do empreendimento"
                 >
-                  <button
-                    type="button"
-                    className="calc-unit-type-tab-btn"
-                    onClick={() => selectMetragem(i)}
-                  >
-                    Metragem {String(i + 1).padStart(2, "0")}
-                  </button>
-                  {unitTypes.length > ESTIMATE_RANGES.unitTypes.min && (
+                  {PROJECT_SIZE_PRESETS.map((preset) => (
                     <button
+                      key={preset.id}
                       type="button"
-                      className="calc-unit-type-tab-remove"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeMetragem(i);
-                      }}
-                      aria-label={`Remover metragem ${i + 1}`}
+                      role="radio"
+                      aria-checked={activePresetId === preset.id}
+                      className={`calc-preset${activePresetId === preset.id ? " is-active" : ""}`}
+                      onClick={() => applyPreset(preset)}
                     >
-                      ×
+                      <span className="calc-preset-name">{preset.name}</span>
+                      <span className="calc-preset-hint">{preset.hint}</span>
                     </button>
-                  )}
-                </div>
-              ))}
-              {unitTypes.length < ESTIMATE_RANGES.unitTypes.max && (
-                <button
-                  type="button"
-                  className="calc-unit-type-add"
-                  onClick={addMetragem}
-                  aria-label="Adicionar metragem"
-                >
-                  + Adicionar
-                </button>
-              )}
-            </div>
-
-            {/* Painel da metragem ativa */}
-            {isActive && (
-              <div className="calc-unit-type-panel">
-                <div className="calc-room-rows">
-                  <p className="calc-label calc-room-rows-head">Ambientes personalizáveis</p>
-                  {isActive.rooms.map((a) => (
-                    <RoomRow
-                      key={a.id}
-                      room={a}
-                      onQuantidadeChange={(v) => updateAmbiente(a.id, { units: v })}
-                      onComponentesChange={(v) => updateAmbiente(a.id, { components: v })}
-                      onRemove={() => removeAmbiente(a.id)}
-                    />
                   ))}
+                </div>
+              </div>
 
-                  <AddAmbienteControl
-                    state={addingAmbiente}
-                    onOpen={() => setAddingAmbiente({ mode: "picker" })}
-                    onSelectPreset={(preset) => addAmbient(preset.name, preset.areaType)}
-                    onSelectCustom={() =>
-                      setAddingAmbiente({ mode: "custom", name: "", areaType: "molhada" })
-                    }
-                    onChange={(patch) =>
-                      setAddingAmbiente((prev) =>
-                        prev?.mode === "custom" ? { ...prev, ...patch } : prev,
-                      )
-                    }
-                    onConfirm={confirmAddAmbiente}
-                    onCancel={() => setAddingAmbiente(null)}
+              {/* Bar global */}
+              <div className="calc-global-bar">
+                <div className="calc-field">
+                  <label className="calc-label calc-label-sm">Opções por componente · secas</label>
+                  <Stepper
+                    value={dryOptions}
+                    min={ESTIMATE_RANGES.dryOptions.min}
+                    max={ESTIMATE_RANGES.dryOptions.max}
+                    onChange={changeDryOptions}
+                    ariaLabel="Opções por componente em áreas secas"
                   />
                 </div>
-
                 <div className="calc-field">
-                  <label className="calc-label">Variações desta metragem</label>
-                  <div className="calc-pills" role="radiogroup" aria-label="Variações">
-                    {VARIANT_CHOICES.map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        role="radio"
-                        aria-checked={n === isActive.variants}
-                        className={`calc-pill${n === isActive.variants ? " is-active" : ""}`}
-                        onClick={() => updateAtiva({ variants: n })}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
+                  <label className="calc-label calc-label-sm">
+                    Opções por componente · molhadas
+                  </label>
+                  <Stepper
+                    value={wetOptions}
+                    min={ESTIMATE_RANGES.wetOptions.min}
+                    max={ESTIMATE_RANGES.wetOptions.max}
+                    onChange={changeWetOptions}
+                    ariaLabel="Opções por componente em áreas molhadas"
+                  />
                 </div>
+              </div>
 
-                {isActive.variants > 1 && (
-                  <div className="calc-field calc-axes">
-                    <div className="calc-axes-head">
-                      <label className="calc-label">Ambientes impactados nas variações</label>
-                      <p className="calc-axes-hint">
-                        Layout novo é modelagem nova: 1 unidade de cada ambiente marcado entra de novo na contagem por variação extra — com a imagem base dela e os componentes configurados acima.
-                      </p>
-                    </div>
-                    <div className="calc-axes-grid">
-                      {isActive.rooms.map((a) => (
-                        <label key={a.id} className="calc-axis">
-                          <input
-                            type="checkbox"
-                            checked={!!isActive.impactedRooms[a.id]}
-                            onChange={() => toggleImpacto(a.id)}
-                          />
-                          <span className="calc-axis-box" aria-hidden="true" />
-                          <span className="calc-axis-title">{a.name}</span>
-                        </label>
+              {/* Tabs de metragens */}
+              <div
+                className="calc-unit-type-tabs"
+                role="tablist"
+                aria-label="Metragens do empreendimento"
+              >
+                {unitTypes.map((m, i) => (
+                  <div
+                    key={m.id}
+                    className={`calc-unit-type-tab${i === activeUnitTypeIndex ? " is-active" : ""}`}
+                    role="tab"
+                    aria-selected={i === activeUnitTypeIndex}
+                  >
+                    <button
+                      type="button"
+                      className="calc-unit-type-tab-btn"
+                      onClick={() => selectMetragem(i)}
+                    >
+                      Metragem {String(i + 1).padStart(2, "0")}
+                    </button>
+                    {unitTypes.length > ESTIMATE_RANGES.unitTypes.min && (
+                      <button
+                        type="button"
+                        className="calc-unit-type-tab-remove"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeMetragem(i);
+                        }}
+                        aria-label={`Remover metragem ${i + 1}`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {unitTypes.length < ESTIMATE_RANGES.unitTypes.max && (
+                  <button
+                    type="button"
+                    className="calc-unit-type-add"
+                    onClick={addMetragem}
+                    aria-label="Adicionar metragem"
+                  >
+                    + Adicionar
+                  </button>
+                )}
+              </div>
+
+              {/* Painel da metragem ativa */}
+              {isActive && (
+                <div className="calc-unit-type-panel">
+                  <div className="calc-room-rows">
+                    <p className="calc-label calc-room-rows-head">Ambientes personalizáveis</p>
+                    {isActive.rooms.map((a) => (
+                      <RoomRow
+                        key={a.id}
+                        room={a}
+                        onQuantidadeChange={(v) => updateAmbiente(a.id, { units: v })}
+                        onComponentesChange={(v) => updateAmbiente(a.id, { components: v })}
+                        onRemove={() => removeAmbiente(a.id)}
+                      />
+                    ))}
+
+                    <AddAmbienteControl
+                      state={addingAmbiente}
+                      onOpen={() => setAddingAmbiente({ mode: "picker" })}
+                      onSelectPreset={(preset) => addAmbient(preset.name, preset.areaType)}
+                      onSelectCustom={() =>
+                        setAddingAmbiente({ mode: "custom", name: "", areaType: "molhada" })
+                      }
+                      onChange={(patch) =>
+                        setAddingAmbiente((prev) =>
+                          prev?.mode === "custom" ? { ...prev, ...patch } : prev,
+                        )
+                      }
+                      onConfirm={confirmAddAmbiente}
+                      onCancel={() => setAddingAmbiente(null)}
+                    />
+                  </div>
+
+                  <div className="calc-field">
+                    <label className="calc-label">Variações desta metragem</label>
+                    <div className="calc-pills" role="radiogroup" aria-label="Variações">
+                      {VARIANT_CHOICES.map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={n === isActive.variants}
+                          className={`calc-pill${n === isActive.variants ? " is-active" : ""}`}
+                          onClick={() => updateAtiva({ variants: n })}
+                        >
+                          {n}
+                        </button>
                       ))}
                     </div>
                   </div>
-                )}
-              </div>
-            )}
-          </div>
 
-          {/* ============ VISUAL + OUTPUT ============ */}
-          <div className="calc-visual">
-            <div className="calc-cards">
-              {unitTypeBreakdowns.map(({ m, calc }, mIdx) => (
-                <UnitTypeGroup
-                  key={m.id}
-                  index={mIdx}
-                  unitType={m}
-                  calc={calc}
-                  isActive={mIdx === activeUnitTypeIndex}
-                  onSelect={() => selectMetragem(mIdx)}
-                />
-              ))}
-            </div>
-
-            <div className="calc-output">
-              <div className="calc-out-block">
-                <span className="calc-out-value">
-                  {imageCountDisplay.toLocaleString("pt-BR")}
-                </span>
-                <span className="calc-out-label">imagens necessárias</span>
-                {/* Sem useCountUp: legenda com número animado vira ruído. */}
-                <span className="calc-out-mix">
-                  {imageMix.base.toLocaleString("pt-BR")} base ·{" "}
-                  {imageMix.option.toLocaleString("pt-BR")} de opção
-                </span>
-              </div>
-              <div className="calc-out-divider" aria-hidden="true" />
-              <div className="calc-out-block">
-                <span className="calc-out-value">{formatCurrency(costDisplay)}</span>
-                <span className="calc-out-label">setup de imagens estimado</span>
-              </div>
-            </div>
-
-            <aside className="calc-disclaimer" role="note" aria-label="Aviso sobre a estimativa">
-              <span className="calc-disclaimer-icon" aria-hidden="true">
-                <InfoIcon />
-              </span>
-              <div className="calc-disclaimer-body">
-                <p className="calc-disclaimer-title">Este valor é uma aproximação</p>
-                <p className="calc-disclaimer-text">
-                  A estimativa serve como referência inicial pra dimensionar o setup do empreendimento. O valor oficial só é fechado quando são consideradas as particularidades reais do empreendimento e do catálogo de acabamentos.
-                </p>
-              </div>
-            </aside>
-
-            <p className="calc-note">
-              {unitTypes.length} {unitTypes.length === 1 ? "metragem" : "metragens"} · escala {dryOptions}/{wetOptions} opções por componente (secas/molhadas).
-              {activeBreakdown && (
-                <>
-                  {" "}
-                  Metragem {String(activeUnitTypeIndex + 1).padStart(2, "0")}:{" "}
-                  {activeBreakdown.total.total} imgs ({activeBreakdown.total.base} base ·{" "}
-                  {activeBreakdown.total.option} de opção)
-                  {activeBreakdown.extraVariants.total > 0 &&
-                    `, sendo ${activeBreakdown.extraVariants.total} das variações`}
-                  .
-                </>
+                  {isActive.variants > 1 && (
+                    <div className="calc-field calc-axes">
+                      <div className="calc-axes-head">
+                        <label className="calc-label">Ambientes impactados nas variações</label>
+                        <p className="calc-axes-hint">
+                          Layout novo é modelagem nova: 1 unidade de cada ambiente marcado entra de
+                          novo na contagem por variação extra — com a imagem base dela e os
+                          componentes configurados acima.
+                        </p>
+                      </div>
+                      <div className="calc-axes-grid">
+                        {isActive.rooms.map((a) => (
+                          <label key={a.id} className="calc-axis">
+                            <input
+                              type="checkbox"
+                              checked={!!isActive.impactedRooms[a.id]}
+                              onChange={() => toggleImpacto(a.id)}
+                            />
+                            <span className="calc-axis-box" aria-hidden="true" />
+                            <span className="calc-axis-title">{a.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
-            </p>
+            </div>
+
+            {/* ============ VISUAL + OUTPUT ============ */}
+            <div className="calc-visual">
+              <div className="calc-cards">
+                {unitTypeBreakdowns.map(({ m, calc }, mIdx) => (
+                  <UnitTypeGroup
+                    key={m.id}
+                    index={mIdx}
+                    unitType={m}
+                    calc={calc}
+                    isActive={mIdx === activeUnitTypeIndex}
+                    onSelect={() => selectMetragem(mIdx)}
+                  />
+                ))}
+              </div>
+
+              <div className="calc-output">
+                <div className="calc-out-block">
+                  <span className="calc-out-value">
+                    {imageCountDisplay.toLocaleString("pt-BR")}
+                  </span>
+                  <span className="calc-out-label">imagens necessárias</span>
+                  {/* Sem useCountUp: legenda com número animado vira ruído. */}
+                  <span className="calc-out-mix">
+                    {imageMix.base.toLocaleString("pt-BR")} base ·{" "}
+                    {imageMix.option.toLocaleString("pt-BR")} de opção
+                  </span>
+                </div>
+                <div className="calc-out-divider" aria-hidden="true" />
+                <div className="calc-out-block">
+                  <span className="calc-out-value">{formatCurrency(costDisplay)}</span>
+                  <span className="calc-out-label">setup de imagens estimado</span>
+                </div>
+              </div>
+
+              <aside className="calc-disclaimer" role="note" aria-label="Aviso sobre a estimativa">
+                <span className="calc-disclaimer-icon" aria-hidden="true">
+                  <InfoIcon />
+                </span>
+                <div className="calc-disclaimer-body">
+                  <p className="calc-disclaimer-title">Este valor é uma aproximação</p>
+                  <p className="calc-disclaimer-text">
+                    A estimativa serve como referência inicial pra dimensionar o setup do
+                    empreendimento. O valor oficial só é fechado quando são consideradas as
+                    particularidades reais do empreendimento e do catálogo de acabamentos.
+                  </p>
+                </div>
+              </aside>
+
+              <p className="calc-note">
+                {unitTypes.length} {unitTypes.length === 1 ? "metragem" : "metragens"} · escala{" "}
+                {dryOptions}/{wetOptions} opções por componente (secas/molhadas).
+                {activeBreakdown && (
+                  <>
+                    {" "}
+                    Metragem {String(activeUnitTypeIndex + 1).padStart(2, "0")}:{" "}
+                    {activeBreakdown.total.total} imgs ({activeBreakdown.total.base} base ·{" "}
+                    {activeBreakdown.total.option} de opção)
+                    {activeBreakdown.extraVariants.total > 0 &&
+                      `, sendo ${activeBreakdown.extraVariants.total} das variações`}
+                    .
+                  </>
+                )}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
     </>
   );
 }
@@ -855,12 +859,7 @@ function VariantCard({
 
 function InfoIcon() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path
         d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
         fill="currentColor"

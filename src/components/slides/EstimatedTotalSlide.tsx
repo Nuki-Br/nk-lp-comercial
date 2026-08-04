@@ -1,8 +1,8 @@
 "use client";
 
+import { useEstimate } from "@/components/deck/EstimateProvider";
 import { useCountUp } from "@/hooks/useCountUp";
 import { formatCurrency } from "@/lib/format";
-import { useEstimate } from "@/components/deck/EstimateProvider";
 
 /**
  * Frame de fechamento da apresentação — consolida o que o prospect configurou
@@ -29,16 +29,11 @@ export function EstimatedTotalSlide() {
           </h2>
         </div>
 
-        <div
-          className="estimated-total-card reveal"
-          aria-label="Total estimado do empreendimento"
-        >
+        <div className="estimated-total-card reveal" aria-label="Total estimado do empreendimento">
           <div className="estimated-total-grid">
             <div className="estimated-total-line">
               <span className="estimated-total-line-label">Setup de imagens</span>
-              <span className="estimated-total-line-value">
-                {formatCurrency(imageCostDisplay)}
-              </span>
+              <span className="estimated-total-line-value">{formatCurrency(imageCostDisplay)}</span>
               <span className="estimated-total-line-hint">
                 {totals.imageCount.toLocaleString("pt-BR")} imagens estimadas
               </span>
@@ -56,9 +51,7 @@ export function EstimatedTotalSlide() {
             </div>
             <div className="estimated-total-sum">
               <span className="estimated-total-sum-label">Total</span>
-              <span className="estimated-total-sum-value">
-                {formatCurrency(grandTotalDisplay)}
-              </span>
+              <span className="estimated-total-sum-value">{formatCurrency(grandTotalDisplay)}</span>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { personas, fitList } from "@/content/deck";
+import { fitList, personas } from "@/content/deck";
 
 export function AudienceSlide() {
   return (
@@ -7,11 +7,11 @@ export function AudienceSlide() {
         <div className="section-head">
           <p className="tag reveal">Pra quem serve</p>
           <h2 className="reveal">
-            Feita pra quem gerencia personalização{" "}
-            <em>de verdade.</em>
+            Feita pra quem gerencia personalização <em>de verdade.</em>
           </h2>
           <p className="lead reveal">
-            Três personas dentro da construtora, cada uma com uma dor específica — e um objetivo comum: acabar com o retrabalho.
+            Três personas dentro da construtora, cada uma com uma dor específica — e um objetivo
+            comum: acabar com o retrabalho.
           </p>
         </div>
 

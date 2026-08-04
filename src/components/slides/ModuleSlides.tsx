@@ -1,7 +1,7 @@
 import { Fragment } from "react";
-import { ModuleSlide } from "./ModuleSlide";
-import { ModuleDemoSlide } from "./ModuleDemoSlide";
 import { modules } from "@/content/modules";
+import { ModuleDemoSlide } from "./ModuleDemoSlide";
+import { ModuleSlide } from "./ModuleSlide";
 
 /**
  * Renderiza os 3 módulos (Planner, Personaliza, Inspetor) como slides estáticos

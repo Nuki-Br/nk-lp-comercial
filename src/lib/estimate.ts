@@ -105,7 +105,11 @@ function buildRoomUnits(m: UnitTypeState, dryOptions: number, wetOptions: number
     nos cards de Variação 02+, representando o subset que muda entre
     variações. Layout novo = modelagem nova, então a unidade impactada traz
     junto a imagem base dela. */
-function buildImpactedRoomUnits(m: UnitTypeState, dryOptions: number, wetOptions: number): RoomUnit[] {
+function buildImpactedRoomUnits(
+  m: UnitTypeState,
+  dryOptions: number,
+  wetOptions: number,
+): RoomUnit[] {
   return m.rooms
     .filter((a) => m.impactedRooms[a.id])
     .map((a) =>

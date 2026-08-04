@@ -50,10 +50,14 @@ export function DeckBehaviors() {
       },
       { threshold: 0.15, rootMargin: "0px 0px -6% 0px" },
     );
-    document.querySelectorAll("[data-reveal-group]").forEach((g) => revIO.observe(g));
+    document.querySelectorAll("[data-reveal-group]").forEach((g) => {
+      revIO.observe(g);
+    });
     cleanups.push(() => {
       revIO.disconnect();
-      timeouts.forEach((t) => clearTimeout(t));
+      timeouts.forEach((t) => {
+        clearTimeout(t);
+      });
     });
 
     // 2) Progress nav — observa `.slide` (as seções do deck). `.module` é resquício
@@ -79,7 +83,9 @@ export function DeckBehaviors() {
       },
       { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
     );
-    document.querySelectorAll(".slide, .module").forEach((s) => navIO.observe(s));
+    document.querySelectorAll(".slide, .module").forEach((s) => {
+      navIO.observe(s);
+    });
     cleanups.push(() => navIO.disconnect());
 
     // 3) Navegação por teclado — deriva a lista walkable do DOM em runtime
@@ -121,12 +127,7 @@ export function DeckBehaviors() {
     const isTypingTarget = (el: EventTarget | null) => {
       if (!(el instanceof HTMLElement)) return false;
       const tag = el.tagName;
-      return (
-        tag === "INPUT" ||
-        tag === "TEXTAREA" ||
-        tag === "SELECT" ||
-        el.isContentEditable
-      );
+      return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable;
     };
 
     // Bridge de ESC vindo de DENTRO do iframe da demo. O HTML injeta um keydown
@@ -156,11 +157,7 @@ export function DeckBehaviors() {
       if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)) {
         e.preventDefault();
         goToPart(cur + 1, partIds);
-      } else if (
-        e.key === "ArrowLeft" ||
-        e.key === "PageUp" ||
-        (e.key === " " && e.shiftKey)
-      ) {
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp" || (e.key === " " && e.shiftKey)) {
         e.preventDefault();
         goToPart(cur - 1, partIds);
       } else if (e.key === "Home") {
@@ -184,21 +181,21 @@ export function DeckBehaviors() {
           es.forEach((e) => {
             if (!e.isIntersecting) return;
             const idx = (e.target as HTMLElement).dataset.step;
-            screens.forEach((s) => s.classList.toggle("is-visible", s.dataset.screen === idx));
+            screens.forEach((s) => {
+              s.classList.toggle("is-visible", s.dataset.screen === idx);
+            });
           });
         },
         { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
       );
-      stepEls.forEach((s) => stepIO.observe(s));
+      stepEls.forEach((s) => {
+        stepIO.observe(s);
+      });
       cleanups.push(() => stepIO.disconnect());
     });
 
     // 5) Parallax do bgnum (fallback).
-    const nativeTimeline = !!(
-      window.CSS &&
-      CSS.supports &&
-      CSS.supports("animation-timeline", "view()")
-    );
+    const nativeTimeline = !!window.CSS?.supports?.("animation-timeline", "view()");
     if (!reduce && !nativeTimeline) {
       const px = Array.from(document.querySelectorAll<HTMLElement>("[data-parallax]"));
       let ticking = false;
@@ -232,7 +229,11 @@ export function DeckBehaviors() {
       });
     }
 
-    return () => cleanups.forEach((fn) => fn());
+    return () => {
+      cleanups.forEach((fn) => {
+        fn();
+      });
+    };
   }, []);
 
   return null;

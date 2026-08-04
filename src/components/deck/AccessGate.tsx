@@ -30,7 +30,9 @@ function getServerSnapshot() {
 }
 function unlockStore() {
   localStorage.setItem(STORAGE_KEY, "1");
-  listeners.forEach((l) => l());
+  listeners.forEach((l) => {
+    l();
+  });
 }
 
 /**
@@ -39,11 +41,7 @@ function unlockStore() {
  * senha de novo.
  */
 export function AccessGate({ children }: { children: React.ReactNode }) {
-  const unlocked = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getServerSnapshot,
-  );
+  const unlocked = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [value, setValue] = useState("");
   const [error, setError] = useState(false);
 
@@ -65,8 +63,7 @@ export function AccessGate({ children }: { children: React.ReactNode }) {
         <span className="gate-tag">Acesso restrito</span>
         <h1 className="gate-title">Apresentação comercial Nuki</h1>
         <p className="gate-lead">
-          Este conteúdo é exclusivo para o time Nuki. Informe a senha de acesso
-          para continuar.
+          Este conteúdo é exclusivo para o time Nuki. Informe a senha de acesso para continuar.
         </p>
         <label className="gate-label" htmlFor="comercial-gate-input">
           Senha

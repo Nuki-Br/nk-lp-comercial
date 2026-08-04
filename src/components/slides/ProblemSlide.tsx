@@ -11,7 +11,8 @@ export function ProblemSlide() {
             <em>manuais e desconectadas.</em>
           </h2>
           <p className="lead reveal">
-            Cada etapa tem sua própria dor. E todas viraram um custo invisível dentro da construtora: retrabalho, risco jurídico e insatisfação do cliente.
+            Cada etapa tem sua própria dor. E todas viraram um custo invisível dentro da
+            construtora: retrabalho, risco jurídico e insatisfação do cliente.
           </p>
         </div>
 

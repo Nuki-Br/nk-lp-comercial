@@ -1,11 +1,9 @@
-import { Footer } from "@/components/layout/Footer";
 import { DeckBehaviors, EstimateProvider, ProgressNav } from "@/components/deck";
+import { Footer } from "@/components/layout/Footer";
 import {
-  AudienceSlide,
   CalculatorSlide,
   CasesSlide,
   CoverSlide,
-  DifferentiatorsSlide,
   EstimatedTotalSlide,
   ModuleSlides,
   PricingSlide,

@@ -22,7 +22,7 @@ export function useCountUp(value: number, durationMs = 450): number {
     const start = performance.now();
     const step = (now: number) => {
       const t = Math.min((now - start) / durationMs, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
+      const eased = 1 - (1 - t) ** 3;
       setDisplay(Math.round(from + (to - from) * eased));
       if (t < 1) raf = requestAnimationFrame(step);
     };

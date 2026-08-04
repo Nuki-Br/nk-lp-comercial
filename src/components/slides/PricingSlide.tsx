@@ -1,10 +1,10 @@
 "use client";
 
-import { plans, billingCycles } from "@/content/deck";
+import { useEstimate } from "@/components/deck/EstimateProvider";
 import { Stepper } from "@/components/ui/Stepper";
+import { billingCycles, plans } from "@/content/deck";
 import { formatCurrency } from "@/lib/format";
 import { discountedMonthlyPrice } from "@/lib/pricing";
-import { useEstimate } from "@/components/deck/EstimateProvider";
 
 const MAX_MONTHS = 36;
 
@@ -27,7 +27,8 @@ export function PricingSlide() {
             Todos os módulos em <em>um plano só</em>.
           </h2>
           <p className="lead reveal">
-            Fee mensal por empreendimento ativo, com Planner, Personaliza e Inspetor inclusos desde o primeiro mês. Simule por quantos meses o empreendimento fica na plataforma.
+            Fee mensal por empreendimento ativo, com Planner, Personaliza e Inspetor inclusos desde
+            o primeiro mês. Simule por quantos meses o empreendimento fica na plataforma.
           </p>
         </div>
 
@@ -50,7 +51,8 @@ export function PricingSlide() {
         </div>
 
         <p className="billing-cycle-hint reveal">
-          O desconto acompanha o compromisso: a partir de 6 meses o Semestral entra sozinho, e a partir de 12 meses, o Anual.
+          O desconto acompanha o compromisso: a partir de 6 meses o Semestral entra sozinho, e a
+          partir de 12 meses, o Anual.
         </p>
 
         <div className="plans">
@@ -73,9 +75,7 @@ export function PricingSlide() {
                   <span className="price-unit">
                     por empreendimento
                     {cycle.discount > 0 && (
-                      <span className="price-badge">
-                        −{Math.round(cycle.discount * 100)}%
-                      </span>
+                      <span className="price-badge">−{Math.round(cycle.discount * 100)}%</span>
                     )}
                   </span>
                 </div>
@@ -96,7 +96,6 @@ export function PricingSlide() {
             );
           })}
         </div>
-
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import { billingCycles, plans, type BillingCycle } from "@/content/deck";
+import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import { type BillingCycle, billingCycles, plans } from "@/content/deck";
 import { cycleForMonths, discountedMonthlyPrice } from "@/lib/pricing";
 
 /** Totais publicados pela Calculadora e consumidos por outras seções da
@@ -77,7 +77,8 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
   const platformCost = useMemo(
     () =>
       months.reduce(
-        (acc, m, i) => acc + m * discountedMonthlyPrice(plans[i]?.monthlyPrice ?? 0, cycle.discount),
+        (acc, m, i) =>
+          acc + m * discountedMonthlyPrice(plans[i]?.monthlyPrice ?? 0, cycle.discount),
         0,
       ),
     [months, cycle.discount],
@@ -99,9 +100,7 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
     [totals, months, selectCycle, cycle, platformCost, totalMonths, grandTotal],
   );
 
-  return (
-    <EstimateContext.Provider value={value}>{children}</EstimateContext.Provider>
-  );
+  return <EstimateContext.Provider value={value}>{children}</EstimateContext.Provider>;
 }
 
 /** Acesso único ao estado do orçamento. Antes eram dois hooks

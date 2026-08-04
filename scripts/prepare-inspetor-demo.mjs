@@ -49,9 +49,9 @@
  *   node scripts/prepare-inspetor-demo.mjs
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -106,10 +106,7 @@ if (patches.tweaks > 0) {
 // second <html> occurrence of its own.
 const TITLE_RE = /<title>[^<]*<\/title>/;
 if (TITLE_RE.test(newHtml)) {
-  newHtml = newHtml.replace(
-    TITLE_RE,
-    () => "<title>Nuki Inspetor — Protótipo navegável</title>",
-  );
+  newHtml = newHtml.replace(TITLE_RE, () => "<title>Nuki Inspetor — Protótipo navegável</title>");
   patches.title++;
 }
 

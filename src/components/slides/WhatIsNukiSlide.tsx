@@ -7,11 +7,11 @@ export function WhatIsNukiSlide() {
         <div className="section-head">
           <p className="tag reveal">O que é a Nuki</p>
           <h2 className="reveal">
-            A camada de gestão de todo o ciclo de personalização —{" "}
-            <em>em uma plataforma só.</em>
+            A camada de gestão de todo o ciclo de personalização — <em>em uma plataforma só.</em>
           </h2>
           <p className="lead reveal">
-            A Nuki transforma um processo manual e fragmentado em um ciclo estruturado, integrado e escalável — da formação de custo do memorial à entrega validada em obra.
+            A Nuki transforma um processo manual e fragmentado em um ciclo estruturado, integrado e
+            escalável — da formação de custo do memorial à entrega validada em obra.
           </p>
         </div>
 
