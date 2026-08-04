@@ -1,0 +1,4 @@
+# Private sales deck — not for indexing. Paired with the X-Robots-Tag header
+# set in next.config.ts.
+User-agent: *
+Disallow: /

@@ -1,0 +1,113 @@
+/* Footer estático. A versão do `nk-lp` abre o modal "Solicitar demo" (webhook
+   Relay + WhatsApp); aqui não faz sentido — o vendedor já está na sala com o
+   prospect. Todos os links apontam pro site institucional, que vive em outro
+   domínio, então são absolutos e usam `<a>` em vez de `next/link`. */
+const SITE_URL = "https://nukibr.com";
+
+export function Footer() {
+  return (
+    <footer className="w-full bg-nuki-cinza-claro shadow-[0_10px_20.7px_0_rgba(0,0,0,0.25)]">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col items-start gap-6 px-6 py-8 sm:px-8 sm:py-10 md:flex-row md:items-center md:justify-between md:px-12 md:py-10 lg:h-[160px] lg:gap-16 lg:px-16 lg:py-0 xl:gap-[152px] xl:px-[108px]">
+        <a href={SITE_URL} aria-label="Nuki" className="shrink-0">
+          <img
+            src="/footer/nuki-logo-horizontal-preto.png"
+            alt="Nuki"
+            width={122}
+            height={60}
+            className="h-[60px] w-[122px] object-contain"
+          />
+        </a>
+
+        <div className="flex w-full min-w-0 flex-col items-start gap-8 md:flex-row md:items-center md:justify-between lg:w-[912px]">
+          <div className="grid w-full min-w-0 grid-cols-1 items-start gap-8 sm:grid-cols-2 md:w-auto md:flex md:flex-1 md:items-start md:justify-between lg:justify-start lg:gap-[152px]">
+            <nav aria-label="Recursos" className="flex flex-col gap-1.5">
+              <p className="text-[12px] font-extrabold leading-6 tracking-[0.15px] text-nuki-preto">
+                Recursos
+              </p>
+              <ul className="flex flex-col gap-1.5 text-[12px] font-normal leading-5 tracking-[0.25px] text-nuki-cinza">
+                <li>
+                  <a
+                    href={`${SITE_URL}/recursos/personalizacao`}
+                    className="inline-block py-2 transition-colors hover:text-nuki-preto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02"
+                  >
+                    Personalização
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={`${SITE_URL}/recursos/controle-analise`}
+                    className="inline-block py-2 transition-colors hover:text-nuki-preto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02"
+                  >
+                    Controle e análise
+                  </a>
+                </li>
+              </ul>
+            </nav>
+
+            <nav aria-label="Institucional" className="flex flex-col gap-3">
+              <a
+                href={`${SITE_URL}/conheca-nossa-historia`}
+                className="inline-block py-2 text-[12px] font-extrabold leading-6 tracking-[0.15px] text-nuki-preto transition-colors hover:text-nuki-verde-02 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02"
+              >
+                Sobre a Nuki
+              </a>
+            </nav>
+
+            <div className="flex items-center gap-[15.25px]">
+              <a
+                href="https://www.instagram.com/nukibr/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="inline-flex items-center justify-center rounded-full text-nuki-preto transition-colors hover:bg-black/5 hover:text-nuki-verde-02 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02 max-lg:size-11"
+              >
+                <InstagramIcon className="size-[22.875px]" />
+              </a>
+              <a
+                href="https://br.linkedin.com/company/nukibrasil"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="inline-flex items-center justify-center rounded-full text-nuki-preto transition-colors hover:bg-black/5 hover:text-nuki-verde-02 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nuki-verde-02 max-lg:size-11"
+              >
+                <LinkedinIcon className="size-[22.875px]" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 22.875 22.875"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M7.63453 20.9688H15.2405V20.9783C18.3953 20.9783 20.9688 18.4048 20.9688 15.25V7.63453C20.9688 4.47016 18.3953 1.90625 15.2405 1.90625H7.63453C4.47016 1.90625 1.90625 4.47016 1.90625 7.63453V15.2405C1.90625 18.4048 4.47969 20.9688 7.63453 20.9688ZM3.69813 7.63453C3.69813 5.46141 5.46141 3.69813 7.63453 3.69813H15.2405C17.4136 3.69813 19.1769 5.47094 19.1769 7.63453V15.25C19.1769 17.4231 17.4136 19.1864 15.2405 19.1864H7.63453C5.46141 19.1864 3.69813 17.4231 3.69813 15.25V7.63453ZM16.4796 5.30897C15.8601 5.30897 15.3645 5.8046 15.3645 6.42413C15.3645 7.04366 15.8696 7.53928 16.4796 7.53928C17.0896 7.53928 17.5948 7.04366 17.5948 6.42413C17.5948 5.8046 17.0896 5.30897 16.4796 5.30897ZM11.5137 6.73866C8.92116 6.73866 6.81475 8.84507 6.81475 11.4376C6.81475 14.0301 8.92116 16.1365 11.5137 16.1365C14.1062 16.1365 16.2126 14.0301 16.2126 11.4376C16.2126 8.84507 14.1062 6.73866 11.5137 6.73866ZM11.5137 14.4399C9.85522 14.4399 8.50178 13.0865 8.50178 11.428C8.50178 9.7696 9.85522 8.42569 11.5137 8.42569C13.1721 8.42569 14.516 9.77913 14.516 11.428C14.516 13.0769 13.1626 14.4399 11.5137 14.4399Z"
+      />
+    </svg>
+  );
+}
+
+function LinkedinIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 22.875 22.875"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path d="M2.22078 8.235H6.18578V20.9688H2.22078V8.235ZM4.20328 1.90625C5.47094 1.90625 6.50031 2.93563 6.50031 4.20328C6.50031 5.47094 5.47094 6.50031 4.20328 6.50031C2.93563 6.50031 1.90625 5.47094 1.90625 4.20328C1.90625 2.93563 2.93563 1.90625 4.20328 1.90625ZM8.67344 20.9688H12.6289V14.6686C12.6289 13.0102 12.9434 11.3994 15.0022 11.3994C17.0609 11.3994 17.0609 13.2961 17.0609 14.7734V20.9688H21.0164V13.9823C21.0164 10.5511 20.273 7.92047 16.2698 7.92047C14.3445 7.92047 13.0483 8.97844 12.5241 9.97922H12.4764V8.235H8.68297V20.9688H8.67344Z" />
+    </svg>
+  );
+}
