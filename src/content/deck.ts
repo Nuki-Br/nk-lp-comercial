@@ -234,7 +234,7 @@ export const DEFAULT_ROOMS: readonly RoomConfig[] = [
   {
     id: "quartos",
     name: "Quartos",
-    areaType: "seca",
+    areaType: "dry",
     weight: "light",
     units: 2,
     components: 3,
@@ -243,7 +243,7 @@ export const DEFAULT_ROOMS: readonly RoomConfig[] = [
   {
     id: "banheiros",
     name: "Banheiros",
-    areaType: "molhada",
+    areaType: "wet",
     weight: "heavy",
     units: 1,
     components: 8,
@@ -276,11 +276,11 @@ export type RoomPreset = {
 };
 
 export const ROOM_PRESETS: readonly RoomPreset[] = [
-  { name: "Sala", areaType: "seca" },
-  { name: "Lavabo", areaType: "molhada" },
-  { name: "Cozinha", areaType: "molhada" },
-  { name: "Área de Serviço", areaType: "molhada" },
-  { name: "Terraço", areaType: "seca" },
+  { name: "Sala", areaType: "dry" },
+  { name: "Lavabo", areaType: "wet" },
+  { name: "Cozinha", areaType: "wet" },
+  { name: "Área de Serviço", areaType: "wet" },
+  { name: "Terraço", areaType: "dry" },
 ];
 
 /* ------------------------------------------------------------------
@@ -332,32 +332,32 @@ const room = (
    bloco (contagem de imagens a 3 opções ÷ 3). Hall Privativo e Cozinha/Sala
    integrada não estão na referência — são estimativas. */
 const studioRooms = (): RoomConfig[] => [
-  room("cozinha-sala", "Cozinha/Sala", "molhada", 8),
-  room("quarto", "Quarto", "seca", 3),
-  room("banheiro", "Banheiro", "molhada", 8),
-  room("area-de-servico", "Área de Serviço", "molhada", 6),
-  room("terraco", "Terraço", "seca", 6),
+  room("cozinha-sala", "Cozinha/Sala", "wet", 8),
+  room("quarto", "Quarto", "dry", 3),
+  room("banheiro", "Banheiro", "wet", 8),
+  room("area-de-servico", "Área de Serviço", "wet", 6),
+  room("terraco", "Terraço", "dry", 6),
 ];
 
 const standardRooms = (): RoomConfig[] => [
-  room("cozinha", "Cozinha", "molhada", 6),
-  room("sala-de-estar", "Sala de Estar", "seca", 4),
-  room("quartos", "Quartos", "seca", 3, 2),
-  room("banheiro", "Banheiro", "molhada", 8),
-  room("lavabo", "Lavabo", "molhada", 7),
-  room("area-de-servico", "Área de Serviço", "molhada", 6),
-  room("terraco", "Terraço", "seca", 6),
+  room("cozinha", "Cozinha", "wet", 6),
+  room("sala-de-estar", "Sala de Estar", "dry", 4),
+  room("quartos", "Quartos", "dry", 3, 2),
+  room("banheiro", "Banheiro", "wet", 8),
+  room("lavabo", "Lavabo", "wet", 7),
+  room("area-de-servico", "Área de Serviço", "wet", 6),
+  room("terraco", "Terraço", "dry", 6),
 ];
 
 const highEndRooms = (): RoomConfig[] => [
-  room("hall-privativo", "Hall Privativo", "seca", 3),
-  room("cozinha", "Cozinha", "molhada", 6),
-  room("sala-de-estar", "Sala de Estar", "seca", 4),
-  room("quartos", "Quartos", "seca", 3, 3),
-  room("banheiros", "Banheiros", "molhada", 8, 2),
-  room("lavabo", "Lavabo", "molhada", 7),
-  room("area-de-servico", "Área de Serviço", "molhada", 6),
-  room("terraco", "Terraço", "seca", 6),
+  room("hall-privativo", "Hall Privativo", "dry", 3),
+  room("cozinha", "Cozinha", "wet", 6),
+  room("sala-de-estar", "Sala de Estar", "dry", 4),
+  room("quartos", "Quartos", "dry", 3, 3),
+  room("banheiros", "Banheiros", "wet", 8, 2),
+  room("lavabo", "Lavabo", "wet", 7),
+  room("area-de-servico", "Área de Serviço", "wet", 6),
+  room("terraco", "Terraço", "dry", 6),
 ];
 
 /** Metragens de composição idêntica dentro de um preset — o vendedor

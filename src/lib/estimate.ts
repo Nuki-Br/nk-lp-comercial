@@ -64,7 +64,7 @@ const mixOfRoomUnits = (units: RoomUnit[]): ImageMix =>
   units.reduce((acc, u) => sumMix(acc, mix(u.baseImages, u.optionImages)), EMPTY_MIX);
 
 function optionsForArea(areaType: RoomAreaType, dryOptions: number, wetOptions: number): number {
-  return areaType === "seca" ? dryOptions : wetOptions;
+  return areaType === "dry" ? dryOptions : wetOptions;
 }
 
 /** Rotula a n-ésima unidade de um ambiente. Se quantidade = 1, usa o nome

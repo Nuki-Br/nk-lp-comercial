@@ -45,8 +45,10 @@ Read these before starting stage 2; they are contract decisions, not trivia.
   a slide that ships disabled (today: `differentiators`, `audience`).
 - **`normalizeDeck` is tolerant, not rejecting** — it warns and repairs. The
   validator that *rejects* is stage 2's `src/server/config/validate.ts`.
-- **`RoomAreaType` is `"seca" | "molhada"`.** Stage 2 persists those strings into
-  JSONB. Rename them before that or accept a data migration — `tech-debt.md` §9.
+- **`RoomAreaType` is `"dry" | "wet"`.** It was `"seca" | "molhada"`; stage 2
+  renamed it in its own commit *before* authoring any migration, because these
+  values land in JSONB and a later rename would be a data migration over live
+  proposals. The pt-BR tags rendered next to them did not move — `tech-debt.md` §9.
 
 ## Why the stages are cut this way
 

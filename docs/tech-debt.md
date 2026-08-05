@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/styles/*.css, src/components/deck/DeckBehaviors.tsx, src/components/slides/CalculatorSlide.tsx
-size: 140
+size: 219
 ---
 
 # Tech debt
@@ -159,16 +159,40 @@ positional, so the index *is* the right key.
 
 Whoever fixes these should do it as its own change, with a fresh DOM baseline.
 
-## 9. `RoomAreaType` values are pt-BR strings
+## 9. `RoomAreaType` values are pt-BR strings — FIXED before stage 2
 
 ```bash
-grep -n 'RoomAreaType = ' src/lib/estimateTypes.ts     # "seca" | "molhada"
+grep -n 'RoomAreaType = ' src/lib/estimateTypes.ts     # "dry" | "wet"
 ```
 
-Violates Rule 1 in the one place where it will be expensive to fix later: stage 2
-persists these values into JSONB, so renaming them to `dry`/`wet` after that
-means a data migration over live proposals. If it is going to happen, it should
-happen **before** stage 2 ships.
+It violated Rule 1 in the one place where it would have been expensive to fix
+later: stage 2 persists these values into JSONB, so renaming after a proposal
+published would have meant a data migration over live commercial documents. Done
+in its own commit, ahead of the migrations, exactly as this entry asked.
+
+The pt-BR copy did **not** move: `dryTag`/`wetTag`/`dryPill`/`wetPill` in
+`src/content/slides.ts` still read "seca" / "molhada" / "Seca" / "Molhada". Only
+the type's values changed. One site had to change with them — `RoomRow`
+interpolated the raw value into an `aria-label`, so a screen reader would have
+started announcing "Classificação: dry"; it now interpolates the tag.
+
+## 10. A preset class name that has never matched its rule
+
+```bash
+grep -n 'calc-add-ambient-preset' src/components/slides/CalculatorSlide.tsx  # 1
+grep -rn 'calc-add-ambient-preset' src/styles/                               # 0
+grep -n 'calc-add-room-preset-wet' src/styles/slides.css                     # 1
+```
+
+`AddAmbienteControl` emits `calc-add-ambient-preset-<areaType>` while
+`slides.css` styles `.calc-add-room-preset-wet` — the two names never met, so
+the wet-area presets in the "+ Adicionar ambiente" picker have never received
+their green class tag. Found during the §9 rename and deliberately **not** fixed
+there: aligning the names turns a colour on, and a visual change does not belong
+in a mechanical rename's diff.
+
+Fixing it is two tokens (`ambient` → `room`, and the value is already
+`dry`/`wet`). Do it with eyes on the picker, as its own change.
 
 ## How to verify a CSS deletion
 

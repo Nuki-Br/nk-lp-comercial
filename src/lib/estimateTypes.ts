@@ -15,7 +15,7 @@
 /** Classe do ambiente decide qual multiplicador de opções usar. Áreas
     molhadas (banho, cozinha, Área de Serviço) oferecem mais superfícies
     personalizáveis do que secas (quartos, sala). */
-export type RoomAreaType = "seca" | "molhada";
+export type RoomAreaType = "dry" | "wet";
 
 /** Categoria de "peso" visual do tile — 3 tiers só, pra ler à distância
     sem virar um degradê contínuo difícil de decodificar. */

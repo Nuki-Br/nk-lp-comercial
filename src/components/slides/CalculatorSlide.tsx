@@ -459,7 +459,7 @@ export function CalculatorSlide({
                       onOpen={() => setAddingAmbiente({ mode: "picker" })}
                       onSelectPreset={(preset) => addAmbient(preset.name, preset.areaType)}
                       onSelectCustom={() =>
-                        setAddingAmbiente({ mode: "custom", name: "", areaType: "molhada" })
+                        setAddingAmbiente({ mode: "custom", name: "", areaType: "wet" })
                       }
                       onChange={(patch) =>
                         setAddingAmbiente((prev) =>
@@ -618,7 +618,7 @@ function RoomRow({
   onRemove: () => void;
 }) {
   const isEmpty = room.units <= 0;
-  const areaTag = room.areaType === "seca" ? labels.rooms.dryTag : labels.rooms.wetTag;
+  const areaTag = room.areaType === "dry" ? labels.rooms.dryTag : labels.rooms.wetTag;
   return (
     <div className={`calc-room-row${isEmpty ? " is-empty" : ""}`}>
       <span className="calc-room-row-name">
@@ -626,7 +626,10 @@ function RoomRow({
         {!room.locked && (
           <span
             className="calc-room-row-class"
-            aria-label={fill(labels.rooms.classAriaTemplate, { areaType: room.areaType })}
+            /* The pt-BR tag, never `room.areaType` — the value is an English
+               identifier now, and interpolating it here would read out
+               "Classificação: dry" to a screen reader. */
+            aria-label={fill(labels.rooms.classAriaTemplate, { areaType: areaTag })}
           >
             {areaTag}
           </span>
@@ -714,7 +717,7 @@ function AddAmbienteControl({
             >
               <span className="calc-add-room-preset-name">{preset.name}</span>
               <span className="calc-add-room-preset-class">
-                {preset.areaType === "seca" ? labels.rooms.dryTag : labels.rooms.wetTag}
+                {preset.areaType === "dry" ? labels.rooms.dryTag : labels.rooms.wetTag}
               </span>
             </button>
           ))}
@@ -754,18 +757,18 @@ function AddAmbienteControl({
         <button
           type="button"
           role="radio"
-          aria-checked={state.areaType === "seca"}
-          className={`calc-pill${state.areaType === "seca" ? " is-active" : ""}`}
-          onClick={() => onChange({ areaType: "seca" })}
+          aria-checked={state.areaType === "dry"}
+          className={`calc-pill${state.areaType === "dry" ? " is-active" : ""}`}
+          onClick={() => onChange({ areaType: "dry" })}
         >
           {labels.rooms.dryPill}
         </button>
         <button
           type="button"
           role="radio"
-          aria-checked={state.areaType === "molhada"}
-          className={`calc-pill${state.areaType === "molhada" ? " is-active" : ""}`}
-          onClick={() => onChange({ areaType: "molhada" })}
+          aria-checked={state.areaType === "wet"}
+          className={`calc-pill${state.areaType === "wet" ? " is-active" : ""}`}
+          onClick={() => onChange({ areaType: "wet" })}
         >
           {labels.rooms.wetPill}
         </button>
