@@ -1,8 +1,8 @@
 ---
 audience: both
 status: current
-verified_against: src/lib/estimate.ts + src/content/deck.ts, re-derived by running the code
-size: 130
+verified_against: src/lib/estimate.ts + src/lib/quote.ts + src/content/deck.ts, re-derived by running the code
+size: 179
 ---
 
 # The estimate
@@ -28,6 +28,30 @@ These are the assertions in `src/lib/estimate.test.ts`. If a preset's room
 composition changes, the test fails, you re-derive, and you update **this table
 only**. If you find these numbers written anywhere else in the repo, that copy is
 a bug — delete it and link here.
+
+### The quote the /admin list shows
+
+`src/lib/quote.ts` composes the four functions above into the three figures per
+row in the proposals table — mensalidade, setup de imagens, total. At the shipped
+defaults (plan **R$ 1.599**/month, cycles 0 / −5% / −10%):
+
+| Figure | Value | Where it comes from |
+|---|---|---|
+| Mensalidade | **R$ 1.439** | featured plan × the cycle that 12 months falls into (anual, −10%) |
+| Setup de imagens | **R$ 1.428** | the "Defaults" row above — the calculator's SEED |
+| Total em 12 meses | **R$ 18.696** | 1.428 + 12 × 1.439 |
+
+Asserted in `src/lib/quote.test.ts`, against `buildDefaultDeck()` rather than a
+hand-built config.
+
+**12 months is arbitrated in one place** — `QUOTE_REFERENCE_MONTHS`. No proposal
+stores a term: the client picks months in the simulator, so the list needs a
+common ruler to compare rows and this is it. A proposal whose `maxMonths` is
+below 12 is quoted over `maxMonths` instead, and the cell says so — a total the
+client cannot even drag to would be a deal that does not exist.
+
+**A published proposal is quoted from its snapshot, a draft from defaults + delta.**
+The salesperson's later edits are a renegotiation nobody received yet.
 
 To re-derive without trusting anything:
 

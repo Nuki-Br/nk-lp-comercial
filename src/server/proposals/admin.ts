@@ -4,9 +4,12 @@ import { randomBytes } from "node:crypto";
 import { buildDefaultDeck } from "@/deck/defaults";
 import { parseDeckOverride } from "@/deck/overrides";
 import { resolveDeckConfig } from "@/deck/resolve";
+import type { DeckConfig } from "@/deck/types";
+import { type ProposalQuote, proposalQuote } from "@/lib/quote";
 import { hashPassword } from "@/server/auth/password";
 import { validateDeckConfig } from "@/server/config/validate";
 import { forVisitor, isProposalExpired } from "@/server/proposals/dal";
+import { parseStoredDeckConfig } from "@/server/schemas/deckConfig";
 import { supabaseAdmin } from "@/server/supabase/adminClient";
 import type { Json } from "@/server/supabase/database.types";
 
@@ -27,6 +30,10 @@ export type ProposalSummary = {
   clientName: string;
   hasPassword: boolean;
   openCount: number;
+  /** Mensalidade, setup de imagens e total — o que a lista compara. */
+  quote: ProposalQuote;
+  /** De onde saíram as cifras: o documento que o cliente tem, ou o rascunho. */
+  quoteSource: "snapshot" | "draft";
 };
 
 /** `nome-do-cliente-<8 random>`.
@@ -51,10 +58,35 @@ export function buildProposalSlug(clientName: string): string {
   return base ? `${base}-${tail}` : `proposta-${tail}`;
 }
 
+/**
+ * De qual config saem as cifras de uma linha da lista.
+ *
+ * Publicada → o SNAPSHOT, porque é o documento que o cliente tem na mão; o
+ * rascunho por cima dele pode ser uma renegociação que ainda não foi enviada, e
+ * uma lista que mostrasse esse número diria que a proposta vale algo que
+ * ninguém recebeu. Rascunho → defaults + delta, que é o que publicar congelaria.
+ *
+ * O snapshot ilegível cai no rascunho em vez de sumir: aqui a cifra é uma
+ * referência interna, e a assimetria com a DAL é deliberada — lá, renderizar os
+ * defaults para um visitante seria mostrar ao cliente um documento diferente do
+ * que ele recebeu (ADR 13), e por isso lá o mesmo caso vira "não encontrado".
+ */
+function estimateForRow(
+  base: DeckConfig,
+  row: { status: string; config_override: unknown; config_snapshot: unknown },
+): { estimate: DeckConfig["estimate"]; source: "snapshot" | "draft" } {
+  if (row.status === "published") {
+    const snapshot = parseStoredDeckConfig(row.config_snapshot);
+    if (snapshot) return { estimate: snapshot.estimate, source: "snapshot" };
+  }
+  const resolved = resolveDeckConfig(base, parseDeckOverride(row.config_override));
+  return { estimate: resolved.estimate, source: "draft" };
+}
+
 export async function listProposals(): Promise<ProposalSummary[]> {
   const { data, error } = await supabaseAdmin
     .from("proposals")
-    .select("id, slug, title, status, expires_at, clients(name)")
+    .select("id, slug, title, status, expires_at, config_override, config_snapshot, clients(name)")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`Could not list proposals: ${error.message}`);
@@ -62,17 +94,26 @@ export async function listProposals(): Promise<ProposalSummary[]> {
   const rows = data ?? [];
   const counts = await openCounts(rows.map((r) => r.id));
   const withPassword = await proposalsWithLiveCredential(rows.map((r) => r.id));
+  /* Uma vez para a lista inteira. `resolveDeckConfig` clona o que recebe, então
+     as N resoluções não se enxergam. */
+  const base = buildDefaultDeck();
 
-  return rows.map((row) => ({
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    status: row.status,
-    expiresAt: row.expires_at,
-    clientName: row.clients?.name ?? "—",
-    hasPassword: withPassword.has(row.id),
-    openCount: counts.get(row.id) ?? 0,
-  }));
+  return rows.map((row) => {
+    const { estimate, source } = estimateForRow(base, row);
+
+    return {
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      status: row.status,
+      expiresAt: row.expires_at,
+      clientName: row.clients?.name ?? "—",
+      hasPassword: withPassword.has(row.id),
+      openCount: counts.get(row.id) ?? 0,
+      quote: proposalQuote(estimate),
+      quoteSource: source,
+    };
+  });
 }
 
 /** The raw open count, and nothing else — the read-out UI is stage 3. */

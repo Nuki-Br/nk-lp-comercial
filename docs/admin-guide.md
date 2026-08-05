@@ -2,7 +2,7 @@
 audience: human
 status: current
 verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,SlidesWorkspace,PricingEditor,EstimateEditor}.tsx, src/server/proposals/config.ts, src/server/tracking/readout.ts
-size: 192
+size: 216
 ---
 
 # Montando uma proposta no /admin
@@ -30,6 +30,30 @@ usar nada aqui.
 Rascunho não abre pra ninguém. Se você mandar o link antes de publicar, o cliente
 vê "não encontrado" — de propósito, pra ele não descobrir que existe uma proposta
 sendo preparada.
+
+## As três cifras da lista
+
+A lista de propostas mostra, à direita de cada linha, quanto aquela proposta
+vale:
+
+| Coluna | O que é |
+|---|---|
+| **Mensalidade** | o plano em destaque, já com o desconto do ciclo — a linha de baixo diz qual ciclo e quanto ele tira |
+| **Setup de imagens** | o pacote de imagens com que a calculadora **abre**, em reais |
+| **Total em 12 meses** | setup + 12 mensalidades |
+
+**Os 12 meses são uma referência, não uma promessa.** Nenhuma proposta guarda um
+prazo: quem escolhe quantos meses contratar é o cliente, no simulador. Os 12
+estão ali para que duas propostas possam ser comparadas na mesma régua — se o
+teto do simulador daquela proposta for menor que 12, a célula diz sobre quantos
+meses a conta foi feita.
+
+**O setup também é um ponto de partida.** É o número da abertura da calculadora;
+o cliente mexe nela durante a apresentação e o valor dele será outro.
+
+Uma proposta **publicada** é cotada pelo documento que o cliente recebeu, não
+pelas edições que você fez depois. Um **rascunho** é cotado pelo que publicar
+congelaria. Passe o mouse sobre o total para ver qual dos dois está na tela.
 
 ## As quatro abas
 
