@@ -133,20 +133,61 @@ export function PasswordForm({ id, hasPassword }: { id: string; hasPassword: boo
   );
 }
 
-export function PublishForm({ id, published }: { id: string; published: boolean }) {
+/* Publishing is a freeze, and the button has to say so. ADR 13's guarantee — a
+   sent proposal does not change because someone edited a default two months
+   later — is only worth anything if the salesperson knows which version the
+   client is looking at. Hence "Congelar e publicar", and hence the stale
+   banner: an edit made after publishing is invisible to the client until it is
+   republished, and that is the fact most likely to be assumed the other way. */
+export function PublishForm({
+  id,
+  published,
+  snapshotStale,
+  publishedAt,
+}: {
+  id: string;
+  published: boolean;
+  /** Published, and the stored delta no longer matches the frozen snapshot. */
+  snapshotStale: boolean;
+  publishedAt: string | null;
+}) {
   const [state, action] = useActionState<DetailState, FormData>(publishProposalAction, EMPTY);
+
+  const frozenOn = publishedAt
+    ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(
+        new Date(publishedAt),
+      )
+    : null;
 
   return (
     <form action={action} className="flex flex-col gap-3">
       <input type="hidden" name="id" value={id} />
-      <p className="text-sm text-nuki-gray-mid">
-        {published
-          ? "Publicada. Republicar congela um novo retrato do deck atual."
-          : "Publicar congela o deck de hoje nesta proposta. Depois disso, mudar o conteúdo padrão não altera o que o cliente vê."}
-      </p>
+
+      {published ? (
+        <p className="text-sm text-nuki-gray-mid">
+          Congelada{frozenOn ? ` em ${frozenOn}` : ""}. O cliente vê esse retrato, e só ele — mudar
+          o conteúdo padrão do deck não altera esta proposta.
+        </p>
+      ) : (
+        <p className="text-sm text-nuki-gray-mid">
+          Publicar congela o deck de hoje nesta proposta. A partir daí ela vira um documento
+          comercial fixo: editar preços ou textos padrão não muda o que o cliente já recebeu.
+        </p>
+      )}
+
+      {snapshotStale && (
+        <p className="rounded-xl border border-nuki-orange bg-nuki-gray-light p-3 text-sm text-nuki-black">
+          Há alterações depois da publicação. O cliente continua vendo a versão congelada até você
+          republicar.
+        </p>
+      )}
+
       <Feedback state={state} />
       <div className="flex justify-end">
-        <Submit label={published ? "Republicar" : "Publicar"} pendingLabel="Publicando…" />
+        <Submit
+          label={published ? "Republicar (congela de novo)" : "Congelar e publicar"}
+          pendingLabel="Publicando…"
+        />
       </div>
     </form>
   );

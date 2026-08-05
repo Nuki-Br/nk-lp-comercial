@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ComposerTabs } from "@/components/admin/ComposerTabs";
 import {
   CopyLinkButton,
   DetailsForm,
@@ -9,6 +9,7 @@ import {
 } from "@/components/admin/ProposalDetailForms";
 import { requireAdmin } from "@/server/auth/requireAdmin";
 import { getProposal, listProposals } from "@/server/proposals/admin";
+import { loadProposalConfig } from "@/server/proposals/config";
 
 export const dynamic = "force-dynamic";
 
@@ -26,20 +27,15 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
   /* `hasPassword` comes from the list query, which already computes it. One more
      round trip for one boolean is not worth a second code path. */
   const summary = (await listProposals()).find((p) => p.id === id);
+  const config = await loadProposalConfig(id);
 
   const host = (await headers()).get("host") ?? "localhost:3000";
   const protocol = host.startsWith("localhost") ? "http" : "https";
   const publicUrl = `${protocol}://${host}/p/${proposal.slug}`;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6">
-      <div>
-        <Link href="/admin" className="text-sm text-nuki-gray-mid underline hover:text-nuki-black">
-          ← Propostas
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-nuki-green-03">{proposal.title}</h1>
-        <p className="text-sm text-nuki-gray-mid">{proposal.clients?.name}</p>
-      </div>
+    <>
+      <ComposerTabs id={id} active="overview" />
 
       <section className="rounded-2xl border border-nuki-gray-border bg-nuki-white p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-nuki-gray-7">
@@ -80,8 +76,13 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-nuki-gray-7">
           Publicação
         </h2>
-        <PublishForm id={proposal.id} published={proposal.status === "published"} />
+        <PublishForm
+          id={proposal.id}
+          published={proposal.status === "published"}
+          snapshotStale={config.snapshotStale}
+          publishedAt={proposal.published_at}
+        />
       </section>
-    </main>
+    </>
   );
 }
