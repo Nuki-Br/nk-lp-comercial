@@ -16,6 +16,19 @@ export default defineConfig({
     include: ["src/**/*.test.ts"],
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+
+      /* `server-only` is not a dependency and does not resolve as a bare import
+         — Next's bundler aliases it to a copy it ships, which is why the app
+         builds and Rule 3's allowlist stays at six packages. Vitest is not that
+         bundler, so it needs the same alias or every src/server/ test dies on
+         line 1.
+
+         Pointed at `empty.js` deliberately: that is the file the real package
+         resolves to under the `react-server` condition. `index.js` throws by
+         design. */
+      "server-only": fileURLToPath(
+        new URL("./node_modules/next/dist/compiled/server-only/empty.js", import.meta.url),
+      ),
     },
   },
 });
