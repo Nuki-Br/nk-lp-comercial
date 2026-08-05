@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split
-size: 453
+verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview
+size: 553
 ---
 
 # Decisions
@@ -37,6 +37,7 @@ the only thing it was for.
 | 18 | V2 is typed in V1 and built later | current |
 | 19 | The billing cycle is derived, not selected | current |
 | 20 | The shared-password gate is scoped to `/fast` | current |
+| 21 | The panel gets its own token sheet, not a component library | current |
 
 ## 1. Split out of nk-lp
 
@@ -451,3 +452,102 @@ while sharing none of the logic.
 
 **Consequence.** `/fast` gains a one-line nested layout, which looks like
 indirection until you know why it exists. That is what this record is for.
+
+## 21. The panel gets its own token sheet, not a component library
+
+**Context.** The `/admin` panel was built in stage 2 as plain Tailwind on the
+`--color-nuki-*` utilities — correct for a stub, and visibly unfinished once it
+had five screens, nine forms and two tables. The brief was "modern, Vercel-like,
+on the Nuki identity", and it came with an offer to use shadcn/ui.
+
+**Decision.** No shadcn, no Radix, no new runtime dependency. Instead:
+
+1. `src/styles/admin.css`, a second token sheet — the shadcn/ui *vocabulary*
+   (`--background`, `--card`, `--primary`, `--muted-foreground`, `--ring`,
+   `--radius`) with light and dark values, imported by `src/app/(admin)/layout.tsx`
+   **in place of** `tokens.css`. `--primary` is the Nuki green 02, in oklch. The
+   `--color-nuki-*` ramp is redeclared alongside it.
+2. `src/components/admin/ui/` — Button, Card, Field, Badge, Alert, Spinner,
+   SubmitButton, ThemeToggle, NukiLogo. Written here, ~450 lines total.
+3. Geist and Geist Mono in `src/styles/fonts.ts`, used only by the panel's root
+   layout. Manrope stays the deck's font, and the brand's.
+
+**Rationale.** Rule 3 bans shadcn/Radix outright, and its stated reason —
+"~15 packages and a second token layer that forks the Nuki palette" — is only
+half about packages. A forked palette is the real cost: two sources of truth for
+the same green, drifting. Taking the *names* without the packages gets the whole
+benefit and pays neither price. `--primary` is not "close to" the Nuki green, it
+is `#047676` written in oklch, and the ramp sits in the same `@theme` block.
+
+The sheet is separate from `tokens.css` because `tokens.css` was imported by both
+root layouts. A `--background`, a `body` rule and a `border-color` reset added
+there would have leaked into the deck, which has its own palette, no dark theme,
+and a `scroll-snap-type` invariant that `testing.md` checklist C asserts by hand.
+Two sheets for two roots is the same argument as ADR 17, one layer down.
+
+The theme is class-based (`.dark` on `<html>`) rather than
+`prefers-color-scheme`, and a blocking inline script in `<head>` applies it
+before the first paint. An effect would run after paint and flash white on every
+navigation between panel routes. `ThemeToggle` therefore reads the DOM through
+`useSyncExternalStore` rather than owning the state — the `classList` is the
+truth, and it was written before React existed on the page.
+
+**Consequence.** A fifth stylesheet and a `ui/` subdirectory under
+`src/components/admin/`. Two font families in the repo, one per root layout —
+ADR 17's rule was one *instance* per family, and it still holds. The panel now
+has a dark theme that the deck does not, which is correct: one is a tool the team
+stares at all day, the other is a document a client opens once.
+
+The `--color-nuki-*` ramp is now declared in two files. That is a real
+duplication and the one thing in this ADR worth watching: if the brand green
+moves, both sheets move. The alternative — a third shared file imported by both —
+buys one edit at the cost of a layer that exists to hold fourteen hex values.
+
+## 22. The composer previews the deck in an iframe, on its own route
+
+**Context.** The Slides tab was a checklist: a column of rows with a checkbox and
+two arrow buttons. Everything it decides — what the client sees, and in what
+order — was invisible until the proposal was published and opened. The brief was
+to make the tab a preview with a drag-and-drop rail beside it.
+
+**Decision.** A fifth route, `/preview/[id]`, inside the `(deck)` route group,
+gated by `requireAdmin()` at the top of the page like every other admin surface.
+It renders `loadProposalConfig(id).resolved` through the same `<Deck>` component
+`/fast` and `/p/[slug]` use, and the composer embeds it in a same-origin iframe.
+
+**Rationale.** The alternative was rendering `<Deck>` directly inside the
+composer, and it fails on the layer table: `src/app/(admin)/` must never hold
+deck CSS. `deck.css` and `slides.css` would have to be imported on the panel
+side, including a `scroll-snap-type` rule with no scope and a `.slide`
+`min-height: 100vh` that would fight the panel's own layout. That is the leak ADR
+17 closed with two root layouts, re-opened one directory down. An iframe keeps
+the two sheets in the two documents that already own them, and because it is
+same origin the rail still scrolls the preview with `getElementById` — no
+message protocol to keep in sync, no new DOM contract.
+
+Rule 4 says a new surface needs an ADR, and this is it. Three properties keep it
+from being a fourth *product* surface:
+
+- **It mounts no tracking.** `<Deck>` takes `behaviors` and this route passes
+  none, so the collector is not in the route's chunk. Rule 2's second test is
+  answered by construction, exactly as it is for `/fast`.
+- **It is not a visitor path.** `/p/[slug]` still renders the frozen snapshot
+  through the DAL, and still is the only door a client has. This route reads the
+  *live* delta — which is the entire point, since a salesperson previews what
+  they have not published — and therefore may only ever be reachable by an admin.
+- **It shows what a client would see.** `resolveForProposal` already runs the
+  config through `forVisitor`, so `allowPriceOverride` is false here too. The
+  `Ctrl+Alt+K` cost panel is as absent from the preview as it is from the link.
+
+`proxy.ts` is deliberately not extended to `/preview`. Its matcher is `/admin`
+and its own header says it decides nothing; the authority is the `requireAdmin()`
+call in the page, and adding a path there would suggest otherwise. `next.config.ts`
+does get a `Cache-Control: private, no-store` for the route, for the reason
+`/p/:slug` has one: admin-gated says who may fetch it, not who may hold it.
+
+**Consequence.** `/preview/[id]` joins the route table in `AGENTS.md`. The
+preview shows the **saved** config, not the rail's pending edits, and reloads
+itself after a successful save. Mirroring unsaved state live was rejected on
+honesty grounds rather than cost: reordering renumbers the modules `01/02/03` and
+re-anchors the nav dots, both in `normalizeDeck` on the server, so a DOM shuffled
+from the panel would show a presentation that does not exist.

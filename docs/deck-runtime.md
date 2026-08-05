@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/components/deck/DeckBehaviors.tsx, src/components/slides/*.tsx, src/styles/*.css
-size: 150
+size: 182
 ---
 
 # Deck runtime
@@ -131,7 +131,7 @@ precedence is `links` → demo → `learnMore`; `planner` and `personaliza` have
 
 ## Styling
 
-Four layers, and a hard scope rule.
+Four layers for the deck, and a hard scope rule.
 
 | File | Holds |
 |---|---|
@@ -140,10 +140,15 @@ Four layers, and a hard scope rule.
 | `src/styles/slides.css` | per-slide, sectioned with `/* ===== NAME ===== */` banners |
 | `src/styles/gate.css` | the `.gate*` block — renders *outside* `.deck`, so it is deliberately unscoped |
 
+A fifth sheet, `src/styles/admin.css`, belongs to the other root layout and never
+loads on a deck route — it is the panel's design system and is documented in
+ADR 21, not here. `tokens.css` used to be imported by both layouts; it is now
+deck-only.
+
 No `tailwind.config` file; Tailwind v4 is CSS-first. The 15 `--color-nuki-*`
 tokens in `@theme inline` also generate utilities (`bg-nuki-green-02`,
-`text-nuki-gray-mid`, …), which is what lets the admin panel look like Nuki with
-no component library.
+`text-nuki-gray-mid`, …). `admin.css` redeclares that same ramp, so the panel
+still speaks the Nuki palette with no component library.
 
 **Everything deck-related is scoped under a single `.deck`.** Keep that scope:
 `slides.css` defines classes named `.card`, `.grid`, `.item`, `.step`, `.tag`,

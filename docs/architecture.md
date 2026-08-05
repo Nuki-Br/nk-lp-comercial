@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/app/, src/components/, next.config.ts
-size: 194
+size: 204
 ---
 
 # Architecture
@@ -24,13 +24,23 @@ src/app/
     fast/page.tsx          → /fast    code-driven, no database
     p/[slug]/page.tsx      → /p/:slug DB-driven, server-verified password
     p/[slug]/actions.ts    the unlock server action
+    preview/[id]/page.tsx  → /preview/:id the composer's iframe. requireAdmin, no tracking
   (admin)/
-    layout.tsx             ROOT #2 — html/body, Manrope, tokens only
+    layout.tsx             ROOT #2 — html/body, Geist, admin.css only (ADR 21)
     admin/**               → /admin   Supabase Auth
   api/
     p/[slug]/track         dwell flushes
 proxy.ts                   repo root. /admin only. Coarse. Not the boundary.
 ```
+
+**The preview is in the deck group, and that is the whole reason it is a route.**
+The composer's Slides tab shows the proposal beside the rail that edits it. It
+gets there through an iframe pointing at `/preview/[id]`, because the panel is
+not allowed to load deck CSS — a `<Deck>` rendered inside `(admin)` would drag
+`slides.css` and its unscoped `scroll-snap-type` across the boundary that two
+root layouts exist to hold. Same origin, so the rail scrolls the preview with a
+plain `getElementById`. It reads the live delta, mounts no tracking, and is
+gated by `requireAdmin()` in the page. ADR 22.
 
 **The unlock is a server action, not a route handler.** `api/p/[slug]/unlock`
 was planned and is not there: the gate is a form, a form posts to an action, and

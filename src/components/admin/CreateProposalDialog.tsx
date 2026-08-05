@@ -1,24 +1,18 @@
 "use client";
 
 import { useActionState, useRef } from "react";
-import { useFormStatus } from "react-dom";
 import { type CreateState, createProposalAction } from "@/app/(admin)/admin/actions";
+import { Alert } from "@/components/admin/ui/Alert";
+import { Button } from "@/components/admin/ui/Button";
+import { Field, Input } from "@/components/admin/ui/Field";
+import { SubmitButton } from "@/components/admin/ui/SubmitButton";
 
 /* Native <dialog>. Focus trapping, ESC-to-close and ::backdrop come free, which
-   is most of what a modal library is sold for — and Rule 3 bans the library. */
+   is most of what a modal library is sold for — and Rule 3 bans the library.
 
-function Submit() {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-full bg-nuki-green-03 px-5 py-2.5 font-semibold text-nuki-white transition hover:bg-nuki-green-08 disabled:opacity-60"
-    >
-      {pending ? "Criando…" : "Criar proposta"}
-    </button>
-  );
-}
+   O visual moderno é `backdrop:backdrop-blur-sm` e as animações de
+   `open`/`starting-style` no CSS — nada disso precisa de JS, e nenhum deles
+   custa o foco preso que o `<dialog>` já entrega. */
 
 export function CreateProposalDialog() {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -28,64 +22,55 @@ export function CreateProposalDialog() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => dialog.current?.showModal()}
-        className="rounded-full bg-nuki-green-03 px-5 py-2.5 font-semibold text-nuki-white transition hover:bg-nuki-green-08"
-      >
-        Nova proposta
-      </button>
+      <Button onClick={() => dialog.current?.showModal()}>Nova proposta</Button>
 
       <dialog
         ref={dialog}
-        className="m-auto w-full max-w-md rounded-2xl p-0 backdrop:bg-nuki-black/40"
+        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-border bg-card p-0 text-card-foreground shadow-xl backdrop:bg-black/50 backdrop:backdrop-blur-sm"
       >
-        <form action={formAction} className="flex flex-col gap-3 p-6">
-          <h2 className="text-lg font-bold text-nuki-green-03">Nova proposta</h2>
-          <p className="text-sm text-nuki-gray-mid">
-            Começa a partir do deck padrão. A personalização é feita depois.
-          </p>
-
-          <label className="mt-2 text-sm font-semibold text-nuki-gray-mid" htmlFor="clientName">
-            Construtora
-          </label>
-          <input
-            id="clientName"
-            name="clientName"
-            required
-            minLength={2}
-            maxLength={80}
-            className="rounded-xl border border-nuki-gray-border px-4 py-3 outline-none focus:border-nuki-green-02"
-          />
-
-          <label className="text-sm font-semibold text-nuki-gray-mid" htmlFor="title">
-            Título
-          </label>
-          <input
-            id="title"
-            name="title"
-            required
-            minLength={2}
-            maxLength={120}
-            defaultValue="Proposta comercial Nuki"
-            className="rounded-xl border border-nuki-gray-border px-4 py-3 outline-none focus:border-nuki-green-02"
-          />
-
-          {state.error && (
-            <p role="alert" className="text-sm font-semibold text-nuki-orange">
-              {state.error}
+        <form action={formAction} className="flex flex-col">
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="text-base font-semibold tracking-tight">Nova proposta</h2>
+            <p className="mt-1 text-[0.8125rem] text-muted-foreground">
+              Começa a partir do deck padrão. A personalização é feita depois.
             </p>
-          )}
+          </div>
 
-          <div className="mt-3 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => dialog.current?.close()}
-              className="rounded-full px-5 py-2.5 font-semibold text-nuki-gray-mid hover:text-nuki-black"
-            >
+          <div className="flex flex-col gap-4 px-5 py-5">
+            <Field label="Construtora" htmlFor="clientName">
+              <Input
+                id="clientName"
+                name="clientName"
+                required
+                minLength={2}
+                maxLength={80}
+                placeholder="Construtora Exemplo"
+              />
+            </Field>
+
+            <Field label="Título" htmlFor="title">
+              <Input
+                id="title"
+                name="title"
+                required
+                minLength={2}
+                maxLength={120}
+                defaultValue="Proposta comercial Nuki"
+              />
+            </Field>
+
+            {state.error && (
+              <Alert tone="danger" live>
+                {state.error}
+              </Alert>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 rounded-b-lg border-t border-border bg-muted/50 px-5 py-3">
+            <Button variant="ghost" onClick={() => dialog.current?.close()}>
               Cancelar
-            </button>
-            <Submit />
+            </Button>
+            <SubmitButton label="Criar proposta" pendingLabel="Criando…" />
           </div>
         </form>
       </dialog>

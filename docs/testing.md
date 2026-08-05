@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: package.json scripts, ADR 7 and ADR 12, src/server/**/*.test.ts
-size: 248
+size: 258
 ---
 
 # Testing
@@ -211,8 +211,13 @@ Access:
 - [ ] Unauthenticated `/admin` **and every composer sub-route** redirect to login
 - [ ] An `auth.users` account with no `admin_users` row is denied
 - [ ] A deactivated admin loses access on the next page load
+- [ ] Unauthenticated `/preview/[id]` redirects to login too — it renders the
+      live proposal, and `proxy.ts` does not cover it
 - [ ] No deck CSS on the page: `getComputedStyle(document.documentElement).scrollSnapType`
-      is `none`
+      is `none`. **Run it on the panel document, not on the preview frame** — the
+      preview is an iframe and its document is supposed to have the deck's CSS
+- [ ] Slides tab: the network panel shows no request to `/api/p/*/track` while
+      the preview is open and scrolling. The preview mounts no tracking (Rule 2)
 
 The composer, end to end. Create → configure → publish → open in a private
 window, and confirm each change reached `/p/[slug]`:
@@ -220,7 +225,12 @@ window, and confirm each change reached `/p/[slug]`:
 - [ ] Three disabled slides are gone; the nav has exactly the enabled dots, and
       arrow keys walk exactly those, in the configured order
 - [ ] A reordered pair renders in the new order; module numerals renumber
-      01/02/03 with no gap
+      01/02/03 with no gap. Reorder it by **dragging** and again with the grip
+      focused and ↑/↓ — the two paths write the same delta
+- [ ] The preview reloads itself after a save, and the "prévia desatualizada"
+      note is present before it and gone after
+- [ ] Clicking a rail row scrolls the preview to that slide; a row that is
+      switched off scrolls nowhere, because it renders nothing
 - [ ] Unticking a module's demo removes the demo **and** its "▷ Explorar" button —
       a leftover button would scroll to nothing
 - [ ] A changed plan price and cycle discount show; a discount typed as `10`
@@ -235,10 +245,10 @@ Validation and the freeze (ADR 13):
 - [ ] Total-before-calculator and an all-disabled deck are refused, each with a
       sentence a salesperson could act on
 - [ ] Disabling `pricing` while `total` survives **warns and still saves**
-- [ ] Editing a published proposal banners the Slides, Planos and Calculadora
-      tabs — on Visão geral the same warning sits inside the publish block, next
-      to the button that fixes it — and leaves the client's link on the old
-      version; republishing clears both
+- [ ] Editing a published proposal banners Planos and Calculadora at the top,
+      Slides inside the rail under its title, and Visão geral inside the publish
+      block next to the button that fixes it — and leaves the client's link on
+      the old version; republishing clears them
 - [ ] Changing a default in `src/content/deck.ts` and reloading the published
       proposal changes **nothing**
 

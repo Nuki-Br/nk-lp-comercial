@@ -1,63 +1,49 @@
 "use client";
 
 import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
 import { type LoginState, signInAction } from "@/app/(admin)/admin/login/actions";
+import { Alert } from "@/components/admin/ui/Alert";
+import { Field, Input } from "@/components/admin/ui/Field";
+import { SubmitButton } from "@/components/admin/ui/SubmitButton";
 
-/* Plain Tailwind on the --color-nuki-* tokens. No component library: Rule 3
-   bans them, and this is four inputs. */
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="mt-2 rounded-full bg-nuki-green-03 px-6 py-3 font-semibold text-nuki-white transition hover:bg-nuki-green-08 disabled:opacity-60"
-    >
-      {pending ? "Entrando…" : "Entrar"}
-    </button>
-  );
-}
+/* Os primitivos de `src/components/admin/ui/`, escritos aqui no repo. Nenhuma
+   biblioteca de componentes: a Regra 3 as proíbe, e isto são dois campos. */
 
 export function LoginForm({ next }: { next?: string }) {
   const [state, formAction] = useActionState<LoginState, FormData>(signInAction, { error: null });
 
   return (
-    <form action={formAction} className="flex w-full max-w-sm flex-col gap-3">
+    <form action={formAction} className="flex flex-col gap-4">
       {next && <input type="hidden" name="next" value={next} />}
 
-      <label className="text-sm font-semibold text-nuki-gray-mid" htmlFor="admin-email">
-        E-mail
-      </label>
-      <input
-        id="admin-email"
-        name="email"
-        type="email"
-        autoComplete="username"
-        required
-        className="rounded-xl border border-nuki-gray-border bg-nuki-white px-4 py-3 outline-none focus:border-nuki-green-02"
-      />
+      <Field label="E-mail" htmlFor="admin-email">
+        <Input
+          id="admin-email"
+          name="email"
+          type="email"
+          autoComplete="username"
+          placeholder="voce@nukibr.com"
+          required
+        />
+      </Field>
 
-      <label className="text-sm font-semibold text-nuki-gray-mid" htmlFor="admin-password">
-        Senha
-      </label>
-      <input
-        id="admin-password"
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        required
-        className="rounded-xl border border-nuki-gray-border bg-nuki-white px-4 py-3 outline-none focus:border-nuki-green-02"
-      />
+      <Field label="Senha" htmlFor="admin-password">
+        <Input
+          id="admin-password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+        />
+      </Field>
 
       {state.error && (
-        <p role="alert" className="text-sm font-semibold text-nuki-orange">
+        <Alert tone="danger" live>
           {state.error}
-        </p>
+        </Alert>
       )}
 
-      <SubmitButton />
+      <SubmitButton label="Entrar" pendingLabel="Entrando…" className="mt-1 w-full" />
     </form>
   );
 }

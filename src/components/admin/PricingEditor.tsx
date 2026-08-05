@@ -1,11 +1,16 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
 import {
   type PricingState,
   savePricingAction,
 } from "@/app/(admin)/admin/proposals/[id]/pricing/actions";
+import { Alert, AlertList } from "@/components/admin/ui/Alert";
+import { Badge } from "@/components/admin/ui/Badge";
+import { CardContent, CardFooter } from "@/components/admin/ui/Card";
+import { Checkbox, FieldLabel, Input, Textarea } from "@/components/admin/ui/Field";
+import { SubmitButton } from "@/components/admin/ui/SubmitButton";
+import { cn } from "@/lib/cn";
 import { formatCurrency } from "@/lib/format";
 import { discountedMonthlyPrice } from "@/lib/pricing";
 
@@ -35,20 +40,18 @@ export type CycleDraft = {
 
 const EMPTY: PricingState = { error: null, notice: null, issues: [], warnings: [] };
 
-const field =
-  "rounded-xl border border-nuki-gray-border bg-nuki-white px-3 py-2 outline-none focus:border-nuki-green-02";
-const labelClass = "text-xs font-semibold uppercase tracking-wide text-nuki-gray-7";
-
-function Submit() {
-  const { pending } = useFormStatus();
+/** Título de um bloco dentro do card. Não é `CardHeader`: o card já tem um, e
+    dois `<h2>` na mesma seção seriam dois títulos para uma coisa só. */
+function GroupTitle({ children, hint }: { children: string; hint?: string }) {
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-full bg-nuki-green-03 px-5 py-2.5 font-semibold text-nuki-white transition hover:bg-nuki-green-08 disabled:opacity-60"
-    >
-      {pending ? "Salvando…" : "Salvar planos e ciclos"}
-    </button>
+    <div>
+      <h3 className="text-sm font-semibold tracking-tight">{children}</h3>
+      {hint && (
+        <p className="mt-1 max-w-prose text-[0.8125rem] leading-relaxed text-muted-foreground">
+          {hint}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -84,186 +87,177 @@ export function PricingEditor({
   const payload = JSON.stringify({ plans, billingCycles: cycles, maxMonths });
 
   return (
-    <form action={action} className="flex flex-col gap-8">
+    <form action={action}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="state" value={payload} />
 
-      <fieldset className="flex flex-col gap-4">
-        <legend className="text-sm font-semibold uppercase tracking-wide text-nuki-gray-7">
-          Planos
-        </legend>
+      <CardContent className="flex flex-col gap-8">
+        <fieldset className="flex flex-col gap-3">
+          <legend className="sr-only">Planos</legend>
+          <GroupTitle>Planos</GroupTitle>
 
-        {plans.map((plan, index) => (
-          <div
-            key={`plan-${index}`}
-            className="flex flex-col gap-3 rounded-xl border border-nuki-gray-border p-4"
-          >
-            <div className="flex flex-wrap gap-3">
-              <label className="flex min-w-[12rem] flex-1 flex-col gap-1">
-                <span className={labelClass}>Nome</span>
-                <input
-                  className={field}
-                  value={plan.n}
-                  onChange={(e) => patchPlan(index, { n: e.target.value })}
-                />
-              </label>
-              <label className="flex w-40 flex-col gap-1">
-                <span className={labelClass}>Mensalidade (R$)</span>
-                <input
-                  className={field}
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={plan.monthlyPrice}
+          {plans.map((plan, index) => (
+            <div
+              key={`plan-${index}`}
+              className={cn(
+                "flex flex-col gap-3 rounded-md border p-4 transition-colors",
+                /* O plano destacado é o que o cliente lê primeiro, e é o que o
+                   preview de desconto usa como base. Vale um anel. */
+                plan.featured ? "border-primary/40 bg-primary/5" : "border-border",
+              )}
+            >
+              <div className="flex flex-wrap gap-3">
+                <FieldLabel label="Nome" className="min-w-[12rem] flex-1">
+                  <Input value={plan.n} onChange={(e) => patchPlan(index, { n: e.target.value })} />
+                </FieldLabel>
+                <FieldLabel label="Mensalidade (R$)" className="w-40">
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={plan.monthlyPrice}
+                    onChange={(e) =>
+                      patchPlan(index, { monthlyPrice: Math.trunc(Number(e.target.value) || 0) })
+                    }
+                  />
+                </FieldLabel>
+              </div>
+
+              <FieldLabel label="Itens inclusos — um por linha">
+                <Textarea
+                  value={plan.items.join("\n")}
                   onChange={(e) =>
-                    patchPlan(index, { monthlyPrice: Math.trunc(Number(e.target.value) || 0) })
+                    patchPlan(index, {
+                      items: e.target.value
+                        .split("\n")
+                        .map((line) => line.trim())
+                        .filter(Boolean),
+                    })
                   }
                 />
-              </label>
-            </div>
+              </FieldLabel>
 
-            <label className="flex flex-col gap-1">
-              <span className={labelClass}>Itens inclusos — um por linha</span>
-              <textarea
-                className={`${field} min-h-24`}
-                value={plan.items.join("\n")}
-                onChange={(e) =>
-                  patchPlan(index, {
-                    items: e.target.value
-                      .split("\n")
-                      .map((line) => line.trim())
-                      .filter(Boolean),
-                  })
-                }
-              />
-            </label>
-
-            <label className="flex items-center gap-2 text-sm text-nuki-gray-mid">
-              <input
-                type="checkbox"
+              <Checkbox
+                label="Destacar este plano"
                 checked={plan.featured}
                 onChange={(e) => patchPlan(index, { featured: e.target.checked })}
               />
-              Destacar este plano
-            </label>
-          </div>
-        ))}
-      </fieldset>
-
-      <fieldset className="flex flex-col gap-4">
-        <legend className="text-sm font-semibold uppercase tracking-wide text-nuki-gray-7">
-          Ciclos de cobrança
-        </legend>
-        <p className="text-sm text-nuki-gray-mid">
-          O desconto é a contrapartida do compromisso: o ciclo é decidido pelos meses contratados,
-          não por um botão. “Meses mínimos” é o piso que ativa cada faixa.
-        </p>
-
-        {cycles.map((cycle, index) => {
-          const discounted = discountedMonthlyPrice(referencePrice, cycle.discountPercent / 100);
-          return (
-            <div
-              key={`cycle-${index}`}
-              className="flex flex-wrap items-end gap-3 rounded-xl border border-nuki-gray-border p-4"
-            >
-              <label className="flex min-w-[10rem] flex-1 flex-col gap-1">
-                <span className={labelClass}>Rótulo</span>
-                <input
-                  className={field}
-                  value={cycle.label}
-                  onChange={(e) => patchCycle(index, { label: e.target.value })}
-                />
-              </label>
-              <label className="flex w-32 flex-col gap-1">
-                <span className={labelClass}>Desconto (%)</span>
-                <input
-                  className={field}
-                  type="number"
-                  min={0}
-                  max={99}
-                  step={1}
-                  value={cycle.discountPercent}
-                  onChange={(e) =>
-                    patchCycle(index, { discountPercent: Number(e.target.value) || 0 })
-                  }
-                />
-              </label>
-              <label className="flex w-32 flex-col gap-1">
-                <span className={labelClass}>Meses mínimos</span>
-                <input
-                  className={field}
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={cycle.minMonths}
-                  onChange={(e) =>
-                    patchCycle(index, { minMonths: Math.trunc(Number(e.target.value) || 0) })
-                  }
-                />
-              </label>
-
-              {/* The whole point of the percentage input: the consequence, in
-                  reais, before anyone saves it. */}
-              <p className="min-w-[12rem] flex-1 text-sm text-nuki-gray-mid">
-                {formatCurrency(referencePrice)} vira{" "}
-                <strong className="text-nuki-black">{formatCurrency(discounted)}</strong> por mês
-              </p>
             </div>
-          );
-        })}
-      </fieldset>
+          ))}
+        </fieldset>
 
-      <label className="flex w-52 flex-col gap-1">
-        <span className={labelClass}>Teto do simulador (meses)</span>
-        <input
-          className={field}
-          type="number"
-          min={1}
-          max={120}
-          step={1}
-          value={maxMonths}
-          onChange={(e) => setMaxMonths(Math.trunc(Number(e.target.value) || 1))}
-        />
-      </label>
+        <fieldset className="flex flex-col gap-3">
+          <legend className="sr-only">Ciclos de cobrança</legend>
+          <GroupTitle hint="O desconto é a contrapartida do compromisso: o ciclo é decidido pelos meses contratados, não por um botão. “Meses mínimos” é o piso que ativa cada faixa.">
+            Ciclos de cobrança
+          </GroupTitle>
 
-      <Feedback state={state} />
+          {cycles.map((cycle, index) => {
+            const discounted = discountedMonthlyPrice(referencePrice, cycle.discountPercent / 100);
+            return (
+              <div
+                key={`cycle-${index}`}
+                className="flex flex-wrap items-end gap-3 rounded-md border border-border p-4"
+              >
+                <FieldLabel label="Rótulo" className="min-w-[10rem] flex-1">
+                  <Input
+                    value={cycle.label}
+                    onChange={(e) => patchCycle(index, { label: e.target.value })}
+                  />
+                </FieldLabel>
+                <FieldLabel label="Desconto (%)" className="w-32">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={99}
+                    step={1}
+                    value={cycle.discountPercent}
+                    onChange={(e) =>
+                      patchCycle(index, { discountPercent: Number(e.target.value) || 0 })
+                    }
+                  />
+                </FieldLabel>
+                <FieldLabel label="Meses mínimos" className="w-32">
+                  <Input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={cycle.minMonths}
+                    onChange={(e) =>
+                      patchCycle(index, { minMonths: Math.trunc(Number(e.target.value) || 0) })
+                    }
+                  />
+                </FieldLabel>
 
-      <div className="flex justify-end">
-        <Submit />
-      </div>
+                {/* The whole point of the percentage input: the consequence, in
+                    reais, before anyone saves it. */}
+                <p className="min-w-[13rem] flex-1 pb-2 text-sm text-muted-foreground">
+                  {formatCurrency(referencePrice)} vira{" "}
+                  <strong className="font-semibold text-foreground tabular-nums">
+                    {formatCurrency(discounted)}
+                  </strong>{" "}
+                  por mês
+                </p>
+              </div>
+            );
+          })}
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-3">
+          <legend className="sr-only">Simulador</legend>
+          <GroupTitle hint="O maior número de meses que o cliente consegue arrastar no simulador.">
+            Simulador
+          </GroupTitle>
+          <FieldLabel label="Teto do simulador (meses)" className="w-52">
+            <Input
+              type="number"
+              min={1}
+              max={120}
+              step={1}
+              value={maxMonths}
+              onChange={(e) => setMaxMonths(Math.trunc(Number(e.target.value) || 1))}
+            />
+          </FieldLabel>
+        </fieldset>
+
+        <Feedback state={state} />
+      </CardContent>
+
+      <CardFooter
+        hint={
+          <span className="inline-flex items-center gap-2">
+            Base do preview
+            <Badge tone="neutral" dot={false}>
+              {formatCurrency(referencePrice)}/mês
+            </Badge>
+          </span>
+        }
+      >
+        <SubmitButton label="Salvar planos e ciclos" pendingLabel="Salvando…" />
+      </CardFooter>
     </form>
   );
 }
 
+/** O bloco de retorno das Server Functions de preço. Exportado porque
+    `ImagePricesForm` fala o mesmo `PricingState` e mostra o mesmo retorno. */
 export function Feedback({ state }: { state: PricingState }) {
   if (!state.error && !state.notice && !state.issues.length && !state.warnings.length) return null;
 
   return (
     <div className="flex flex-col gap-2">
-      {state.issues.length > 0 && (
-        <ul role="alert" className="flex flex-col gap-1 rounded-xl border border-nuki-orange p-3">
-          {state.issues.map((issue) => (
-            <li key={issue} className="text-sm font-semibold text-nuki-orange">
-              {issue}
-            </li>
-          ))}
-        </ul>
-      )}
+      <AlertList tone="danger" items={state.issues} />
       {state.error && (
-        <p role="alert" className="text-sm font-semibold text-nuki-orange">
+        <Alert tone="danger" live>
           {state.error}
-        </p>
+        </Alert>
       )}
-      {state.notice && <p className="text-sm font-semibold text-nuki-green-02">{state.notice}</p>}
-      {state.warnings.length > 0 && (
-        <ul className="flex flex-col gap-1 rounded-xl bg-nuki-gray-light p-3">
-          {state.warnings.map((warning) => (
-            <li key={warning} className="text-sm text-nuki-gray-mid">
-              ⚠ {warning}
-            </li>
-          ))}
-        </ul>
+      {state.notice && (
+        <Alert tone="success" live>
+          {state.notice}
+        </Alert>
       )}
+      <AlertList tone="warning" items={state.warnings} live={false} />
     </div>
   );
 }

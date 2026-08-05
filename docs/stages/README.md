@@ -197,7 +197,6 @@ They will blow your context window or waste a large fraction of it:
 | `public/demos/inspetor/index.html` | 5.7 MB on a handful of enormous lines |
 | `src/HTML/**` | the 5.7 MB source of the above |
 | `package-lock.json` | no information you need |
-| `.env` | holds a service key; check names with `cut -d= -f1`, never values |
 
 `docs/context/modulo-*.md` are 170–630 lines each. Read one only if your task is
 about that module's screens.

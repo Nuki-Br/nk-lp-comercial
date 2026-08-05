@@ -22,6 +22,7 @@ A sales tool with three surfaces:
 | `/admin/**` | proposal composer, for the Nuki team | Supabase Auth session |
 | `/p/[slug]` | one client's customized proposal | per-proposal password, server-verified |
 | `/fast` | the code-driven quick-pitch deck | shared password, client-side (deliberate) |
+| `/preview/[id]` | the composer's live preview of one proposal | Supabase Auth session |
 | `/comercial` | 307 → `/fast` | — |
 | `/api/**` | route handlers | per route |
 
@@ -68,8 +69,10 @@ proposal we issued to a named client. The rule is not "which API is used" — it
 these three tests:
 
 1. Does the request leave our origin? → forbidden.
-2. Is the collecting code reachable from `/fast` or `/admin`? → forbidden.
-   Tracking mounts **only** inside the `/p/[slug]` render path.
+2. Is the collecting code reachable from `/fast`, `/admin` or `/preview/[id]`?
+   → forbidden. Tracking mounts **only** inside the `/p/[slug]` render path.
+   `/preview/[id]` renders the same `<Deck>` and passes no `behaviors`, which is
+   how it stays out — an admin rehearsing a pitch is not a client reading one.
 3. Does it add a vendor SDK to `package.json`? → forbidden.
 
 `navigator.sendBeacon` stays banned by name; the sanctioned transport is
@@ -106,11 +109,13 @@ in a `package.json` diff and someone wrote down why.
 
 ## Rule 4 — the surfaces are enumerated; the deck is still one page
 
-The route table at the top is the whole list. A fifth surface needs an ADR.
+The route table at the top is the whole list. A surface that is not in it needs
+an ADR — `/preview/[id]` is the one that has one (ADR 22), and it is a render of
+an existing document for the team, not a new product surface.
 
-**The deck itself is still a single scrolling page.** `/fast` and `/p/[slug]`
-each render one document with N sections and no client-side navigation between
-slides — arrow keys scroll, they do not route. Do not introduce `/p/[slug]/[n]`,
+**The deck itself is still a single scrolling page.** `/fast`, `/p/[slug]` and
+`/preview/[id]` each render one document with N sections and no client-side
+navigation between slides — arrow keys scroll, they do not route. Do not introduce `/p/[slug]/[n]`,
 a slide-level router, or any client routing library. That is what "no router"
 meant, and it still holds.
 
@@ -118,7 +123,7 @@ meant, and it still holds.
 
 | Path | Holds | Never holds |
 |---|---|---|
-| `src/app/(deck)/` | root layout #1 + `/fast` + `/p/[slug]` | SQL, secrets, business logic |
+| `src/app/(deck)/` | root layout #1 + `/fast` + `/p/[slug]` + `/preview/[id]` | SQL, secrets, business logic |
 | `src/app/(admin)/` | root layout #2 + the composer | SQL, password logic, deck CSS |
 | `src/app/api/` | route handlers — parse, authorize, delegate | business logic, SQL |
 | `src/deck/` | `DeckConfig` types, defaults, override merge, slide registry | pt-BR copy (re-exports `content/`), DB access |

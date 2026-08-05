@@ -1,8 +1,8 @@
 ---
 audience: human
 status: current
-verified_against: src/app/(admin)/admin/**, src/server/proposals/config.ts, src/server/tracking/readout.ts
-size: 143
+verified_against: src/app/(admin)/admin/**, src/components/admin/SlidesWorkspace.tsx, src/server/proposals/config.ts, src/server/tracking/readout.ts
+size: 155
 ---
 
 # Montando uma proposta no /admin
@@ -45,9 +45,20 @@ pode ser lida de volta do sistema.
 
 ### Slides
 
-Desmarque o que não vai e use as setas pra reordenar. Duas coisas se ajustam
+A apresentação de um lado, a lista do outro. **Arraste as linhas pra reordenar**
+e use o interruptor pra tirar um slide da conversa. Duas coisas se ajustam
 sozinhas e você não precisa cuidar delas: a numeração 01/02/03 dos módulos, e os
 pontinhos de navegação lateral.
+
+**Clique numa linha e a prévia vai até aquele slide.** É a forma rápida de
+conferir o que o cliente lê antes de mandar o link. Em cima da prévia dá pra
+trocar entre computador e celular, e "Abrir ↗" mostra a mesma coisa em tela
+cheia — é lá que a demo do módulo e as setas do teclado funcionam de verdade.
+
+**A prévia mostra o que está salvo.** Enquanto houver alteração pendente ela
+avisa "prévia desatualizada"; salvou, ela se atualiza sozinha. Se você preferir
+o teclado ao mouse, o punho de arrastar (as bolinhas à esquerda) move a linha
+com ↑ e ↓ quando está selecionado.
 
 **A demo do Inspetor é um checkbox dentro do módulo**, não uma linha separada.
 Ela não tem pontinho próprio — usa o do módulo — então ela só existe se o módulo
@@ -128,10 +139,11 @@ fotografia e nada mais: mudar o conteúdo padrão do deck, ou o preço padrão, 
 mexe num documento que já foi enviado.
 
 Isso vale também pras **suas** edições. Se você mexer numa proposta já publicada,
-as abas Slides, Planos e preços e Calculadora passam a mostrar um aviso laranja
-no topo: há alterações que o cliente ainda não vê. Na Visão geral o mesmo aviso
-aparece dentro do bloco "Publicação", ao lado do botão que resolve. As alterações
-só chegam no cliente quando você **republicar**.
+aparece um aviso laranja: há alterações que o cliente ainda não vê. Em Planos e
+preços e na Calculadora ele fica no topo da página; em Slides, dentro da lista à
+direita, logo abaixo do título; e na Visão geral, dentro do bloco "Publicação",
+ao lado do botão que resolve. As alterações só chegam no cliente quando você
+**republicar**.
 
 ## Quando algo não abre
 

@@ -1,28 +1,19 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { useFormStatus } from "react-dom";
 import {
   type DetailState,
   publishProposalAction,
   setPasswordAction,
   updateProposalAction,
 } from "@/app/(admin)/admin/proposals/[id]/actions";
+import { Alert, AlertList } from "@/components/admin/ui/Alert";
+import { Button } from "@/components/admin/ui/Button";
+import { CardContent, CardFooter } from "@/components/admin/ui/Card";
+import { Field, Input } from "@/components/admin/ui/Field";
+import { SubmitButton } from "@/components/admin/ui/SubmitButton";
 
 const EMPTY: DetailState = { error: null, notice: null, warnings: [] };
-
-function Submit({ label, pendingLabel }: { label: string; pendingLabel: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-full bg-nuki-green-03 px-5 py-2.5 font-semibold text-nuki-white transition hover:bg-nuki-green-08 disabled:opacity-60"
-    >
-      {pending ? pendingLabel : label}
-    </button>
-  );
-}
 
 /* Warnings render ALONGSIDE the outcome, never instead of it: the action either
    succeeded or it did not, and "salvo" plus "confira isto antes de mandar" are
@@ -33,27 +24,19 @@ function Feedback({ state }: { state: DetailState }) {
   return (
     <div className="flex flex-col gap-2">
       {state.error && (
-        <p role="alert" className="text-sm font-semibold text-nuki-orange">
+        <Alert tone="danger" live>
           {state.error}
-        </p>
+        </Alert>
       )}
-      {state.notice && <p className="text-sm font-semibold text-nuki-green-02">{state.notice}</p>}
-      {state.warnings.length > 0 && (
-        <ul className="flex flex-col gap-1 rounded-xl bg-nuki-gray-light p-3">
-          {state.warnings.map((warning) => (
-            <li key={warning} className="text-sm text-nuki-gray-mid">
-              ⚠ {warning}
-            </li>
-          ))}
-        </ul>
+      {state.notice && (
+        <Alert tone="success" live>
+          {state.notice}
+        </Alert>
       )}
+      <AlertList tone="warning" items={state.warnings} live={false} />
     </div>
   );
 }
-
-const field =
-  "rounded-xl border border-nuki-gray-border bg-nuki-white px-4 py-3 outline-none focus:border-nuki-green-02";
-const label = "text-sm font-semibold text-nuki-gray-mid";
 
 export function DetailsForm({
   id,
@@ -68,33 +51,34 @@ export function DetailsForm({
   const [state, action] = useActionState<DetailState, FormData>(updateProposalAction, EMPTY);
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form action={action}>
       <input type="hidden" name="id" value={id} />
 
-      <label className={label} htmlFor="title">
-        Título
-      </label>
-      <input id="title" name="title" defaultValue={title} required className={field} />
+      <CardContent className="flex flex-col gap-4">
+        <Field label="Título" htmlFor="title">
+          <Input id="title" name="title" defaultValue={title} required />
+        </Field>
 
-      <label className={label} htmlFor="expiresAt">
-        Expira em
-      </label>
-      <input
-        id="expiresAt"
-        name="expiresAt"
-        type="date"
-        defaultValue={expiresAt}
-        className={field}
-      />
-      <p className="text-xs text-nuki-gray-7">
-        Em branco, a proposta não expira. Depois da data, o cliente vê um aviso mesmo com a senha
-        correta.
-      </p>
+        <Field
+          label="Expira em"
+          htmlFor="expiresAt"
+          hint="Em branco, a proposta não expira. Depois da data, o cliente vê um aviso mesmo com a senha correta."
+        >
+          <Input
+            id="expiresAt"
+            name="expiresAt"
+            type="date"
+            defaultValue={expiresAt}
+            className="w-full sm:w-56"
+          />
+        </Field>
 
-      <Feedback state={state} />
-      <div className="flex justify-end">
-        <Submit label="Salvar" pendingLabel="Salvando…" />
-      </div>
+        <Feedback state={state} />
+      </CardContent>
+
+      <CardFooter>
+        <SubmitButton label="Salvar" pendingLabel="Salvando…" />
+      </CardFooter>
     </form>
   );
 }
@@ -103,32 +87,38 @@ export function PasswordForm({ id, hasPassword }: { id: string; hasPassword: boo
   const [state, action] = useActionState<DetailState, FormData>(setPasswordAction, EMPTY);
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form action={action}>
       <input type="hidden" name="id" value={id} />
 
-      <label className={label} htmlFor="password">
-        {hasPassword ? "Trocar a senha" : "Definir a senha"}
-      </label>
-      <input
-        id="password"
-        name="password"
-        type="text"
-        minLength={6}
-        maxLength={64}
-        required
-        autoComplete="off"
-        className={field}
-        placeholder="6 a 64 caracteres"
-      />
-      <p className="text-xs text-nuki-gray-7">
-        Trocar a senha revoga a anterior. Quem já estava com a proposta aberta continua dentro até o
-        cookie vencer.
-      </p>
+      <CardContent className="flex flex-col gap-4">
+        <Field
+          label={hasPassword ? "Trocar a senha" : "Definir a senha"}
+          htmlFor="password"
+          hint="Trocar a senha revoga a anterior. Quem já estava com a proposta aberta continua dentro até o cookie vencer."
+        >
+          <Input
+            id="password"
+            name="password"
+            type="text"
+            minLength={6}
+            maxLength={64}
+            required
+            autoComplete="off"
+            className="font-mono"
+            placeholder="6 a 64 caracteres"
+          />
+        </Field>
 
-      <Feedback state={state} />
-      <div className="flex justify-end">
-        <Submit label="Salvar senha" pendingLabel="Salvando…" />
-      </div>
+        {!hasPassword && (
+          <Alert tone="warning">Sem senha definida, ninguém consegue abrir o link.</Alert>
+        )}
+
+        <Feedback state={state} />
+      </CardContent>
+
+      <CardFooter>
+        <SubmitButton label="Salvar senha" pendingLabel="Salvando…" />
+      </CardFooter>
     </form>
   );
 }
@@ -160,35 +150,31 @@ export function PublishForm({
     : null;
 
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form action={action}>
       <input type="hidden" name="id" value={id} />
 
-      {published ? (
-        <p className="text-sm text-nuki-gray-mid">
-          Congelada{frozenOn ? ` em ${frozenOn}` : ""}. O cliente vê esse retrato, e só ele — mudar
-          o conteúdo padrão do deck não altera esta proposta.
+      <CardContent className="flex flex-col gap-3">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {published
+            ? `Congelada${frozenOn ? ` em ${frozenOn}` : ""}. O cliente vê esse retrato, e só ele — mudar o conteúdo padrão do deck não altera esta proposta.`
+            : "Publicar congela o deck de hoje nesta proposta. A partir daí ela vira um documento comercial fixo: editar preços ou textos padrão não muda o que o cliente já recebeu."}
         </p>
-      ) : (
-        <p className="text-sm text-nuki-gray-mid">
-          Publicar congela o deck de hoje nesta proposta. A partir daí ela vira um documento
-          comercial fixo: editar preços ou textos padrão não muda o que o cliente já recebeu.
-        </p>
-      )}
 
-      {snapshotStale && (
-        <p className="rounded-xl border border-nuki-orange bg-nuki-gray-light p-3 text-sm text-nuki-black">
-          Há alterações depois da publicação. O cliente continua vendo a versão congelada até você
-          republicar.
-        </p>
-      )}
+        {snapshotStale && (
+          <Alert tone="warning" title="Alterações depois da publicação">
+            O cliente continua vendo a versão congelada até você republicar.
+          </Alert>
+        )}
 
-      <Feedback state={state} />
-      <div className="flex justify-end">
-        <Submit
+        <Feedback state={state} />
+      </CardContent>
+
+      <CardFooter hint={published ? "Republicar substitui o retrato congelado." : undefined}>
+        <SubmitButton
           label={published ? "Republicar (congela de novo)" : "Congelar e publicar"}
           pendingLabel="Publicando…"
         />
-      </div>
+      </CardFooter>
     </form>
   );
 }
@@ -197,10 +183,12 @@ export function CopyLinkButton({ url }: { url: string }) {
   const [copied, setCopied] = useState(false);
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <code className="rounded-lg bg-nuki-gray-light px-3 py-2 text-sm break-all">{url}</code>
-      <button
-        type="button"
+    <div className="flex flex-wrap items-center gap-2">
+      <code className="min-w-0 flex-1 rounded-md border border-border bg-muted px-3 py-2 font-mono text-[0.8125rem] break-all">
+        {url}
+      </code>
+      <Button
+        variant="outline"
         onClick={() => {
           navigator.clipboard.writeText(url).then(
             () => {
@@ -210,10 +198,9 @@ export function CopyLinkButton({ url }: { url: string }) {
             () => setCopied(false),
           );
         }}
-        className="rounded-full border border-nuki-gray-border px-4 py-2 text-sm font-semibold transition hover:border-nuki-green-02"
       >
         {copied ? "Copiado" : "Copiar link"}
-      </button>
+      </Button>
     </div>
   );
 }

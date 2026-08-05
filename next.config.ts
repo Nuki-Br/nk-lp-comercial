@@ -53,6 +53,15 @@ const nextConfig: NextConfig = {
         source: "/p/:slug",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
+      /**
+       * The composer's preview renders the same document, before it is even
+       * published — same reasoning, same header. It is admin-gated, but "only
+       * an admin can fetch it" says nothing about who may hold the response.
+       */
+      {
+        source: "/preview/:id",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
     ];
   },
 };

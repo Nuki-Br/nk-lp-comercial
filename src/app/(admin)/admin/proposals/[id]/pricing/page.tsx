@@ -1,6 +1,7 @@
-import { ComposerTabs, UnpublishedChangesBanner } from "@/components/admin/ComposerTabs";
+import { UnpublishedChangesBanner } from "@/components/admin/ComposerTabs";
 import { ImagePricesForm } from "@/components/admin/ImagePricesForm";
 import { PricingEditor } from "@/components/admin/PricingEditor";
+import { Card, CardHeader } from "@/components/admin/ui/Card";
 import { requireAdmin } from "@/server/auth/requireAdmin";
 import { loadProposalConfig } from "@/server/proposals/config";
 
@@ -15,18 +16,16 @@ export default async function PricingPage({ params }: { params: Promise<{ id: st
   const { plans, billingCycles, maxMonths, imagePrices } = resolved.estimate;
 
   return (
-    <>
-      <ComposerTabs id={id} active="pricing" />
+    /* Coluna de leitura, não a largura toda: o compositor alargou por causa da
+       aba Slides, e um formulário de 1280px é onde o olho perde a linha. */
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       {snapshotStale && <UnpublishedChangesBanner id={id} />}
 
-      <section className="rounded-2xl border border-nuki-gray-border bg-nuki-white p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-nuki-gray-7">
-          Planos e ciclos
-        </h2>
-        <p className="mt-2 mb-5 text-sm text-nuki-gray-mid">
-          O que o cliente vê no slide de planos e no simulador de meses.
-        </p>
-
+      <Card>
+        <CardHeader
+          title="Planos e ciclos"
+          description="O que o cliente vê no slide de planos e no simulador de meses."
+        />
         <PricingEditor
           id={id}
           initialPlans={plans.map((plan) => ({
@@ -45,18 +44,15 @@ export default async function PricingPage({ params }: { params: Promise<{ id: st
           }))}
           initialMaxMonths={maxMonths}
         />
-      </section>
+      </Card>
 
-      <section className="rounded-2xl border border-nuki-gray-border bg-nuki-white p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-nuki-gray-7">
-          Tarifas de imagem
-        </h2>
-        <p className="mt-2 mb-5 text-sm text-nuki-gray-mid">
-          A base de custo por trás da calculadora desta proposta.
-        </p>
-
+      <Card>
+        <CardHeader
+          title="Tarifas de imagem"
+          description="A base de custo por trás da calculadora desta proposta."
+        />
         <ImagePricesForm id={id} base={imagePrices.base} option={imagePrices.option} />
-      </section>
-    </>
+      </Card>
+    </div>
   );
 }

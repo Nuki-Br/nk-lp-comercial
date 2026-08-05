@@ -1,5 +1,5 @@
-import { ComposerTabs, UnpublishedChangesBanner } from "@/components/admin/ComposerTabs";
-import { type PickerRow, SlidePicker } from "@/components/admin/SlidePicker";
+import type { PickerRow } from "@/components/admin/SlidePicker";
+import { SlidesWorkspace } from "@/components/admin/SlidesWorkspace";
 import { slideMetaOf } from "@/deck/meta";
 import type { SlideNode } from "@/deck/types";
 import { requireAdmin } from "@/server/auth/requireAdmin";
@@ -30,6 +30,9 @@ function toRows(slides: SlideNode[]): PickerRow[] {
     });
 }
 
+/** A única aba que ocupa a largura toda: o rail sozinho é uma coluna estreita,
+    e a prévia ao lado dele é o que transforma "desmarcar uma linha" em "ver o
+    que o cliente deixa de ver". */
 export default async function SlidesPage({ params }: { params: Promise<{ id: string }> }) {
   /* Top of the page, every time — not once in the layout. ADR 15. */
   await requireAdmin();
@@ -38,21 +41,11 @@ export default async function SlidesPage({ params }: { params: Promise<{ id: str
   const config = await loadProposalConfig(id);
 
   return (
-    <>
-      <ComposerTabs id={id} active="slides" />
-      {config.snapshotStale && <UnpublishedChangesBanner id={id} />}
-
-      <section className="rounded-2xl border border-nuki-gray-border bg-nuki-white p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-nuki-gray-7">
-          Slides desta proposta
-        </h2>
-        <p className="mt-2 mb-5 text-sm text-nuki-gray-mid">
-          Desmarque o que não vai nesta apresentação e use as setas para reordenar. A numeração dos
-          módulos e os pontinhos de navegação se ajustam sozinhos.
-        </p>
-
-        <SlidePicker id={id} initialRows={toRows(config.resolved.slides)} />
-      </section>
-    </>
+    <SlidesWorkspace
+      id={id}
+      initialRows={toRows(config.resolved.slides)}
+      previewSrc={`/preview/${id}`}
+      snapshotStale={config.snapshotStale}
+    />
   );
 }
