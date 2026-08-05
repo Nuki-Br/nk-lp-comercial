@@ -2,7 +2,7 @@
 audience: human
 status: current
 verified_against: src/app/(admin)/admin/**, src/server/proposals/config.ts, src/server/tracking/readout.ts
-size: 141
+size: 143
 ---
 
 # Montando uma proposta no /admin
@@ -128,8 +128,10 @@ fotografia e nada mais: mudar o conteúdo padrão do deck, ou o preço padrão, 
 mexe num documento que já foi enviado.
 
 Isso vale também pras **suas** edições. Se você mexer numa proposta já publicada,
-aparece um aviso laranja em todas as abas dizendo que há alterações que o cliente
-ainda não vê. Elas só chegam nele quando você **republicar**.
+as abas Slides, Planos e preços e Calculadora passam a mostrar um aviso laranja
+no topo: há alterações que o cliente ainda não vê. Na Visão geral o mesmo aviso
+aparece dentro do bloco "Publicação", ao lado do botão que resolve. As alterações
+só chegam no cliente quando você **republicar**.
 
 ## Quando algo não abre
 

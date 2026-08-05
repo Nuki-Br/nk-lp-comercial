@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: package.json scripts, ADR 7 and ADR 12, src/server/**/*.test.ts
-size: 246
+size: 248
 ---
 
 # Testing
@@ -235,8 +235,10 @@ Validation and the freeze (ADR 13):
 - [ ] Total-before-calculator and an all-disabled deck are refused, each with a
       sentence a salesperson could act on
 - [ ] Disabling `pricing` while `total` survives **warns and still saves**
-- [ ] Editing a published proposal banners every composer tab and leaves the
-      client's link on the old version; republishing clears both
+- [ ] Editing a published proposal banners the Slides, Planos and Calculadora
+      tabs — on Visão geral the same warning sits inside the publish block, next
+      to the button that fixes it — and leaves the client's link on the old
+      version; republishing clears both
 - [ ] Changing a default in `src/content/deck.ts` and reloading the published
       proposal changes **nothing**
 
