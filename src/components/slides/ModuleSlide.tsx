@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import type { ModuleData, ModuleScreenshot } from "@/content/modules";
+import type { ModuleNode, ModuleScreenshot } from "@/deck/types";
+import { fill, ordinal2 } from "@/lib/format";
 
 const AUTO_ADVANCE_MS = 5000;
 
@@ -28,7 +29,11 @@ const AUTO_ADVANCE_MS = 5000;
  * "Saiba mais" da página de recurso. Quando o módulo já tem produto público,
  * mandar o prospect pro app real vale mais do que qualquer demo.
  */
-export function ModuleSlide({ data, index }: { data: ModuleData; index: number }) {
+export function ModuleSlide({ node }: { node: ModuleNode }) {
+  const { data, labels } = node;
+  /* `ordinal` é derivado por `normalizeDeck` sobre os módulos HABILITADOS, então
+     esconder um módulo renumera os numerais de fundo em vez de deixar um buraco. */
+  const index = (node.ordinal ?? 1) - 1;
   const [activeBeat, setActiveBeat] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   /* Timer dos beats só roda quando a seção está de fato visível — evita gastar
@@ -66,7 +71,8 @@ export function ModuleSlide({ data, index }: { data: ModuleData; index: number }
     <section
       ref={sectionRef}
       className={`slide module-slide${isPhone ? " is-phone" : " is-desktop"}`}
-      id={data.id}
+      id={node.id}
+      data-tone={node.tone}
       data-reveal-group=""
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -77,7 +83,7 @@ export function ModuleSlide({ data, index }: { data: ModuleData; index: number }
           `.jornada .bgnum` (jornada.css:95-105) já importado. Parallax nativo
           via animation-timeline: view() ou fallback JS do ComercialScripts. */}
       <span className="bg-numeral" data-parallax="-70" aria-hidden="true">
-        {String(index + 1).padStart(2, "0")}
+        {ordinal2(index + 1)}
       </span>
       {/* Pearl decorativa — mesma linguagem do /antiga (SobreANuki, FaleComAGente).
           Off-canvas parcial, borrada, transparente — assinatura de marca sem
@@ -104,7 +110,7 @@ export function ModuleSlide({ data, index }: { data: ModuleData; index: number }
             <ul
               className="module-slide-tabs reveal"
               role="tablist"
-              aria-label={`Recursos do ${data.title.strong}`}
+              aria-label={fill(labels.featuresAriaTemplate, { strong: data.title.strong })}
             >
               {data.beats.map((b, i) => (
                 <li key={b.shot.base} role="presentation">
@@ -119,7 +125,7 @@ export function ModuleSlide({ data, index }: { data: ModuleData; index: number }
                     onClick={() => setActiveBeat(i)}
                   >
                     <span className="module-slide-tab-num">
-                      Beat {String(i + 1).padStart(2, "0")}
+                      {fill(labels.beatTemplate, { n: ordinal2(i + 1) })}
                     </span>
                     <span className="module-slide-tab-title">{b.title}</span>
                   </button>
@@ -160,18 +166,24 @@ export function ModuleSlide({ data, index }: { data: ModuleData; index: number }
                     rel="noopener noreferrer"
                   >
                     <span className="module-slide-cta-glyph" aria-hidden="true">
-                      ↗
+                      {labels.externalGlyph}
                     </span>
                     {l.label}
                   </a>
                 ))}
               </div>
-            ) : data.demoUrl ? (
+            ) : node.childId ? (
+              /* Chaveia pelo CONFIG RESOLVIDO (`childId`, setado por
+                 `normalizeDeck` só quando o nó de demo sobreviveu), não por
+                 `data.demoUrl`. Um deck cuja demo foi removida renderizaria,
+                 pelo caminho antigo, um botão que rola pra lugar nenhum.
+                 docs/deck-runtime.md. */
               <button
                 type="button"
                 className="module-slide-cta reveal"
                 onClick={() => {
-                  const demoId = `${data.id}-demo`;
+                  const demoId = node.childId;
+                  if (!demoId) return;
                   // Entra já ativa: quem chega pelo CTA não paga o clique de
                   // ativação do iframe (o ModuleDemoSlide escuta este evento).
                   window.dispatchEvent(
@@ -183,13 +195,13 @@ export function ModuleSlide({ data, index }: { data: ModuleData; index: number }
                 }}
               >
                 <span className="module-slide-cta-glyph" aria-hidden="true">
-                  ▷
+                  {labels.exploreGlyph}
                 </span>
-                Explorar o {data.title.strong}
+                {fill(labels.exploreTemplate, { strong: data.title.strong })}
               </button>
             ) : (
               <a className="module-slide-link reveal" href={data.learnMoreHref}>
-                Saiba mais <span aria-hidden="true">→</span>
+                {labels.learnMore} <span aria-hidden="true">{labels.learnMoreGlyph}</span>
               </a>
             )}
           </div>

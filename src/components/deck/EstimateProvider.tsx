@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
-import { type BillingCycle, billingCycles, plans } from "@/content/deck";
+import type { EstimateConfig } from "@/deck/types";
+import type { BillingCycle } from "@/lib/estimateTypes";
 import { cycleForMonths, discountedMonthlyPrice } from "@/lib/pricing";
 
 /** Totais publicados pela Calculadora e consumidos por outras seções da
@@ -34,6 +35,12 @@ type PlanSimulator = {
   grandTotal: number;
 };
 
+/* O valor default do Context precisa de um `BillingCycle` e não há mais um
+   `billingCycles[0]` de módulo pra pegar — os ciclos vêm por prop. Um ciclo
+   vazio serve: o `PricingSlide` compara por `id`, então `""` não casa com nada,
+   que é a degradação certa pra um render sem provider (que não acontece). */
+const NO_CYCLE: BillingCycle = { id: "", label: "", discount: 0, minMonths: 0 };
+
 const EstimateContext = createContext<
   {
     totals: EstimateTotals;
@@ -44,14 +51,21 @@ const EstimateContext = createContext<
   setTotals: () => {},
   months: [],
   setMonths: () => {},
-  cycle: billingCycles[0],
+  cycle: NO_CYCLE,
   selectCycle: () => {},
   platformCost: 0,
   totalMonths: 0,
   grandTotal: 0,
 });
 
-export function EstimateProvider({ children }: { children: ReactNode }) {
+export function EstimateProvider({
+  estimate,
+  children,
+}: {
+  estimate: EstimateConfig;
+  children: ReactNode;
+}) {
+  const { plans, billingCycles } = estimate;
   const [totals, setTotals] = useState<EstimateTotals>(defaultTotals);
 
   /* Meses contratados por plano — começa em 0 (o user preenche no CTA). */
@@ -64,7 +78,10 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
      é o anual. Mantê-lo como estado clicável em paralelo permitiria exibir
      "Mensal" com 12 meses contratados, uma proposta que não existe. Em 0 meses
      cai no ciclo base (Mensal, 0%). */
-  const cycle = useMemo(() => cycleForMonths(billingCycles, totalMonths), [totalMonths]);
+  const cycle = useMemo(
+    () => cycleForMonths(billingCycles, totalMonths),
+    [billingCycles, totalMonths],
+  );
 
   /* O toggle continua clicável, mas como atalho na direção inversa: escolher um
      ciclo preenche os meses com o piso dele — o que devolve o mesmo ciclo pela
@@ -81,7 +98,7 @@ export function EstimateProvider({ children }: { children: ReactNode }) {
           acc + m * discountedMonthlyPrice(plans[i]?.monthlyPrice ?? 0, cycle.discount),
         0,
       ),
-    [months, cycle.discount],
+    [months, plans, cycle.discount],
   );
   const grandTotal = totals.imageCost + platformCost;
 

@@ -1,23 +1,14 @@
-import { problemCards } from "@/content/deck";
+import { SectionHead } from "@/components/slides/SectionHead";
+import type { ProblemNode } from "@/deck/types";
 
-export function ProblemSlide() {
+export function ProblemSlide({ node }: { node: ProblemNode }) {
   return (
-    <section className="slide problem" id="problem" data-reveal-group="">
+    <section className="slide problem" id={node.id} data-tone={node.tone} data-reveal-group="">
       <div className="slide-inner">
-        <div className="section-head">
-          <p className="tag reveal">O problema</p>
-          <h2 className="reveal">
-            A personalização de unidades acontece hoje em três etapas —{" "}
-            <em>manuais e desconectadas.</em>
-          </h2>
-          <p className="lead reveal">
-            Cada etapa tem sua própria dor. E todas viraram um custo invisível dentro da
-            construtora: retrabalho, risco jurídico e insatisfação do cliente.
-          </p>
-        </div>
+        <SectionHead head={node.head} />
 
         <div className="cards">
-          {problemCards.map((c) => (
+          {node.cards.map((c) => (
             <article className="card reveal" key={c.step}>
               <span className="step">{c.step}</span>
               <h3>{c.title}</h3>

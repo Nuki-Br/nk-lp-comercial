@@ -1,39 +1,34 @@
 "use client";
 
 import { useEstimate } from "@/components/deck/EstimateProvider";
+import { SectionHead } from "@/components/slides/SectionHead";
 import { Stepper } from "@/components/ui/Stepper";
-import { billingCycles, plans } from "@/content/deck";
-import { formatCurrency } from "@/lib/format";
+import type { EstimateConfig, PricingNode } from "@/deck/types";
+import { fill, formatCurrency } from "@/lib/format";
 import { discountedMonthlyPrice } from "@/lib/pricing";
 
-const MAX_MONTHS = 36;
-
-export function PricingSlide() {
-  /* Meses/ciclo vivem no CalculadoraProvider — o CTA edita, a seção
-     #total (TotalEstimado, depois da Calculadora) lê os derivados. O `cycle`
-     vem derivado dos meses: subir o stepper até 6 já acende o Semestral aqui. */
+export function PricingSlide({ node, estimate }: { node: PricingNode; estimate: EstimateConfig }) {
+  /* Meses/ciclo vivem no EstimateProvider — o CTA edita, a seção #total lê os
+     derivados. O `cycle` vem derivado dos meses: subir o stepper até 6 já
+     acende o Semestral aqui. */
   const { months, setMonths, cycle, selectCycle } = useEstimate();
+  const { labels } = node;
 
   const updateMeses = (idx: number, v: number) => {
     setMonths((prev) => prev.map((m, i) => (i === idx ? v : m)));
   };
 
   return (
-    <section className="slide pricing" id="pricing" data-tone="dark" data-reveal-group="">
+    <section className="slide pricing" id={node.id} data-tone={node.tone} data-reveal-group="">
       <div className="slide-inner">
-        <div className="section-head">
-          <p className="tag reveal">Plano & contato</p>
-          <h2 className="reveal">
-            Todos os módulos em <em>um plano só</em>.
-          </h2>
-          <p className="lead reveal">
-            Fee mensal por empreendimento ativo, com Planner, Personaliza e Inspetor inclusos desde
-            o primeiro mês. Simule por quantos meses o empreendimento fica na plataforma.
-          </p>
-        </div>
+        <SectionHead head={node.head} />
 
-        <div className="billing-cycle-toggle reveal" role="tablist" aria-label="Ciclo de cobrança">
-          {billingCycles.map((c) => (
+        <div
+          className="billing-cycle-toggle reveal"
+          role="tablist"
+          aria-label={labels.cycleTabsAria}
+        >
+          {estimate.billingCycles.map((c) => (
             <button
               key={c.id}
               type="button"
@@ -50,13 +45,10 @@ export function PricingSlide() {
           ))}
         </div>
 
-        <p className="billing-cycle-hint reveal">
-          O desconto acompanha o compromisso: a partir de 6 meses o Semestral entra sozinho, e a
-          partir de 12 meses, o Anual.
-        </p>
+        <p className="billing-cycle-hint reveal">{labels.cycleHint}</p>
 
         <div className="plans">
-          {plans.map((p, i) => {
+          {estimate.plans.map((p, i) => {
             const finalMonthlyPrice = discountedMonthlyPrice(p.monthlyPrice, cycle.discount);
             const subtotal = (months[i] ?? 0) * finalMonthlyPrice;
             return (
@@ -71,25 +63,28 @@ export function PricingSlide() {
                   {cycle.discount > 0 && (
                     <span className="price-original">{formatCurrency(p.monthlyPrice)}</span>
                   )}
-                  <span className="price-value">{formatCurrency(finalMonthlyPrice)}/mês</span>
+                  <span className="price-value">
+                    {formatCurrency(finalMonthlyPrice)}
+                    {labels.priceSuffix}
+                  </span>
                   <span className="price-unit">
-                    por empreendimento
+                    {labels.priceUnit}
                     {cycle.discount > 0 && (
                       <span className="price-badge">−{Math.round(cycle.discount * 100)}%</span>
                     )}
                   </span>
                 </div>
                 <div className="plan-simulator">
-                  <span className="plan-simulator-label">Meses na plataforma</span>
+                  <span className="plan-simulator-label">{labels.monthsLabel}</span>
                   <Stepper
                     value={months[i] ?? 0}
                     min={0}
-                    max={MAX_MONTHS}
+                    max={estimate.maxMonths}
                     onChange={(v) => updateMeses(i, v)}
-                    ariaLabel={`Meses no ${p.n}`}
+                    ariaLabel={fill(labels.monthsAriaTemplate, { plan: p.n })}
                   />
                   <span className={`plan-simulator-sub${(months[i] ?? 0) > 0 ? " is-active" : ""}`}>
-                    {(months[i] ?? 0) > 0 ? formatCurrency(subtotal) : "—"}
+                    {(months[i] ?? 0) > 0 ? formatCurrency(subtotal) : labels.emptySubtotal}
                   </span>
                 </div>
               </article>

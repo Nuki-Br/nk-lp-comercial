@@ -173,8 +173,8 @@ Contadores de patches aplicados no fim do script — se algum for 0, avisa (rege
 Tudo já espera novos módulos:
 
 - `ModuleData.demoUrl?: string` — só setar em `src/content/modules.ts` pro módulo alvo
-- `ModuleSlides.tsx` emite `<ModuleDemoSlide>` automaticamente quando `demoUrl` existe
-- `ModuleSlide.tsx` troca "Saiba mais" por CTA "▷ Explorar o {título}" quando `demoUrl` existe
+- `src/deck/defaults.ts` emite um nó `module-demo` logo depois do módulo quando `demoUrl` existe, com `parentId` apontando pro pai
+- `ModuleSlide.tsx` troca "Saiba mais" por CTA "▷ Explorar o {título}" quando o nó tem `childId` — isto é, quando a demo sobreviveu ao config resolvido, e não quando `demoUrl` meramente existe
 - `ModuleDemoSlide.tsx` — layout fullscreen (barra 44px sticky + iframe), botões `← Voltar` e `Seguir →`, e o estado de ativação da demo
 - `DeckBehaviors.tsx` — reemite o postMessage `nuki-demo:esc` do iframe como o evento de janela `nuki-demo:exit`
 - CSS `.module-demo-*` — cobre desktop + fallback mobile (<900px mostra "abrir em nova aba")

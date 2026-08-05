@@ -2,20 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useEstimate } from "@/components/deck/EstimateProvider";
+import { SectionHead } from "@/components/slides/SectionHead";
 import { Stepper } from "@/components/ui/Stepper";
-import {
-  buildDefaultRooms,
-  CUSTOM_ROOM_DEFAULTS,
-  ESTIMATE_DEFAULTS,
-  ESTIMATE_RANGES,
-  noImpactedRooms,
-  PROJECT_SIZE_PRESETS,
-  type ProjectSizePreset,
-  ROOM_PRESETS,
-  type RoomAreaType,
-  type RoomConfig,
-  type UnitTypeState,
-} from "@/content/deck";
+import type {
+  CalculatorLabels,
+  CalculatorNode,
+  EstimateConfig,
+  ProjectSizePreset,
+  RoomPreset,
+} from "@/deck/types";
 import { useCountUp } from "@/hooks/useCountUp";
 import {
   computeEstimate,
@@ -24,7 +19,15 @@ import {
   type RoomUnit,
   type UnitTypeBreakdown,
 } from "@/lib/estimate";
-import { clamp, formatCurrency } from "@/lib/format";
+import {
+  ESTIMATE_RANGES,
+  materializeRooms,
+  materializeUnitTypes,
+  type RoomAreaType,
+  type RoomConfig,
+  type UnitTypeState,
+} from "@/lib/estimateTypes";
+import { clamp, fill, formatCurrency, ordinal2 } from "@/lib/format";
 
 /* Uma pill por variação possível. Sai do range em vez de ser literal, senão o
    seletor para em 3 e nenhum preset com mais variações fica editável. */
@@ -44,13 +47,25 @@ type AddRoomState =
   | { mode: "picker" }
   | { mode: "custom"; name: string; areaType: RoomAreaType };
 
-export function CalculatorSlide() {
-  const [dryOptions, setOpcoesSecas] = useState(ESTIMATE_DEFAULTS.dryOptions);
-  const [wetOptions, setOpcoesMolhadas] = useState(ESTIMATE_DEFAULTS.wetOptions);
-  const [baseImagePrice, setBaseImagePrice] = useState(ESTIMATE_DEFAULTS.baseImagePrice);
-  const [optionImagePrice, setOptionImagePrice] = useState(ESTIMATE_DEFAULTS.optionImagePrice);
+export function CalculatorSlide({
+  node,
+  estimate,
+  allowPriceOverride,
+}: {
+  node: CalculatorNode;
+  estimate: EstimateConfig;
+  /** Libera o painel Ctrl+Alt+K. `true` no /fast, `false` numa proposta: num
+      link que fica com o cliente, um painel escondido que expõe custo-base é um
+      vazamento descobrível. Ver docs/estimate.md. */
+  allowPriceOverride: boolean;
+}) {
+  const labels = node.labels;
+  const [dryOptions, setOpcoesSecas] = useState(estimate.defaults.dryOptions);
+  const [wetOptions, setOpcoesMolhadas] = useState(estimate.defaults.wetOptions);
+  const [baseImagePrice, setBaseImagePrice] = useState(estimate.imagePrices.base);
+  const [optionImagePrice, setOptionImagePrice] = useState(estimate.imagePrices.option);
   const [unitTypes, setMetragens] = useState<UnitTypeState[]>(() =>
-    ESTIMATE_DEFAULTS.initialUnitTypes(),
+    materializeUnitTypes(estimate.defaults.unitTypes),
   );
   const [activeUnitTypeIndex, setMetragemAtiva] = useState(0);
   const [addingAmbiente, setAddingAmbiente] = useState<AddRoomState>(null);
@@ -72,6 +87,9 @@ export function CalculatorSlide() {
      atalho nunca disparava pra quem usa macOS. `e.code` é a posição física da
      tecla, imune a isso e a layouts não-US (ABNT2 etc). */
   useEffect(() => {
+    // Numa proposta o listener nem chega a existir: nada de painel escondido
+    // num link que fica com o cliente.
+    if (!allowPriceOverride) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.altKey && e.code === "KeyK") {
         e.preventDefault();
@@ -84,7 +102,7 @@ export function CalculatorSlide() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [adminOpen]);
+  }, [adminOpen, allowPriceOverride]);
 
   const { breakdowns, total: imageMix } = computeEstimate(unitTypes, { dryOptions, wetOptions });
   const unitTypeBreakdowns = unitTypes.map((m, i) => ({ m, calc: breakdowns[i] }));
@@ -120,7 +138,9 @@ export function CalculatorSlide() {
      ids que o preset já usou — sem isso um "+ Adicionar" depois do Alto
      padrão (ids 1 e 2) geraria um id 2 duplicado e quebraria as React keys. */
   const applyPreset = (preset: ProjectSizePreset) => {
-    const next = preset.buildUnitTypes();
+    // Clona: `preset.unitTypes` agora é dado compartilhado do módulo, e aplicar
+    // o mesmo preset duas vezes não pode reusar as mesmas referências.
+    const next = materializeUnitTypes(preset.unitTypes);
     setMetragens(next);
     nextIdRef.current = next.length + 1;
     setMetragemAtiva(0);
@@ -192,9 +212,9 @@ export function CalculatorSlide() {
       id,
       name: trimmed,
       areaType,
-      weight: CUSTOM_ROOM_DEFAULTS.weight,
-      units: CUSTOM_ROOM_DEFAULTS.units,
-      components: CUSTOM_ROOM_DEFAULTS.components,
+      weight: estimate.customRoomDefaults.weight,
+      units: estimate.customRoomDefaults.units,
+      components: estimate.customRoomDefaults.components,
     };
     mutate((prev) =>
       prev.map((m, i) => (i === activeUnitTypeIndex ? { ...m, rooms: [...m.rooms, updated] } : m)),
@@ -228,9 +248,9 @@ export function CalculatorSlide() {
     const id = nextIdRef.current++;
     const updated: UnitTypeState = {
       id,
-      rooms: buildDefaultRooms(),
+      rooms: materializeRooms(estimate.defaultRooms),
       variants: 1,
-      impactedRooms: noImpactedRooms(),
+      impactedRooms: {},
     };
     mutate((prev) => (prev.length >= ESTIMATE_RANGES.unitTypes.max ? prev : [...prev, updated]));
     setMetragemAtiva(Math.min(unitTypes.length, ESTIMATE_RANGES.unitTypes.max - 1));
@@ -255,21 +275,21 @@ export function CalculatorSlide() {
   return (
     <>
       {adminOpen && (
-        <div className="calc-admin-panel" role="dialog" aria-label="Configuração da apresentação">
+        <div className="calc-admin-panel" role="dialog" aria-label={labels.admin.dialogAria}>
           <div className="calc-admin-header">
-            <span className="calc-admin-title">Config apresentação</span>
+            <span className="calc-admin-title">{labels.admin.title}</span>
             <button
               type="button"
               className="calc-admin-close"
               onClick={() => setAdminOpen(false)}
-              aria-label="Fechar"
+              aria-label={labels.admin.closeAria}
             >
-              ×
+              {labels.admin.closeGlyph}
             </button>
           </div>
           <div className="calc-admin-field">
             <label className="calc-admin-label" htmlFor="calc-admin-base-price">
-              Valor da imagem base (R$)
+              {labels.admin.basePriceLabel}
             </label>
             <input
               id="calc-admin-base-price"
@@ -291,7 +311,7 @@ export function CalculatorSlide() {
           </div>
           <div className="calc-admin-field">
             <label className="calc-admin-label" htmlFor="calc-admin-option-price">
-              Valor da imagem de opção (R$)
+              {labels.admin.optionPriceLabel}
             </label>
             <input
               id="calc-admin-option-price"
@@ -311,35 +331,25 @@ export function CalculatorSlide() {
               }
             />
           </div>
-          <p className="calc-admin-hint">Ctrl+Alt+K abre/fecha · ESC fecha</p>
+          <p className="calc-admin-hint">{labels.admin.hint}</p>
         </div>
       )}
-      <section className="slide calculator" id="calculator" data-reveal-group="">
+      <section className="slide calculator" id={node.id} data-tone={node.tone} data-reveal-group="">
         <div className="slide-inner">
-          <div className="section-head">
-            <p className="tag reveal">Estime o setup</p>
-            <h2 className="reveal">
-              Descubra quantas imagens seu empreendimento <em>vai precisar.</em>
-            </h2>
-            <p className="lead reveal">
-              Cada ambiente é modelado em 3D uma vez — dessa modelagem sai a <em>imagem base</em>.
-              As opções de acabamento são recortes de material sobre ela, e por isso custam bem
-              menos. Escolha um ponto de partida e ajuste ambiente por ambiente.
-            </p>
-          </div>
+          <SectionHead head={node.head} />
 
           <div className="calc-grid reveal">
             {/* ============ INPUTS ============ */}
             <div className="calc-inputs">
               {/* Presets de porte — substituem o estado inteiro da calculadora */}
               <div className="calc-field calc-presets">
-                <label className="calc-label calc-label-sm">Ponto de partida</label>
+                <label className="calc-label calc-label-sm">{labels.presets.label}</label>
                 <div
                   className="calc-preset-list"
                   role="radiogroup"
-                  aria-label="Porte do empreendimento"
+                  aria-label={labels.presets.groupAria}
                 >
-                  {PROJECT_SIZE_PRESETS.map((preset) => (
+                  {estimate.projectSizePresets.map((preset) => (
                     <button
                       key={preset.id}
                       type="button"
@@ -358,25 +368,23 @@ export function CalculatorSlide() {
               {/* Bar global */}
               <div className="calc-global-bar">
                 <div className="calc-field">
-                  <label className="calc-label calc-label-sm">Opções por componente · secas</label>
+                  <label className="calc-label calc-label-sm">{labels.options.dryLabel}</label>
                   <Stepper
                     value={dryOptions}
                     min={ESTIMATE_RANGES.dryOptions.min}
                     max={ESTIMATE_RANGES.dryOptions.max}
                     onChange={changeDryOptions}
-                    ariaLabel="Opções por componente em áreas secas"
+                    ariaLabel={labels.options.dryAria}
                   />
                 </div>
                 <div className="calc-field">
-                  <label className="calc-label calc-label-sm">
-                    Opções por componente · molhadas
-                  </label>
+                  <label className="calc-label calc-label-sm">{labels.options.wetLabel}</label>
                   <Stepper
                     value={wetOptions}
                     min={ESTIMATE_RANGES.wetOptions.min}
                     max={ESTIMATE_RANGES.wetOptions.max}
                     onChange={changeWetOptions}
-                    ariaLabel="Opções por componente em áreas molhadas"
+                    ariaLabel={labels.options.wetAria}
                   />
                 </div>
               </div>
@@ -385,7 +393,7 @@ export function CalculatorSlide() {
               <div
                 className="calc-unit-type-tabs"
                 role="tablist"
-                aria-label="Metragens do empreendimento"
+                aria-label={labels.unitTypes.tablistAria}
               >
                 {unitTypes.map((m, i) => (
                   <div
@@ -399,7 +407,7 @@ export function CalculatorSlide() {
                       className="calc-unit-type-tab-btn"
                       onClick={() => selectMetragem(i)}
                     >
-                      Metragem {String(i + 1).padStart(2, "0")}
+                      {fill(labels.unitTypes.tabTemplate, { n: ordinal2(i + 1) })}
                     </button>
                     {unitTypes.length > ESTIMATE_RANGES.unitTypes.min && (
                       <button
@@ -409,9 +417,9 @@ export function CalculatorSlide() {
                           e.stopPropagation();
                           removeMetragem(i);
                         }}
-                        aria-label={`Remover metragem ${i + 1}`}
+                        aria-label={fill(labels.unitTypes.removeTemplate, { n: i + 1 })}
                       >
-                        ×
+                        {labels.unitTypes.removeGlyph}
                       </button>
                     )}
                   </div>
@@ -421,9 +429,9 @@ export function CalculatorSlide() {
                     type="button"
                     className="calc-unit-type-add"
                     onClick={addMetragem}
-                    aria-label="Adicionar metragem"
+                    aria-label={labels.unitTypes.addAria}
                   >
-                    + Adicionar
+                    {labels.unitTypes.addLabel}
                   </button>
                 )}
               </div>
@@ -432,10 +440,11 @@ export function CalculatorSlide() {
               {isActive && (
                 <div className="calc-unit-type-panel">
                   <div className="calc-room-rows">
-                    <p className="calc-label calc-room-rows-head">Ambientes personalizáveis</p>
+                    <p className="calc-label calc-room-rows-head">{labels.rooms.heading}</p>
                     {isActive.rooms.map((a) => (
                       <RoomRow
                         key={a.id}
+                        labels={labels}
                         room={a}
                         onQuantidadeChange={(v) => updateAmbiente(a.id, { units: v })}
                         onComponentesChange={(v) => updateAmbiente(a.id, { components: v })}
@@ -444,6 +453,8 @@ export function CalculatorSlide() {
                     ))}
 
                     <AddAmbienteControl
+                      labels={labels}
+                      roomPresets={estimate.roomPresets}
                       state={addingAmbiente}
                       onOpen={() => setAddingAmbiente({ mode: "picker" })}
                       onSelectPreset={(preset) => addAmbient(preset.name, preset.areaType)}
@@ -461,8 +472,12 @@ export function CalculatorSlide() {
                   </div>
 
                   <div className="calc-field">
-                    <label className="calc-label">Variações desta metragem</label>
-                    <div className="calc-pills" role="radiogroup" aria-label="Variações">
+                    <label className="calc-label">{labels.variants.label}</label>
+                    <div
+                      className="calc-pills"
+                      role="radiogroup"
+                      aria-label={labels.variants.groupAria}
+                    >
                       {VARIANT_CHOICES.map((n) => (
                         <button
                           key={n}
@@ -481,12 +496,8 @@ export function CalculatorSlide() {
                   {isActive.variants > 1 && (
                     <div className="calc-field calc-axes">
                       <div className="calc-axes-head">
-                        <label className="calc-label">Ambientes impactados nas variações</label>
-                        <p className="calc-axes-hint">
-                          Layout novo é modelagem nova: 1 unidade de cada ambiente marcado entra de
-                          novo na contagem por variação extra — com a imagem base dela e os
-                          componentes configurados acima.
-                        </p>
+                        <label className="calc-label">{labels.variants.impactedLabel}</label>
+                        <p className="calc-axes-hint">{labels.variants.impactedHint}</p>
                       </div>
                       <div className="calc-axes-grid">
                         {isActive.rooms.map((a) => (
@@ -513,6 +524,7 @@ export function CalculatorSlide() {
                 {unitTypeBreakdowns.map(({ m, calc }, mIdx) => (
                   <UnitTypeGroup
                     key={m.id}
+                    labels={labels}
                     index={mIdx}
                     unitType={m}
                     calc={calc}
@@ -527,45 +539,57 @@ export function CalculatorSlide() {
                   <span className="calc-out-value">
                     {imageCountDisplay.toLocaleString("pt-BR")}
                   </span>
-                  <span className="calc-out-label">imagens necessárias</span>
+                  <span className="calc-out-label">{labels.output.countLabel}</span>
                   {/* Sem useCountUp: legenda com número animado vira ruído. */}
                   <span className="calc-out-mix">
-                    {imageMix.base.toLocaleString("pt-BR")} base ·{" "}
-                    {imageMix.option.toLocaleString("pt-BR")} de opção
+                    {fill(labels.output.mixTemplate, {
+                      base: imageMix.base.toLocaleString("pt-BR"),
+                      option: imageMix.option.toLocaleString("pt-BR"),
+                    })}
                   </span>
                 </div>
                 <div className="calc-out-divider" aria-hidden="true" />
                 <div className="calc-out-block">
                   <span className="calc-out-value">{formatCurrency(costDisplay)}</span>
-                  <span className="calc-out-label">setup de imagens estimado</span>
+                  <span className="calc-out-label">{labels.output.costLabel}</span>
                 </div>
               </div>
 
-              <aside className="calc-disclaimer" role="note" aria-label="Aviso sobre a estimativa">
+              <aside
+                className="calc-disclaimer"
+                role="note"
+                aria-label={labels.output.disclaimerAria}
+              >
                 <span className="calc-disclaimer-icon" aria-hidden="true">
                   <InfoIcon />
                 </span>
                 <div className="calc-disclaimer-body">
-                  <p className="calc-disclaimer-title">Este valor é uma aproximação</p>
-                  <p className="calc-disclaimer-text">
-                    A estimativa serve como referência inicial pra dimensionar o setup do
-                    empreendimento. O valor oficial só é fechado quando são consideradas as
-                    particularidades reais do empreendimento e do catálogo de acabamentos.
-                  </p>
+                  <p className="calc-disclaimer-title">{labels.output.disclaimerTitle}</p>
+                  <p className="calc-disclaimer-text">{labels.output.disclaimerBody}</p>
                 </div>
               </aside>
 
               <p className="calc-note">
-                {unitTypes.length} {unitTypes.length === 1 ? "metragem" : "metragens"} · escala{" "}
-                {dryOptions}/{wetOptions} opções por componente (secas/molhadas).
+                {fill(labels.note.scaleTemplate, {
+                  count: unitTypes.length,
+                  unit:
+                    unitTypes.length === 1 ? labels.note.unitTypeOne : labels.note.unitTypeOther,
+                  dry: dryOptions,
+                  wet: wetOptions,
+                })}
                 {activeBreakdown && (
                   <>
                     {" "}
-                    Metragem {String(activeUnitTypeIndex + 1).padStart(2, "0")}:{" "}
-                    {activeBreakdown.total.total} imgs ({activeBreakdown.total.base} base ·{" "}
-                    {activeBreakdown.total.option} de opção)
+                    {fill(labels.note.activeTemplate, {
+                      n: ordinal2(activeUnitTypeIndex + 1),
+                      total: activeBreakdown.total.total,
+                      base: activeBreakdown.total.base,
+                      option: activeBreakdown.total.option,
+                    })}
                     {activeBreakdown.extraVariants.total > 0 &&
-                      `, sendo ${activeBreakdown.extraVariants.total} das variações`}
+                      fill(labels.note.extraTemplate, {
+                        extra: activeBreakdown.extraVariants.total,
+                      })}
                     .
                   </>
                 )}
@@ -581,46 +605,52 @@ export function CalculatorSlide() {
 /* ============ SUB-COMPONENTES ============ */
 
 function RoomRow({
+  labels,
   room,
   onQuantidadeChange,
   onComponentesChange,
   onRemove,
 }: {
+  labels: CalculatorLabels;
   room: RoomConfig;
   onQuantidadeChange: (v: number) => void;
   onComponentesChange: (v: number) => void;
   onRemove: () => void;
 }) {
   const isEmpty = room.units <= 0;
+  const areaTag = room.areaType === "seca" ? labels.rooms.dryTag : labels.rooms.wetTag;
   return (
     <div className={`calc-room-row${isEmpty ? " is-empty" : ""}`}>
       <span className="calc-room-row-name">
         {room.name}
         {!room.locked && (
-          <span className="calc-room-row-class" aria-label={`Classificação: ${room.areaType}`}>
-            {room.areaType === "seca" ? "seca" : "molhada"}
+          <span
+            className="calc-room-row-class"
+            aria-label={fill(labels.rooms.classAriaTemplate, { areaType: room.areaType })}
+          >
+            {areaTag}
           </span>
         )}
       </span>
       <div className="calc-room-row-fields">
         <div className="calc-micro-field">
-          <span className="calc-micro-label">unidades</span>
+          <span className="calc-micro-label">{labels.rooms.unitsLabel}</span>
           <Stepper
             value={room.units}
             min={ESTIMATE_RANGES.units.min}
             max={ESTIMATE_RANGES.units.max}
             onChange={onQuantidadeChange}
-            ariaLabel={`Unidades de ${room.name}`}
+            ariaLabel={fill(labels.rooms.unitsAriaTemplate, { name: room.name })}
           />
         </div>
         <div className="calc-micro-field">
-          <span className="calc-micro-label">componentes</span>
+          <span className="calc-micro-label">{labels.rooms.componentsLabel}</span>
           <Stepper
             value={room.components}
             min={ESTIMATE_RANGES.components.min}
             max={ESTIMATE_RANGES.components.max}
             onChange={onComponentesChange}
-            ariaLabel={`Componentes por ${room.name}`}
+            ariaLabel={fill(labels.rooms.componentsAriaTemplate, { name: room.name })}
           />
         </div>
         {!room.locked && (
@@ -628,10 +658,10 @@ function RoomRow({
             type="button"
             className="calc-room-remove"
             onClick={onRemove}
-            aria-label={`Remover ${room.name}`}
-            title={`Remover ${room.name}`}
+            aria-label={fill(labels.rooms.removeTemplate, { name: room.name })}
+            title={fill(labels.rooms.removeTemplate, { name: room.name })}
           >
-            ×
+            {labels.rooms.removeGlyph}
           </button>
         )}
       </div>
@@ -640,6 +670,8 @@ function RoomRow({
 }
 
 function AddAmbienteControl({
+  labels,
+  roomPresets,
   state,
   onOpen,
   onSelectPreset,
@@ -648,9 +680,11 @@ function AddAmbienteControl({
   onConfirm,
   onCancel,
 }: {
+  labels: CalculatorLabels;
+  roomPresets: RoomPreset[];
   state: AddRoomState;
   onOpen: () => void;
-  onSelectPreset: (preset: (typeof ROOM_PRESETS)[number]) => void;
+  onSelectPreset: (preset: RoomPreset) => void;
   onSelectCustom: () => void;
   onChange: (patch: Partial<{ name: string; areaType: RoomAreaType }>) => void;
   onConfirm: () => void;
@@ -659,7 +693,7 @@ function AddAmbienteControl({
   if (state === null) {
     return (
       <button type="button" className="calc-add-room-btn" onClick={onOpen}>
-        + Adicionar ambiente
+        {labels.rooms.addButton}
       </button>
     );
   }
@@ -668,10 +702,10 @@ function AddAmbienteControl({
      form de nome livre. Clicar num preset já adiciona o ambient. */
   if (state.mode === "picker") {
     return (
-      <div className="calc-add-room-picker" role="group" aria-label="Escolher ambiente">
-        <p className="calc-add-room-picker-label">Escolha um ambiente:</p>
+      <div className="calc-add-room-picker" role="group" aria-label={labels.rooms.pickerAria}>
+        <p className="calc-add-room-picker-label">{labels.rooms.pickerPrompt}</p>
         <div className="calc-add-room-preset-list">
-          {ROOM_PRESETS.map((preset) => (
+          {roomPresets.map((preset) => (
             <button
               key={preset.name}
               type="button"
@@ -680,7 +714,7 @@ function AddAmbienteControl({
             >
               <span className="calc-add-room-preset-name">{preset.name}</span>
               <span className="calc-add-room-preset-class">
-                {preset.areaType === "seca" ? "seca" : "molhada"}
+                {preset.areaType === "seca" ? labels.rooms.dryTag : labels.rooms.wetTag}
               </span>
             </button>
           ))}
@@ -689,11 +723,11 @@ function AddAmbienteControl({
             className="calc-add-room-preset calc-add-room-preset-custom"
             onClick={onSelectCustom}
           >
-            <span className="calc-add-room-preset-name">+ Personalizado</span>
+            <span className="calc-add-room-preset-name">{labels.rooms.customOption}</span>
           </button>
         </div>
         <button type="button" className="calc-add-room-cancel" onClick={onCancel}>
-          Cancelar
+          {labels.rooms.cancel}
         </button>
       </div>
     );
@@ -702,11 +736,11 @@ function AddAmbienteControl({
   /* Passo 2 (só se user escolheu "Personalizado"): form de nome + classe. */
   const canConfirm = state.name.trim().length > 0;
   return (
-    <div className="calc-add-room-form" role="group" aria-label="Adicionar ambiente personalizado">
+    <div className="calc-add-room-form" role="group" aria-label={labels.rooms.formAria}>
       <input
         type="text"
         className="calc-add-room-input"
-        placeholder="Nome do ambiente (ex: Home Office)"
+        placeholder={labels.rooms.namePlaceholder}
         value={state.name}
         onChange={(e) => onChange({ name: e.target.value })}
         onKeyDown={(e) => {
@@ -716,7 +750,7 @@ function AddAmbienteControl({
         autoFocus
         maxLength={40}
       />
-      <div className="calc-add-room-class" role="radiogroup" aria-label="Classificação">
+      <div className="calc-add-room-class" role="radiogroup" aria-label={labels.rooms.classAria}>
         <button
           type="button"
           role="radio"
@@ -724,7 +758,7 @@ function AddAmbienteControl({
           className={`calc-pill${state.areaType === "seca" ? " is-active" : ""}`}
           onClick={() => onChange({ areaType: "seca" })}
         >
-          Seca
+          {labels.rooms.dryPill}
         </button>
         <button
           type="button"
@@ -733,7 +767,7 @@ function AddAmbienteControl({
           className={`calc-pill${state.areaType === "molhada" ? " is-active" : ""}`}
           onClick={() => onChange({ areaType: "molhada" })}
         >
-          Molhada
+          {labels.rooms.wetPill}
         </button>
       </div>
       <div className="calc-add-room-actions">
@@ -743,10 +777,10 @@ function AddAmbienteControl({
           onClick={onConfirm}
           disabled={!canConfirm}
         >
-          Adicionar
+          {labels.rooms.confirm}
         </button>
         <button type="button" className="calc-add-room-cancel" onClick={onCancel}>
-          Cancelar
+          {labels.rooms.cancel}
         </button>
       </div>
     </div>
@@ -754,12 +788,14 @@ function AddAmbienteControl({
 }
 
 function UnitTypeGroup({
+  labels,
   index,
   unitType,
   calc,
   isActive,
   onSelect,
 }: {
+  labels: CalculatorLabels;
   index: number;
   unitType: UnitTypeState;
   calc: UnitTypeBreakdown;
@@ -778,14 +814,16 @@ function UnitTypeGroup({
       role="button"
       tabIndex={0}
       aria-pressed={isActive}
-      aria-label={`Editar Metragem ${String(index + 1).padStart(2, "0")}`}
+      aria-label={fill(labels.cards.groupAriaTemplate, { n: ordinal2(index + 1) })}
       onClick={onSelect}
       onKeyDown={handleKey}
     >
       <header className="unit-type-group-head">
-        <span className="unit-type-group-index">Metragem {String(index + 1).padStart(2, "0")}</span>
+        <span className="unit-type-group-index">
+          {fill(labels.cards.indexTemplate, { n: ordinal2(index + 1) })}
+        </span>
         <span className="unit-type-group-images">
-          {calc.total.total.toLocaleString("pt-BR")} imagens
+          {fill(labels.cards.imagesTemplate, { count: calc.total.total.toLocaleString("pt-BR") })}
         </span>
       </header>
       <div className="unit-type-group-cards">
@@ -794,6 +832,7 @@ function UnitTypeGroup({
           return (
             <VariantCard
               key={v}
+              labels={labels}
               variantIndex={v + 1}
               mode={isMain ? "main" : "extras"}
               rooms={isMain ? calc.rooms : calc.impactedRooms}
@@ -810,11 +849,13 @@ function UnitTypeGroup({
     ambientes impactados). Nada a ver com "imagem base" — essa é uma das duas
     tarifas e aparece em `images.base`. */
 function VariantCard({
+  labels,
   variantIndex,
   mode,
   rooms,
   images,
 }: {
+  labels: CalculatorLabels;
   variantIndex: number;
   mode: "main" | "extras";
   rooms: RoomUnit[];
@@ -825,12 +866,12 @@ function VariantCard({
     <article className={`variant-card variant-card-${mode}`} role="listitem">
       <header className="variant-head">
         <span className="variant-index">
-          Variação {String(variantIndex).padStart(2, "0")}
-          {!isMain && <span className="variant-tag">apenas ambientes impactados</span>}
+          {fill(labels.cards.variantTemplate, { n: ordinal2(variantIndex) })}
+          {!isMain && <span className="variant-tag">{labels.cards.extraTag}</span>}
         </span>
         <span className="variant-images">
-          {isMain ? "" : "+"}
-          {images.total.toLocaleString("pt-BR")} imgs
+          {isMain ? "" : labels.cards.extraPrefix}
+          {images.total.toLocaleString("pt-BR")} {labels.cards.variantImagesSuffix}
         </span>
       </header>
       {rooms.length > 0 ? (
@@ -839,7 +880,11 @@ function VariantCard({
             <div
               key={a.key}
               className={`room-tile weight-${a.weight}`}
-              title={`${a.label}: ${a.baseImages} base + ${a.optionImages} de opção`}
+              title={fill(labels.cards.tileTitleTemplate, {
+                label: a.label,
+                base: a.baseImages,
+                option: a.optionImages,
+              })}
             >
               <span className="room-tile-label">{a.label}</span>
               <span className="room-tile-images">{a.images}</span>
@@ -848,9 +893,7 @@ function VariantCard({
         </div>
       ) : (
         <p className="variant-empty">
-          {isMain
-            ? "Nenhum ambiente adicionado. Suba as unidades acima."
-            : "Nenhum ambiente marcado como impactado."}
+          {isMain ? labels.cards.emptyMain : labels.cards.emptyExtras}
         </p>
       )}
     </article>

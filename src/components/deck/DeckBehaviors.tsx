@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
+import { useDeckNavigation } from "@/components/deck/DeckNavigation";
 
 /**
- * Scripts da apresentação /comercial.
+ * Scripts da apresentação.
  *
  * Cobre:
  * 1. Reveal/stagger — igual ao JourneyScripts, observa [data-reveal-group].
- * 2. Progress nav lateral — observa .slide e .module. Uma seção pode emprestar
- *    o ponto de outra via [data-nav-id] (é como o slide de demo mantém o ponto
- *    do módulo aceso, já que ele não existe no deckNav).
+ * 2. Progress nav lateral — observa os nós walkable do config. Uma seção pode
+ *    emprestar o ponto de outra via [data-nav-id] (é como o slide de demo mantém
+ *    o ponto do módulo aceso, já que ele não tem ponto próprio).
  * 3. Navegação por teclado — ←/PageUp/Shift+Espaço volta, →/PageDown/Espaço avança.
- *    Deriva a lista walkable do DOM, não do deckNav.
+ *    A lista walkable vem do DeckConfig, não de uma query no DOM.
  * 4. Bridge do ESC vindo de dentro do iframe da demo: reemite o postMessage
  *    `nuki-demo:esc` como o evento de janela `nuki-demo:exit`.
  * 5. Sticky-device (troca de tela nos módulos) — mesmo padrão do JourneyScripts.
@@ -23,6 +24,14 @@ import { useEffect } from "react";
  * a ativação da demo é do ModuleDemoSlide.
  */
 export function DeckBehaviors() {
+  /* `getWalkableIds` entra no array de dependências abaixo, e mesmo assim o
+     efeito monta UMA vez só: o `DeckNavigation` guarda o objeto de contexto num
+     ref criado uma única vez, então a identidade da função nunca muda. A lista
+     em si é lida por ref, na hora da tecla. Suprimir a regra do linter aqui
+     seria pior — se algum dia essa estabilidade se perder, é este array que
+     precisa avisar. */
+  const { getWalkableIds } = useDeckNavigation();
+
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const cleanups: Array<() => void> = [];
@@ -83,24 +92,19 @@ export function DeckBehaviors() {
       },
       { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
     );
-    document.querySelectorAll(".slide, .module").forEach((s) => {
-      navIO.observe(s);
-    });
+    // Observa exatamente os nós walkable do config, na ordem do config. O
+    // seletor antigo `.slide, .module` carregava `.module`, resquício morto do
+    // JourneyModule do nk-lp que não casa com nada aqui.
+    for (const id of getWalkableIds()) {
+      const el = document.getElementById(id);
+      if (el) navIO.observe(el);
+    }
     cleanups.push(() => navIO.disconnect());
 
-    // 3) Navegação por teclado — deriva a lista walkable do DOM em runtime
-    // (todo `.slide` com id, na ordem em que aparece). Isso permite que seções
-    // como `#inspetor-demo` (que NÃO existem em deckNav) sejam navegáveis por
-    // seta ← → mas continuem invisíveis no progress-nav lateral. deckNav segue
-    // sendo a fonte da verdade só do progress-nav.
-    const getWalkableIds = (): string[] => {
-      const nodes = document.querySelectorAll<HTMLElement>(".slide, .module");
-      const ids: string[] = [];
-      nodes.forEach((el) => {
-        if (el.id) ids.push(el.id);
-      });
-      return ids;
-    };
+    // 3) Navegação por teclado. A lista walkable vem do DeckConfig via
+    // DeckNavigationContext — não mais de uma query no DOM. Isso torna a ordem
+    // autoritativa em vez de incidental, deixa uma seção sair da caminhada sem
+    // gambiarra, e remove o contrato duplicado que o ModuleDemoSlide mantinha.
     const currentPartIndex = (partIds: string[]) => {
       const mid = window.innerHeight / 2;
       let closest = 0;
@@ -234,7 +238,7 @@ export function DeckBehaviors() {
         fn();
       });
     };
-  }, []);
+  }, [getWalkableIds]);
 
   return null;
 }

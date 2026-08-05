@@ -1,22 +1,14 @@
-import { moduleFlow } from "@/content/deck";
+import { SectionHead } from "@/components/slides/SectionHead";
+import type { WhatIsNukiNode } from "@/deck/types";
 
-export function WhatIsNukiSlide() {
+export function WhatIsNukiSlide({ node }: { node: WhatIsNukiNode }) {
   return (
-    <section className="slide what-is-nuki" id="what-is-nuki" data-reveal-group="">
+    <section className="slide what-is-nuki" id={node.id} data-tone={node.tone} data-reveal-group="">
       <div className="slide-inner">
-        <div className="section-head">
-          <p className="tag reveal">O que é a Nuki</p>
-          <h2 className="reveal">
-            A camada de gestão de todo o ciclo de personalização — <em>em uma plataforma só.</em>
-          </h2>
-          <p className="lead reveal">
-            A Nuki transforma um processo manual e fragmentado em um ciclo estruturado, integrado e
-            escalável — da formação de custo do memorial à entrega validada em obra.
-          </p>
-        </div>
+        <SectionHead head={node.head} />
 
         <div className="flow reveal">
-          {moduleFlow.map((m) => (
+          {node.flow.map((m) => (
             <div className="step" key={m.name}>
               <span className="phase">{m.phase}</span>
               <span className="name">{m.name}</span>

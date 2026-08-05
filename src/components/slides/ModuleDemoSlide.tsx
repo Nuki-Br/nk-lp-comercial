@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ModuleData } from "@/content/modules";
+import { useDeckNavigation } from "@/components/deck/DeckNavigation";
+import type { ModuleDemoNode } from "@/deck/types";
+import { fill } from "@/lib/format";
 
 /**
  * Slide fullscreen com a demo interativa do módulo dentro de um iframe.
@@ -35,13 +37,18 @@ import type { ModuleData } from "@/content/modules";
  * DeckBehaviors reemite o postMessage `nuki-demo:esc` como `nuki-demo:exit`),
  * os botões da barra, ou sair de vista.
  */
-export function ModuleDemoSlide({ data }: { data: ModuleData }) {
+export function ModuleDemoSlide({ node }: { node: ModuleDemoNode }) {
   const [loaded, setLoaded] = useState(false);
   const [active, setActive] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  // Hook antes de qualquer early return — regras dos hooks.
+  const { getWalkableIds } = useDeckNavigation();
 
-  const demoId = data.demoUrl ? `${data.id}-demo` : null;
-  const backTargetId = data.id;
+  const { labels, moduleName } = node;
+  const demoId = node.id;
+  /* O pai é quem `normalizeDeck` amarrou via `parentId`; o fallback nunca
+     dispara num config normalizado, mas evita um `undefined` no scroll. */
+  const backTargetId = node.parentId ?? node.id;
 
   /** Sair da demo: desativa e volta pro slide descritivo do módulo. */
   const exitToDescriptive = useCallback(() => {
@@ -98,26 +105,24 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
     return () => io.disconnect();
   }, []);
 
-  if (!data.demoUrl || !demoId) return null;
+  /** Navega entre os slides walkable a partir da demo. dir = -1 volta pro
+      descritivo do mesmo módulo, dir = 1 vai pra próxima seção.
 
-  /** Navega entre os slides walkable a partir do demo. dir = -1 volta pro
-      descritivo do mesmo módulo, dir = 1 vai pro próximo módulo (ou seção)
-      na ordem em que aparecem no DOM. Reusa a mesma lista que o
-      DeckBehaviors monta pra setas globais — nada de props/ref. */
+      Consome a MESMA lista que o `DeckBehaviors` usa pras setas globais, vinda
+      do config. Antes esta função remontava a query do DOM à mão, então dois
+      lugares codificavam "o que é navegável" e iam divergir. */
   const navigate = (dir: -1 | 1) => {
     if (typeof document === "undefined") return;
     setActive(false);
-    const walkable = Array.from(document.querySelectorAll<HTMLElement>(".slide, .module")).filter(
-      (el) => el.id,
-    );
-    const currentIdx = walkable.findIndex((el) => el.id === demoId);
+    const ids = getWalkableIds();
+    const currentIdx = ids.indexOf(demoId);
     if (currentIdx === -1) return;
-    const target = walkable[currentIdx + dir];
-    if (target)
-      target.scrollIntoView({
-        behavior: prefersReducedMotion() ? "auto" : "smooth",
-        block: "start",
-      });
+    const targetId = ids[currentIdx + dir];
+    if (!targetId) return;
+    document.getElementById(targetId)?.scrollIntoView({
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+      block: "start",
+    });
   };
 
   return (
@@ -125,35 +130,36 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
       ref={sectionRef}
       className={`slide is-fullscreen module-demo-slide${active ? " is-active" : ""}`}
       id={demoId}
-      /* Mantém o ponto do módulo aceso no progress nav: `inspetor-demo` não
-         existe no deckNav, e sem isso o nav apaga inteiro nesta seção. */
-      data-nav-id={data.id}
+      /* Mantém o ponto do módulo aceso no progress nav: a demo não tem ponto
+         próprio, e sem isso o nav apaga inteiro nesta seção. `navId` é derivado
+         por `normalizeDeck`, então não dá pra apontar pra um ponto que sumiu. */
+      data-nav-id={node.navId ?? backTargetId}
     >
       <header className="module-demo-bar">
         <button
           type="button"
           className="module-demo-bar-nav"
           onClick={() => navigate(-1)}
-          aria-label={`Voltar para ${data.title.strong}`}
-          title="Voltar (←)"
+          aria-label={fill(labels.backAriaTemplate, { strong: moduleName })}
+          title={labels.backTitle}
         >
-          <span aria-hidden="true">←</span> Voltar
+          <span aria-hidden="true">{labels.backGlyph}</span> {labels.back}
         </button>
 
         <span className="module-demo-bar-title">
-          <strong>{data.title.strong}</strong>
-          <span className="module-demo-bar-sep">·</span>
-          <span className="module-demo-bar-suffix">Demo interativa</span>
+          <strong>{moduleName}</strong>
+          <span className="module-demo-bar-sep">{labels.separator}</span>
+          <span className="module-demo-bar-suffix">{labels.badge}</span>
         </span>
 
         <button
           type="button"
           className="module-demo-bar-nav"
           onClick={() => navigate(1)}
-          aria-label="Seguir para a próxima seção"
-          title="Seguir (→)"
+          aria-label={labels.forwardAria}
+          title={labels.forwardTitle}
         >
-          Seguir <span aria-hidden="true">→</span>
+          {labels.forward} <span aria-hidden="true">{labels.forwardGlyph}</span>
         </button>
       </header>
 
@@ -161,8 +167,8 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
         {/* Iframe full width/height; onLoad esconde o skeleton */}
         <iframe
           className="module-demo-frame"
-          src={data.demoUrl}
-          title={`${data.title.strong} — demo interativa`}
+          src={node.demoUrl}
+          title={fill(labels.iframeTitleTemplate, { strong: moduleName })}
           loading="lazy"
           onLoad={() => setLoaded(true)}
         />
@@ -170,7 +176,7 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
         {!loaded && (
           <div className="module-demo-skeleton" aria-hidden="true">
             <div className="module-demo-skeleton-pulse" />
-            <p className="module-demo-skeleton-text">Carregando demo…</p>
+            <p className="module-demo-skeleton-text">{labels.loading}</p>
           </div>
         )}
 
@@ -179,28 +185,27 @@ export function ModuleDemoSlide({ data }: { data: ModuleData }) {
             type="button"
             className="module-demo-activate"
             onClick={() => setActive(true)}
-            aria-label={`Ativar a demo interativa do ${data.title.strong}`}
+            aria-label={fill(labels.activateAriaTemplate, { strong: moduleName })}
           >
             <span className="module-demo-activate-pill">
-              <span aria-hidden="true">▷</span> Clique para interagir
+              <span aria-hidden="true">{labels.activateGlyph}</span> {labels.activateHint}
             </span>
           </button>
         )}
 
         {/* Mobile fallback — CSS controla a visibilidade */}
         <div className="module-demo-mobile" role="note">
-          <p className="module-demo-mobile-title">Demo funciona melhor no desktop</p>
+          <p className="module-demo-mobile-title">{labels.mobileTitle}</p>
           <p className="module-demo-mobile-body">
-            O {data.title.strong} foi feito pra tela larga. No celular, abra em uma nova aba pra
-            explorar com espaço.
+            {fill(labels.mobileBodyTemplate, { strong: moduleName })}
           </p>
           <a
             className="module-demo-mobile-link"
-            href={data.demoUrl}
+            href={node.demoUrl}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Abrir em nova aba →
+            {labels.mobileCta}
           </a>
         </div>
       </div>

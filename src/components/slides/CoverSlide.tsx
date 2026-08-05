@@ -1,28 +1,31 @@
-/* A apresentação agora é a raiz deste repo, então o botão "voltar" aponta pra
-   home institucional em outro domínio — link absoluto, não `next/link`. */
-const HOME_URL = "https://nukibr.com";
+import { Fragment } from "react";
+import { RichText } from "@/components/ui/RichText";
+import type { CoverNode } from "@/deck/types";
 
-export function CoverSlide() {
+export function CoverSlide({ node }: { node: CoverNode }) {
   return (
-    <section className="slide cover" id="cover" data-tone="dark" data-reveal-group="">
-      <a href={HOME_URL} className="back-link" aria-label="Voltar para a home">
+    <section className="slide cover" id={node.id} data-tone={node.tone} data-reveal-group="">
+      {/* A apresentação não é mais a raiz deste repo, mas o "voltar" continua
+          apontando pra home institucional em outro domínio — link absoluto,
+          não `next/link`. */}
+      <a href={node.backLink.href} className="back-link" aria-label={node.backLink.ariaLabel}>
         <ChevronLeftIcon className="back-link-icon" />
       </a>
       <div className="slide-inner">
-        <p className="kicker reveal">Apresentação comercial · 2026</p>
+        <p className="kicker reveal">{node.kicker}</p>
         <h1 className="reveal">
-          Agora, a jornada completa — <em>do custo à entrega.</em>
+          <RichText value={node.title} />
         </h1>
         <p className="lead reveal">
-          A Nuki organiza, profissionaliza e centraliza o ciclo completo de personalização de
-          acabamentos — do planejamento de custo do memorial à validação em obra.
+          <RichText value={node.lead} />
         </p>
         <div className="meta reveal">
-          <span>Planner</span>
-          <span>·</span>
-          <span>Personaliza</span>
-          <span>·</span>
-          <span>Inspetor</span>
+          {node.meta.items.map((item, i) => (
+            <Fragment key={item}>
+              {i > 0 && <span>{node.meta.separator}</span>}
+              <span>{item}</span>
+            </Fragment>
+          ))}
         </div>
       </div>
     </section>
