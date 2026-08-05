@@ -52,19 +52,7 @@ Decide this before the proposal surface ships, not after.
 ## Migrations
 
 Files on disk, forward-only, one concern per file, **never edit an applied
-migration**. The Supabase CLI owns the timestamp — do not hand-name a file.
-
-```bash
-supabase migration new proposals_foundation
-supabase db push --db-url "$DIRECT_URL"
-supabase db lint --db-url "$DIRECT_URL" --level warning
-supabase gen types typescript --db-url "$DIRECT_URL" --schema public \
-  > src/server/supabase/database.types.ts
-```
-
-None of this needs OAuth, `supabase link`, or Docker. That matters: the Supabase
-**MCP server needs an interactive OAuth flow that a headless agent session cannot
-complete**, so no part of the build may depend on it.
+migration**.
 
 ⚠ The connection string **must be percent-encoded**. Supabase-generated passwords
 routinely contain `@ : / ? #`, and a `db push` failing with an opaque parse error
@@ -77,9 +65,6 @@ agent session: no local Postgres, no shadow database.
 
 **No down migrations.** The Supabase CLI does not run them; the recovery path is
 a new forward migration. Do not write one and trust it.
-
-**The agent writes migrations; a human applies them.** `.claude/settings.json`
-denies `supabase db push` and `psql`, so this is enforced rather than requested.
 
 ## Redirects
 

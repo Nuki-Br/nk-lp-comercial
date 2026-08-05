@@ -91,13 +91,6 @@ depend on them being right.
    what state it is in.
 4. **Each stage writes only the docs it can verify.** Nobody documents something
    that does not exist yet. This is why `data-model.md` is absent until stage 2.
-5. **Do not use the Supabase MCP server.** It requires an interactive OAuth flow
-   an agent session cannot complete. The CLI over `DIRECT_URL` needs no OAuth and
-   is the supported path. If MCP tools appear in your tool list, ignore them.
-6. **Agents author migrations; humans apply them.** `.claude/settings.json`
-   enforces this by denying `supabase db push` and `psql`.
-7. **Do not commit or push unless asked.** Report what you did and let the human
-   review the diff.
 
 ## Never read these files
 

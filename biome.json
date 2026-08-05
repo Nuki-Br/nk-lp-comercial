@@ -3,7 +3,14 @@
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/node_modules", "!**/.next", "!public/demos", "!src/HTML"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.next",
+      "!public/demos",
+      "!src/HTML",
+      "!src/server/supabase/database.types.ts"
+    ]
   },
   "formatter": {
     "enabled": true,

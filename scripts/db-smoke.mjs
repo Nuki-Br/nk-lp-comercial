@@ -68,12 +68,34 @@ const TABLES = [
 const failures = [];
 const rest = (path) => `${URL_BASE.replace(/\/$/, "")}/rest/v1/${path}`;
 
-/** One row, zero columns of interest: we want the status code, not the data. */
+/** One row, zero columns of interest: we want the status code and, when it is a
+    refusal, the reason. PostgREST puts a Postgres SQLSTATE in the body, and the
+    difference between "this role may not touch this table" (42501) and "this key
+    is not valid" (PGRST301 and friends) is the difference between a passing test
+    and a test that proves nothing. */
 async function probe(table, key) {
   const res = await fetch(rest(`${table}?select=*&limit=0`), {
     headers: { apikey: key, Authorization: `Bearer ${key}` },
   });
-  return res.status;
+  let code = null;
+  if (!res.ok) {
+    try {
+      code = (await res.json())?.code ?? null;
+    } catch {
+      /* Not every refusal has a JSON body. Status alone will have to do. */
+    }
+  }
+  return { status: res.status, code };
+}
+
+/** Proves the publishable key is a real key before any conclusion is drawn from
+    it being refused. An invalid key is refused by everything, which would make
+    the whole lockout section below read as a pass. */
+async function keyIsLive(key) {
+  const res = await fetch(`${URL_BASE.replace(/\/$/, "")}/auth/v1/settings`, {
+    headers: { apikey: key },
+  });
+  return res.ok;
 }
 
 /* ---- 1. Every table exists and the service key can reach it ---- */
@@ -81,11 +103,11 @@ async function probe(table, key) {
 console.log("\ntables, as the service key sees them\n");
 
 for (const { name } of TABLES) {
-  const status = await probe(name, SECRET);
+  const { status, code } = await probe(name, SECRET);
   if (status === 200) {
     console.log(`  ok       ${name}`);
   } else {
-    console.log(`  MISSING  ${name}  (HTTP ${status})`);
+    console.log(`  MISSING  ${name}  (HTTP ${status}${code ? `, ${code}` : ""})`);
     failures.push(`${name} is not reachable with the secret key (HTTP ${status})`);
   }
 }
@@ -96,19 +118,34 @@ if (!PUBLISHABLE) {
   console.log("\nSUPABASE_PUBLISHABLE_KEY not set — skipping the anon lockout check");
   console.log("This is the half of the smoke test that matters. Set it and re-run.\n");
   failures.push("anon lockout unverified (SUPABASE_PUBLISHABLE_KEY not set)");
+} else if (!(await keyIsLive(PUBLISHABLE))) {
+  /* Without this gate the section below is worthless: a typo'd key is refused by
+     every table and prints seven reassuring `locked` lines. */
+  console.log("\nSUPABASE_PUBLISHABLE_KEY is refused by /auth/v1/settings — the key");
+  console.log("itself is invalid, so nothing can be concluded from anon being denied.\n");
+  failures.push("anon lockout unverified (SUPABASE_PUBLISHABLE_KEY is not a live key)");
 } else {
   console.log("\nsame tables, as the publishable key sees them\n");
 
   for (const { name } of TABLES) {
-    const status = await probe(name, PUBLISHABLE);
-    /* 401/403 is a grant denial, 404 is PostgREST refusing to admit the table
-       exists. Any of them is a locked door. 200 is a leak, even with zero rows:
-       it means the table is exposed and only a policy is holding the line. */
+    const { status, code } = await probe(name, PUBLISHABLE);
+    /* 42501 is Postgres saying "permission denied for table", which is the
+       revoke doing its job. PGRST205 is PostgREST refusing to admit the table is
+       in its schema cache — also a locked door.
+
+       200 is a leak even with zero rows: it means the table is exposed and only
+       a policy is holding the line.
+
+       Anything else is not a pass. An unexplained refusal is a result nobody can
+       act on, and this script exists to be actionable. */
     if (status === 200) {
       console.log(`  LEAK     ${name}  (HTTP 200)`);
       failures.push(`${name} is readable by the publishable key`);
+    } else if (code === "42501" || code === "PGRST205") {
+      console.log(`  locked   ${name}  (${code})`);
     } else {
-      console.log(`  locked   ${name}  (HTTP ${status})`);
+      console.log(`  ?        ${name}  (HTTP ${status}${code ? `, ${code}` : ""})`);
+      failures.push(`${name} refused anon for an unrecognised reason (${code ?? status})`);
     }
   }
 }

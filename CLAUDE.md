@@ -37,9 +37,3 @@ cut -d= -f1 .env
 ## Scratch files
 
 Use the session scratchpad directory, never `/tmp` and never the repo.
-
-## Permissions
-
-Read-only and verification commands are pre-allowed in `.claude/settings.json`;
-`.claude/README.md` explains why each denial is there. Personal overrides belong
-in `.claude/settings.local.json`, which is gitignored.
