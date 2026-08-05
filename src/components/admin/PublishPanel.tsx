@@ -37,42 +37,48 @@ export type SendState = "draft" | "no-password" | "expired" | "stale" | "live" |
  * `draft` e `no-password` eram um estado só ("bloqueada"), e uma pílula obriga a
  * separá-los: são as duas maneiras de o link não abrir, e a que se resolve não é
  * a mesma. */
+/* A faixa é um GRADIENTE que morre no fundo do card, não um bloco de cor.
+ *
+ * Chapada, ela era um retângulo colorido com uma borda embaixo, e o painel
+ * parecia dois cards empilhados. Esvaindo-se para baixo, a cor do estado tinge o
+ * topo e entrega o card ao conteúdo — que é a mesma leitura, com uma divisão a
+ * menos na coluna mais estreita da tela. */
 const STATE: Record<SendState, { badge: string; tone: BadgeTone; detail: string; band: string }> = {
   draft: {
     badge: "Rascunho",
     tone: "neutral",
     detail: "O cliente vê “não encontrado” até você publicar.",
-    band: "bg-muted/40",
+    band: "bg-linear-to-b from-muted/70 to-transparent",
   },
   "no-password": {
     badge: "Sem senha",
     tone: "warning",
     detail: "Publicada, mas ninguém consegue entrar sem uma senha definida.",
-    band: "bg-warning/8",
+    band: "bg-linear-to-b from-warning/12 to-transparent",
   },
   expired: {
     badge: "Expirada",
     tone: "danger",
     detail: "Passou da data de validade: o cliente vê o aviso mesmo com a senha certa.",
-    band: "bg-destructive/8",
+    band: "bg-linear-to-b from-destructive/12 to-transparent",
   },
   stale: {
     badge: "Alterações pendentes",
     tone: "warning",
     detail: "O cliente continua vendo a versão publicada até você publicar de novo.",
-    band: "bg-warning/8",
+    band: "bg-linear-to-b from-warning/12 to-transparent",
   },
   live: {
     badge: "No ar",
     tone: "success",
     detail: "O link abre com a senha desta proposta.",
-    band: "bg-success/8",
+    band: "bg-linear-to-b from-success/12 to-transparent",
   },
   unpublished: {
     badge: "Despublicada",
     tone: "warning",
     detail: "O cliente vê um aviso de indisponível até você publicar de novo.",
-    band: "bg-warning/8",
+    band: "bg-linear-to-b from-warning/12 to-transparent",
   },
 };
 
@@ -116,7 +122,12 @@ export function PublishPanel({
 
   return (
     <Card className="overflow-hidden">
-      <div className={cn("border-b border-border px-5 py-4", state.band)}>
+      <div
+        className={cn(
+          "border-b border-border px-5 py-4 transition-colors duration-500",
+          state.band,
+        )}
+      >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold tracking-tight">Envio</h2>
           <Badge tone={state.tone}>{state.badge}</Badge>
@@ -154,7 +165,7 @@ function LinkRow({ url }: { url: string }) {
     <div className="flex items-center gap-2">
       <code
         title={url}
-        className="min-w-0 flex-1 truncate rounded-md border border-border bg-muted px-2.5 py-1.5 font-mono text-xs text-muted-foreground"
+        className="min-w-0 flex-1 truncate rounded-md border border-border bg-muted px-2.5 py-1.5 font-mono text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground"
       >
         {url.replace(/^https?:\/\//, "")}
       </code>
@@ -166,6 +177,7 @@ function LinkRow({ url }: { url: string }) {
            que anuncia a troca. Sem ele, o nome do botão mudaria debaixo de quem
            está com o foco nele. */
         aria-label="Copiar o link do cliente"
+        className={cn("gap-1.5", copied && "border-success/40 text-success")}
         onClick={() => {
           navigator.clipboard.writeText(url).then(
             () => {
@@ -176,6 +188,40 @@ function LinkRow({ url }: { url: string }) {
           );
         }}
       >
+        {/* O ícone troca junto com a palavra, e o visto entra com `animate-pop`.
+            Copiar um link é uma ação sem NENHUMA consequência visível — a área
+            de transferência não se vê — e o visto saltando é o recibo. */}
+        <span aria-hidden="true" className="grid size-3.5 shrink-0 place-items-center">
+          {copied ? (
+            <svg viewBox="0 0 14 14" fill="none" className="size-3.5 animate-pop">
+              <path
+                d="m3 7.4 2.8 2.8L11 4.4"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 14 14" fill="none" className="size-3.5">
+              <rect
+                x="4.75"
+                y="4.75"
+                width="8"
+                height="8"
+                rx="1.75"
+                stroke="currentColor"
+                strokeWidth="1.4"
+              />
+              <path
+                d="M9.75 2.75a1.5 1.5 0 0 0-1.5-1.5H2.75a1.5 1.5 0 0 0-1.5 1.5v5.5a1.5 1.5 0 0 0 1.5 1.5"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
+            </svg>
+          )}
+        </span>
         {/* `aria-live` no rótulo, e não no botão: o que muda é o texto, e um
             leitor de tela precisa ouvir "copiado" sem precisar reler o botão. */}
         <span aria-live="polite">{copied ? "Copiado" : "Copiar"}</span>
@@ -189,14 +235,14 @@ function ChecklistRow({ item }: { item: ChecklistItem }) {
     <li className="flex items-start gap-2.5">
       <span
         className={cn(
-          "mt-px flex size-4 shrink-0 items-center justify-center rounded-full border",
+          "mt-px flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-300",
           item.done
             ? "border-success/30 bg-success/12 text-success"
             : "border-dashed border-warning/60 text-warning",
         )}
       >
         {item.done ? (
-          <svg aria-hidden="true" viewBox="0 0 12 12" fill="none" className="size-2.5">
+          <svg aria-hidden="true" viewBox="0 0 12 12" fill="none" className="size-2.5 animate-pop">
             <path
               d="M2.5 6.25 4.75 8.5 9.5 3.5"
               stroke="currentColor"

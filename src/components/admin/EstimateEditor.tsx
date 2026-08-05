@@ -9,6 +9,7 @@ import { UnpublishedChangesBanner } from "@/components/admin/ComposerTabs";
 import { Alert, AlertList } from "@/components/admin/ui/Alert";
 import { Button } from "@/components/admin/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/admin/ui/Card";
+import { ExternalLink } from "@/components/admin/ui/ExternalLink";
 import { Checkbox, FieldLabel, Input, Select } from "@/components/admin/ui/Field";
 import { Section, SectionActions } from "@/components/admin/ui/Section";
 import { SubmitButton } from "@/components/admin/ui/SubmitButton";
@@ -232,7 +233,8 @@ export function EstimateEditor({
   const TH = "pb-2 text-xs font-medium text-muted-foreground";
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+    /* `animate-fade` e não `animate-rise` — ver a nota igual no editor de preços. */
+    <div className="grid gap-6 animate-fade lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       {/* Mesma coluna de ajustes das outras abas — ver a nota no editor de
           preços. */}
       <div className="flex min-w-0 flex-col gap-8 [&>section:first-of-type]:border-t-0 [&>section:first-of-type]:pt-0">
@@ -297,7 +299,7 @@ export function EstimateEditor({
               {unitTypes.map((type, typeIndex) => (
                 <div
                   key={type.id}
-                  className="flex flex-col gap-3 rounded-lg border border-border bg-muted/20 p-4"
+                  className="flex flex-col gap-3 rounded-xl border border-border bg-muted/20 p-4 transition-colors duration-200 hover:border-ring/20"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-baseline gap-2">
@@ -346,7 +348,10 @@ export function EstimateEditor({
                       </thead>
                       <tbody>
                         {type.rooms.map((room) => (
-                          <tr key={room.id} className="border-b border-border last:border-0">
+                          <tr
+                            key={room.id}
+                            className="group border-b border-border transition-colors duration-200 last:border-0 hover:bg-card/60"
+                          >
                             <td className="py-1.5 pr-2">
                               <Input
                                 value={room.name}
@@ -436,12 +441,16 @@ export function EstimateEditor({
                               {roomImages(room)}
                             </td>
                             <td className="py-1.5 text-right">
+                              {/* Apagado até o ponteiro entrar na linha — mas
+                                  nunca invisível: num tablet não existe hover, e
+                                  um botão escondido atrás dele é um botão que
+                                  não existe. */}
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => removeRoom(typeIndex, room.id)}
                                 aria-label={`Remover ${room.name}`}
-                                className="size-8 hover:text-destructive"
+                                className="size-8 opacity-45 group-hover:opacity-100 hover:text-destructive focus-visible:opacity-100"
                               >
                                 <span aria-hidden="true">×</span>
                               </Button>
@@ -488,7 +497,7 @@ export function EstimateEditor({
                         sem nenhum ambiente marcado não somam imagem nenhuma. Dito
                         aqui, na metragem em que acontece. */}
                   {type.variants > 1 && breakdowns[typeIndex]?.perExtraVariant.total === 0 && (
-                    <p className="text-xs leading-relaxed text-warning">
+                    <p className="text-xs leading-relaxed text-warning animate-rise">
                       {type.variants} variações, e nenhum ambiente marcado em “Varia” — as variações
                       extras não somam imagem nenhuma.
                     </p>
@@ -565,7 +574,7 @@ export function EstimateEditor({
 
       {/* Numa coluna só o painel vem PRIMEIRO — ver a nota igual no editor de
           preços. */}
-      <aside className="order-first lg:order-none lg:sticky lg:top-[10.5rem]">
+      <aside className="order-first lg:order-none lg:sticky lg:top-[var(--admin-sticky)]">
         <LiveEstimate
           total={total}
           setupCost={setupCost}
@@ -634,14 +643,7 @@ function LiveEstimate({
           </ul>
         )}
 
-        <a
-          href={previewHref}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/25"
-        >
-          Ver o slide na prévia <span aria-hidden="true">↗</span>
-        </a>
+        <ExternalLink href={previewHref}>Ver o slide na prévia</ExternalLink>
       </CardContent>
     </Card>
   );

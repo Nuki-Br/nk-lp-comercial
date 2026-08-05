@@ -10,6 +10,7 @@ import { Alert, AlertList } from "@/components/admin/ui/Alert";
 import { Badge } from "@/components/admin/ui/Badge";
 import { Button } from "@/components/admin/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/admin/ui/Card";
+import { ExternalLink } from "@/components/admin/ui/ExternalLink";
 import { FieldLabel, Input, Textarea } from "@/components/admin/ui/Field";
 import { Section, SectionActions } from "@/components/admin/ui/Section";
 import { SubmitButton } from "@/components/admin/ui/SubmitButton";
@@ -155,7 +156,9 @@ export function PricingEditor({
   const payload = payloadOf(plans, cycles, maxMonths);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+    /* `animate-fade` e não `animate-rise` — ver a nota igual na Visão geral: a
+       coluna tem um painel grudento, e transladar a entrada o arrastaria junto. */
+    <div className="grid gap-6 animate-fade lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       {/* Mesma coluna de ajustes da Visão geral: seções sem caixa, separadas por
           um fio, e a primeira sem ele. `first-of-type` e não `first-child`
           porque o aviso de alterações não publicadas entra antes dela. */}
@@ -183,11 +186,11 @@ export function PricingEditor({
                   <div
                     key={plan.key}
                     className={cn(
-                      "rounded-lg border p-4 transition-colors",
+                      "rounded-xl border p-4 transition-[border-color,background-color,box-shadow] duration-300 ease-out-quart",
                       /* O plano destacado é o que o cliente lê primeiro, e é o
                          que o simulador usa como base. Vale um anel. */
                       plan.featured
-                        ? "border-primary/40 bg-primary/5"
+                        ? "border-primary/40 bg-primary/5 shadow-xs"
                         : "border-border bg-muted/20",
                     )}
                   >
@@ -213,7 +216,7 @@ export function PricingEditor({
                         onClick={() => removePlan(index)}
                         disabled={plans.length <= ESTIMATE_RANGES.plans.min}
                         aria-label={`Remover o plano ${plan.n || index + 1}`}
-                        className="ml-auto size-7 hover:text-destructive"
+                        className="ml-auto size-7 opacity-60 hover:text-destructive hover:opacity-100 focus-visible:opacity-100"
                       >
                         <span aria-hidden="true">×</span>
                       </Button>
@@ -292,7 +295,7 @@ export function PricingEditor({
                 return (
                   <div
                     key={`cycle-${index}`}
-                    className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-[minmax(7rem,1fr)_6.5rem_7.5rem] sm:items-end"
+                    className="grid gap-3 rounded-xl border border-border p-3 transition-colors duration-200 hover:border-ring/20 hover:bg-muted/20 sm:grid-cols-[minmax(7rem,1fr)_6.5rem_7.5rem] sm:items-end"
                   >
                     <FieldLabel label="Rótulo">
                       <Input
@@ -380,7 +383,7 @@ export function PricingEditor({
       {/* Numa coluna só o painel vem PRIMEIRO: empurrado para depois de um
           formulário longo, a consequência do que se digita fica a uma rolagem
           de distância, que é a mesma distância de antes de ele existir. */}
-      <aside className="order-first lg:order-none lg:sticky lg:top-[10.5rem]">
+      <aside className="order-first lg:order-none lg:sticky lg:top-[var(--admin-sticky)]">
         <ClientView plans={plans} cycles={cycles} maxMonths={maxMonths} previewHref={previewHref} />
       </aside>
     </div>
@@ -411,17 +414,23 @@ function FeaturedToggle({
       title={featured ? "Plano em destaque" : "Destacar este plano"}
       onClick={onToggle}
       className={cn(
-        "flex size-7 shrink-0 items-center justify-center rounded-md outline-none transition-colors",
-        "focus-visible:ring-[3px] focus-visible:ring-ring/25",
+        "flex size-7 shrink-0 items-center justify-center rounded-md outline-none",
+        "transition-colors duration-200 focus-visible:ring-[3px] focus-visible:ring-ring/25",
         featured
           ? "text-primary hover:bg-primary/10"
           : "text-muted-foreground/50 hover:bg-accent hover:text-foreground",
       )}
     >
+      {/* A estrela cresce um pouco quando acende. É a mesma escolha em dois
+          lugares — aqui e no card do plano, que ganha borda e sombra — e as duas
+          animam juntas, o que liga o clique ao card lá embaixo. */}
       <svg
         aria-hidden="true"
         viewBox="0 0 16 16"
-        className="size-4"
+        className={cn(
+          "size-4 transition-[scale,fill] duration-300 ease-out-back",
+          featured ? "scale-110" : "scale-100",
+        )}
         fill={featured ? "currentColor" : "none"}
         stroke="currentColor"
         strokeWidth="1.5"
@@ -536,7 +545,8 @@ function ClientView({
                   <li
                     key={plan.key}
                     className={cn(
-                      "flex items-baseline justify-between gap-3 rounded-md border px-3 py-2",
+                      "flex items-baseline justify-between gap-3 rounded-lg border px-3 py-2",
+                      "transition-colors duration-300 ease-out-quart",
                       plan.featured ? "border-primary/40 bg-primary/5" : "border-border",
                     )}
                   >
@@ -565,14 +575,7 @@ function ClientView({
           </p>
         )}
 
-        <a
-          href={previewHref}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/25"
-        >
-          Ver o slide na prévia <span aria-hidden="true">↗</span>
-        </a>
+        <ExternalLink href={previewHref}>Ver o slide na prévia</ExternalLink>
       </CardContent>
     </Card>
   );

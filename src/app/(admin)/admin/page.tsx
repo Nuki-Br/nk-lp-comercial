@@ -4,6 +4,7 @@ import { CreateProposalDialog } from "@/components/admin/CreateProposalDialog";
 import { PortfolioOverview } from "@/components/admin/PortfolioOverview";
 import { Badge, type BadgeTone } from "@/components/admin/ui/Badge";
 import { Card, PageHeader } from "@/components/admin/ui/Card";
+import { PageShell } from "@/components/admin/ui/Page";
 import { buildDefaultDeck } from "@/deck/defaults";
 import { formatCurrency } from "@/lib/format";
 import { QUOTE_REFERENCE_MONTHS } from "@/lib/quote";
@@ -24,13 +25,6 @@ const STATUS: Record<string, { label: string; tone: BadgeTone }> = {
 /* A date, in pt-BR, from Intl — no date library (Rule 3). */
 const formatDate = (iso: string | null): string =>
   iso ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(iso)) : "—";
-
-/** Mais larga que o `max-w-5xl` que era o padrão do painel, pelo mesmo motivo
-    que o compositor: a lista passou a carregar três colunas de dinheiro, e a
-    5xl as empurrava para fora da tela — um total que só aparece rolando de lado
-    é um total que ninguém compara. Mesma largura do compositor, para as duas
-    telas não trocarem de coluna a cada navegação. */
-const CONTAINER = "max-w-7xl";
 
 const TH = "px-5 py-2.5 font-medium";
 /* As três colunas de dinheiro andam juntas: mesmo alinhamento, mesma tabular,
@@ -55,9 +49,9 @@ export default async function AdminPage() {
 
   return (
     <>
-      <AdminTopBar email={admin.email} role={admin.role} container={CONTAINER} />
+      <AdminTopBar email={admin.email} role={admin.role} />
 
-      <main className={`mx-auto flex w-full flex-1 flex-col gap-6 px-4 py-8 sm:px-6 ${CONTAINER}`}>
+      <PageShell>
         <PageHeader
           title="Propostas"
           description="Cada proposta é um deck congelado no nome de uma construtora, com link e senha próprios."
@@ -69,19 +63,43 @@ export default async function AdminPage() {
         {proposals.length > 0 && <PortfolioOverview attention={attention} proposals={proposals} />}
 
         {proposals.length === 0 ? (
-          <Card className="border-dashed shadow-none">
-            <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-              <p className="text-sm font-medium">Nenhuma proposta ainda</p>
-              <p className="max-w-sm text-sm text-muted-foreground">
+          /* O vazio ganhou um ícone e um alvo maior. Uma folha em branco com
+             duas frases centralizadas é indistinguível de uma tela que falhou
+             ao carregar — o desenho é o que diz "não há nada aqui ainda" antes
+             de o texto ser lido. */
+          <Card className="border-dashed shadow-none animate-rise [animation-delay:120ms]">
+            <div className="flex flex-col items-center gap-3 px-6 py-20 text-center">
+              <span
+                aria-hidden="true"
+                className="grid size-12 place-items-center rounded-2xl border border-border bg-muted/50 text-muted-foreground"
+              >
+                <svg viewBox="0 0 24 24" fill="none" className="size-6">
+                  <path
+                    d="M6.5 3.75h7l4.25 4.25v12.25a1 1 0 0 1-1 1h-10.25a1 1 0 0 1-1-1V4.75a1 1 0 0 1 1-1Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M13.25 3.9v4.35h4.35M9 12.5h6M9 16h4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <p className="text-base font-medium">Nenhuma proposta ainda</p>
+              <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
                 A primeira começa do deck padrão. A personalização vem depois, nas abas.
               </p>
-              <div className="mt-3">
+              <div className="mt-2">
                 <CreateProposalDialog />
               </div>
             </div>
           </Card>
         ) : (
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden animate-rise [animation-delay:120ms]">
             <div className="overflow-x-auto">
               {/* 46rem → 68rem: as três colunas de dinheiro não cabiam sem
                   espremer o nome da construtora, e uma tabela apertada rola —
@@ -139,17 +157,29 @@ export default async function AdminPage() {
                     return (
                       <tr
                         key={proposal.id}
-                        className="border-b border-border transition-colors last:border-0 hover:bg-muted/40"
+                        className="group border-b border-border transition-colors duration-200 last:border-0 hover:bg-muted/50"
                       >
                         <th scope="row" className="px-5 py-3 font-medium">
                           {proposal.clientName}
                         </th>
                         <td className="px-5 py-3">
+                          {/* A seta aparece no hover da LINHA, não do link: a
+                              linha inteira é o que o ponteiro percorre, e a
+                              seta é a resposta de "o que acontece se eu clicar
+                              aqui". Ela ocupa lugar o tempo todo (`opacity`,
+                              não `hidden`) para o título não deslizar de lado
+                              quando ela entra. */}
                           <Link
                             href={`/admin/proposals/${proposal.id}`}
-                            className="rounded-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/25"
+                            className="inline-flex items-center gap-1 rounded-sm font-medium underline-offset-4 outline-none transition-colors duration-200 hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/25"
                           >
                             {proposal.title}
+                            <span
+                              aria-hidden="true"
+                              className="-translate-x-1 text-muted-foreground opacity-0 transition-[translate,opacity] duration-200 ease-out-quart group-hover:translate-x-0 group-hover:opacity-100"
+                            >
+                              →
+                            </span>
                           </Link>
                         </td>
                         <td className="px-5 py-3">
@@ -229,7 +259,7 @@ export default async function AdminPage() {
             </p>
           </Card>
         )}
-      </main>
+      </PageShell>
     </>
   );
 }

@@ -122,12 +122,18 @@ export function SlidePicker({
                 setLiftedId(null);
               }}
               className={cn(
-                "group flex items-start gap-1.5 rounded-lg border px-1.5 py-2 transition-[border-color,box-shadow,opacity]",
+                "group flex items-start gap-1.5 rounded-lg border px-1.5 py-2",
+                "transition-[border-color,box-shadow,opacity,scale,background-color] duration-200 ease-out-quart",
                 /* Um slide desligado continua na lista e continua arrastável —
                    só para de parecer parte da apresentação. */
                 row.enabled ? "border-border bg-card" : "border-dashed border-border bg-muted/30",
                 active && "border-primary/50 ring-[3px] ring-primary/15",
-                dragging && "opacity-40",
+                /* Encolhe e clareia enquanto é arrastada. A opacidade sozinha
+                   dizia "esta some"; com a escala ela diz "esta está na mão", que
+                   é o que está acontecendo — as outras linhas é que se movem. */
+                dragging
+                  ? "scale-[0.98] opacity-40"
+                  : "hover:border-ring/25 hover:bg-accent/40 hover:shadow-sm",
               )}
             >
               <button
@@ -143,7 +149,11 @@ export function SlidePicker({
                   event.preventDefault();
                   moveByKey(index, event.key === "ArrowDown" ? 1 : -1);
                 }}
-                className="mt-px flex size-6 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground/60 outline-none transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/25 active:cursor-grabbing"
+                /* O punho fica quase apagado até o ponteiro entrar na linha. É o
+                   controle menos usado da linha — a maioria dos cliques é no
+                   título ou no olho — e apagado ele para de competir com os dois
+                   por atenção, sem sair da ordem de tabulação nem do teclado. */
+                className="mt-px flex size-6 shrink-0 cursor-grab items-center justify-center rounded text-muted-foreground/40 opacity-70 outline-none transition-[color,opacity] duration-200 group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/25 active:cursor-grabbing"
               >
                 <svg
                   aria-hidden="true"
@@ -190,7 +200,10 @@ export function SlidePicker({
                   <label
                     className={cn(
                       "mt-2 ml-6 flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2 py-1.5 text-xs",
-                      row.enabled ? "cursor-pointer" : "cursor-not-allowed opacity-50",
+                      "transition-colors duration-200",
+                      row.enabled
+                        ? "cursor-pointer hover:border-ring/25 hover:bg-muted has-checked:border-primary/30 has-checked:bg-primary/5"
+                        : "cursor-not-allowed opacity-50",
                     )}
                   >
                     <input
@@ -198,7 +211,7 @@ export function SlidePicker({
                       checked={row.demo.enabled}
                       disabled={!row.enabled}
                       onChange={(event) => onToggleDemo(row.id, event.target.checked)}
-                      className="size-3.5 shrink-0 cursor-[inherit] rounded accent-primary outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
+                      className="size-3.5 shrink-0 cursor-[inherit] rounded accent-primary outline-none transition-transform duration-150 focus-visible:ring-[3px] focus-visible:ring-ring/25 active:scale-90"
                     />
                     <span className="min-w-0 text-foreground">Incluir a demo navegável</span>
                   </label>
@@ -233,7 +246,15 @@ export function SlidePicker({
  *
  * Continua um botão de alternar de verdade: `aria-pressed` é o que um leitor de
  * tela lê como "ativado", e o rótulo nomeia o slide, porque um olho sozinho não
- * diz de quem ele é. O `title` existe para o mouse, que não ouve nada. */
+ * diz de quem ele é. O `title` existe para o mouse, que não ouve nada.
+ *
+ * A PÁLPEBRA É DESENHADA, NÃO ACESA. Ela é o mesmo `<path>` sempre montado, com
+ * o traço escondido dentro do próprio comprimento (`stroke-dasharray` igual ao
+ * dele, `stroke-dashoffset` no mesmo valor) e revelado zerando o offset. Assim a
+ * barra risca o olho no clique em vez de aparecer inteira, e é a única animação
+ * do rail que diz o que o clique fez em vez de decorar a linha — este é o
+ * controle que decide se o cliente vê o slide. 15 é o comprimento da diagonal de
+ * 10,5 por 10,5 do `viewBox`, arredondado para cima. */
 function VisibilityToggle({
   enabled,
   label,
@@ -251,8 +272,8 @@ function VisibilityToggle({
       title={enabled ? "Tirar da apresentação" : "Incluir na apresentação"}
       onClick={onToggle}
       className={cn(
-        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md outline-none transition-colors",
-        "focus-visible:ring-[3px] focus-visible:ring-ring/25",
+        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md outline-none",
+        "transition-colors duration-200 focus-visible:ring-[3px] focus-visible:ring-ring/25",
         enabled
           ? "text-muted-foreground hover:bg-accent hover:text-foreground"
           : "text-muted-foreground/40 hover:bg-accent hover:text-muted-foreground",
@@ -269,9 +290,21 @@ function VisibilityToggle({
         className="size-4"
       >
         <path d="M1.5 8S3.9 3.75 8 3.75 14.5 8 14.5 8 12.1 12.25 8 12.25 1.5 8 1.5 8Z" />
-        <circle cx="8" cy="8" r="1.75" />
-        {/* A pálpebra: a barra que atravessa o olho quando o slide está fora. */}
-        {!enabled && <path d="M2.75 13.25 13.25 2.75" />}
+        <circle
+          cx="8"
+          cy="8"
+          r="1.75"
+          className={cn(
+            "origin-center transition-[scale,opacity] duration-200 ease-out-quart",
+            enabled ? "scale-100 opacity-100" : "scale-50 opacity-40",
+          )}
+        />
+        <path
+          d="M2.75 13.25 13.25 2.75"
+          strokeDasharray="15"
+          strokeDashoffset={enabled ? 15 : 0}
+          className="transition-[stroke-dashoffset] duration-300 ease-out-quart"
+        />
       </svg>
     </button>
   );

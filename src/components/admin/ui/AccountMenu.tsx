@@ -60,10 +60,13 @@ export function AccountMenu({ email, role }: { email: string; role: string }) {
   }, []);
 
   return (
-    <details ref={details} className="relative">
+    /* `group` no `<details>` para o chevron poder ler o estado aberto: a variante
+       `group-open:` do Tailwind é o `[open]` do elemento pai, e sem ela a seta
+       apontaria para baixo com a gaveta já aberta. */
+    <details ref={details} className="group relative">
       <summary
         aria-label={`Conta de ${email}`}
-        className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-border bg-card py-1 pr-2.5 pl-1 text-sm outline-none transition-colors select-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/25 [&::-webkit-details-marker]:hidden"
+        className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-border bg-card py-1 pr-2.5 pl-1 text-sm outline-none transition-colors duration-200 select-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/25 group-open:bg-accent [&::-webkit-details-marker]:hidden"
       >
         <span
           aria-hidden="true"
@@ -74,7 +77,12 @@ export function AccountMenu({ email, role }: { email: string; role: string }) {
         <span className="hidden max-w-[14rem] truncate text-muted-foreground sm:inline">
           {email}
         </span>
-        <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className="size-3.5 shrink-0">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          fill="none"
+          className="size-3.5 shrink-0 transition-transform duration-200 ease-out-quart group-open:rotate-180"
+        >
           <path
             d="m4.5 6.5 3.5 3.5 3.5-3.5"
             stroke="currentColor"
@@ -85,7 +93,9 @@ export function AccountMenu({ email, role }: { email: string; role: string }) {
         </svg>
       </summary>
 
-      <div className="absolute right-0 z-40 mt-2 w-64 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-lg">
+      {/* `origin-top-right`: a gaveta cresce do canto de onde foi puxada, e não
+          do próprio centro. É o que a faz parecer presa ao gatilho. */}
+      <div className="absolute right-0 z-40 mt-2 w-64 origin-top-right overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg animate-pop">
         <div className="flex items-center gap-2.5 border-b border-border px-3 py-3">
           <span
             aria-hidden="true"
@@ -102,9 +112,14 @@ export function AccountMenu({ email, role }: { email: string; role: string }) {
         <form action={signOutAction} className="p-1">
           <button
             type="submit"
-            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium outline-none transition-colors hover:bg-accent focus-visible:bg-accent"
+            className="group/exit flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium outline-none transition-colors duration-200 hover:bg-accent focus-visible:bg-accent"
           >
-            <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className="size-4 shrink-0">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="size-4 shrink-0 transition-transform duration-200 ease-out-quart group-hover/exit:translate-x-0.5"
+            >
               <path
                 d="M6.5 2.75h-2a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h2M10.25 11l3-3-3-3M13 8H6.25"
                 stroke="currentColor"

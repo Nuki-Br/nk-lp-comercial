@@ -8,11 +8,17 @@ import { cn } from "@/lib/cn";
  * `CardFooter` na ordem que quiser, e uma seção sem cabeçalho simplesmente não
  * renderiza um. */
 
+/* `rounded-xl` — 14px, contra os 8px dos controles.
+ *
+ * Não é preferência: raio é a única pista puramente visual que separa "isto é
+ * uma superfície" de "isto é um controle". Com card e botão no mesmo raio, uma
+ * tela de formulário vira uma pilha de retângulos do mesmo tipo, e o olho tem de
+ * ler o conteúdo para saber o que é clicável. */
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
   return (
     <section
       className={cn(
-        "rounded-lg border border-border bg-card text-card-foreground shadow-xs",
+        "rounded-xl border border-border bg-card text-card-foreground shadow-sm",
         className,
       )}
     >
@@ -76,12 +82,19 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-4">
+    /* `animate-rise` aqui e nos blocos abaixo dele: o painel é quatro rotas que
+       se atravessam o dia inteiro, e uma troca de tela sem nenhuma transição lê
+       como um recarregamento. Meio passo para cima em 420ms é o bastante para a
+       navegação parecer contínua — e a regra de `prefers-reduced-motion` em
+       `admin.css` já a desliga inteira para quem pediu. */
+    <header className="flex flex-wrap items-end justify-between gap-4 animate-rise">
       <div className="min-w-0">
         {eyebrow}
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight text-balance">{title}</h1>
         {description && (
-          <p className="mt-1.5 max-w-prose text-sm text-muted-foreground">{description}</p>
+          <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         )}
       </div>
       {action && <div className="flex shrink-0 items-center gap-2">{action}</div>}

@@ -39,6 +39,10 @@ export function Badge({
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap",
+        /* A pílula de status troca de tom quando a proposta muda de estado, e a
+           troca acontece sob os olhos de quem clicou em "Publicar". Sem
+           transição ela pisca de cinza para verde; com ela, a cor atravessa. */
+        "transition-colors duration-300 ease-out-quart",
         chip,
         className,
       )}

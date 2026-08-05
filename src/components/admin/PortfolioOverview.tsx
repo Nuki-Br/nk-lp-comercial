@@ -54,7 +54,15 @@ export function PortfolioOverview({
   const topSlides = attention.slides.slice(0, 6);
 
   return (
-    <section className="flex flex-col gap-4" aria-labelledby="portfolio-heading">
+    /* A entrada é escalonada em três degraus — cabeçalho da página, esta faixa
+       de números, a lista abaixo — e não tile a tile. Um atraso por elemento
+       precisaria de um `animationDelay` calculado, e o ganho seria uma onda de
+       oito passos numa tela que se abre dezenas de vezes por dia. Três degraus
+       dão a sensação de ordem; oito viram espera. */
+    <section
+      className="flex flex-col gap-4 animate-rise [animation-delay:60ms]"
+      aria-labelledby="portfolio-heading"
+    >
       <h2 id="portfolio-heading" className="sr-only">
         Números do painel
       </h2>
@@ -119,10 +127,13 @@ export function PortfolioOverview({
               ) : (
                 <ul className="flex flex-col gap-3">
                   {topSlides.map((slide) => (
-                    <li key={slide.anchorId} className="flex flex-col gap-1.5">
+                    <li key={slide.anchorId} className="group flex flex-col gap-1.5">
                       <div className="flex items-baseline justify-between gap-3">
                         <span className="truncate text-sm font-medium">{slide.label}</span>
-                        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                        {/* O tempo sobe de cinza para o texto normal quando o
+                            ponteiro passa: é o número que se está procurando ao
+                            correr o olho pela lista. */}
+                        <span className="shrink-0 text-xs text-muted-foreground transition-colors duration-200 tabular-nums group-hover:text-foreground">
                           {formatDuration(slide.dwellMs)}
                         </span>
                       </div>
@@ -157,14 +168,20 @@ export function PortfolioOverview({
                 {mostRead.map(({ row, proposal }) => (
                   <li
                     key={row.proposalId}
-                    className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                    className="group flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
                   >
                     <div className="min-w-0">
                       <Link
                         href={`/admin/proposals/${proposal.id}`}
-                        className="block truncate rounded-sm text-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/25"
+                        className="inline-flex max-w-full items-center gap-1 truncate rounded-sm text-sm font-medium underline-offset-4 outline-none transition-colors duration-200 hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/25"
                       >
-                        {proposal.clientName}
+                        <span className="truncate">{proposal.clientName}</span>
+                        <span
+                          aria-hidden="true"
+                          className="-translate-x-1 shrink-0 text-muted-foreground opacity-0 transition-[translate,opacity] duration-200 ease-out-quart group-hover:translate-x-0 group-hover:opacity-100"
+                        >
+                          →
+                        </span>
                       </Link>
                       <p className="truncate text-xs text-muted-foreground">
                         {row.sessionCount} {plural(row.sessionCount, "abertura", "aberturas")} · até{" "}

@@ -17,9 +17,15 @@ import { cn } from "@/lib/cn";
 
 const CONTROL =
   "w-full rounded-md border border-input bg-card px-3 text-sm text-foreground shadow-xs " +
-  "transition-[color,box-shadow,border-color] outline-none placeholder:text-muted-foreground " +
+  "transition-[color,box-shadow,border-color] duration-200 ease-out-quart outline-none " +
+  "placeholder:text-muted-foreground " +
+  /* O hover existe porque um formulário do compositor tem doze campos em quatro
+     larguras diferentes, e sem ele a única forma de saber em qual o ponteiro
+     está é clicar. É a borda que responde, não o fundo: mudar o fundo de um
+     campo de texto no hover pisca a tela inteira ao correr o mouse por ela. */
+  "hover:border-ring/25 " +
   "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 " +
-  "disabled:cursor-not-allowed disabled:opacity-50";
+  "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-input";
 
 /** A classe crua, para os poucos lugares que precisam do elemento sem wrapper. */
 export const controlClass = cn(CONTROL, "h-9");
@@ -115,16 +121,22 @@ export function Checkbox({
   ...rest
 }: InputHTMLAttributes<HTMLInputElement> & { label: ReactNode; description?: ReactNode }) {
   return (
+    /* A caixa inteira vira uma linha de lista no hover, com o recuo negativo
+       devolvendo o `px-2` para que o texto continue alinhado com o resto da
+       coluna. Sem isso, o alvo de clique é do tamanho do rótulo e não parece
+       alvo de nada. */
     <label
       className={cn(
-        "flex items-start gap-2.5 text-sm",
-        rest.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+        "-mx-2 flex items-start gap-2.5 rounded-md px-2 py-1 text-sm transition-colors duration-200",
+        rest.disabled
+          ? "cursor-not-allowed opacity-50"
+          : "cursor-pointer hover:bg-accent/60 has-checked:bg-primary/5",
         className,
       )}
     >
       <input
         type="checkbox"
-        className="mt-0.5 size-4 shrink-0 cursor-[inherit] rounded accent-primary outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
+        className="mt-0.5 size-4 shrink-0 cursor-[inherit] rounded accent-primary outline-none transition-transform duration-150 focus-visible:ring-[3px] focus-visible:ring-ring/25 active:scale-90"
         {...rest}
       />
       <span className="min-w-0">

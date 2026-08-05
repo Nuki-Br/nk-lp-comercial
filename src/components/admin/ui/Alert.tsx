@@ -69,10 +69,14 @@ export function Alert({
   children?: ReactNode;
 }) {
   return (
+    /* `animate-rise` porque uma caixa de aviso quase sempre é a RESPOSTA a algo:
+       o retorno de um envio, um campo que faltou. Aparecendo de uma vez, ela
+       empurra o resto da tela para baixo sem que se perceba de onde veio — a
+       entrada de meio passo é o que liga a caixa ao clique que a produziu. */
     <div
       role={live ? "alert" : undefined}
       className={cn(
-        "flex items-start gap-2.5 rounded-md border px-3.5 py-3 text-sm leading-relaxed",
+        "flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm leading-relaxed animate-rise",
         TONES[tone],
         className,
       )}

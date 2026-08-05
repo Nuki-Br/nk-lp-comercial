@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview, 23 unpublish and delete
-size: 617
+verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview, 23 unpublish and delete, 24 the panel's motion and layout tokens
+size: 682
 ---
 
 # Decisions
@@ -40,6 +40,7 @@ the only thing it was for.
 | 21 | The panel gets its own token sheet, not a component library | current |
 | 22 | The composer previews the deck in an iframe, on its own route | current |
 | 23 | Unpublish is a fourth status; delete is the existing archive | current |
+| 24 | The panel's motion and its sticky ruler are tokens, not literals | current |
 
 ## 1. Split out of nk-lp
 
@@ -615,3 +616,67 @@ fourth value. A proposal that is unpublished keeps showing in the admin list —
 the checklist and pill on its detail page say why the link is down — while an
 archived one does not, because "come back later" and "gone" are different facts
 and the two screens now say so.
+
+## 24. The panel's motion and its sticky ruler are tokens, not literals
+
+**Context.** Two unrelated-looking complaints turned out to be the same one.
+
+The composer's sticky stack — the 3.5rem panel bar plus the 7rem title-and-tabs
+ruler — was written as four different literals in four files: `top-14` in the
+composer layout, `lg:top-[10.5rem]` in three sticky asides, `scroll-mt-[12rem]`
+in `src/components/admin/ui/Section.tsx`, and `calc(100dvh-13.75rem)` in
+`src/components/admin/SlidesWorkspace.tsx`. Nothing linked them. They agreed by
+memory, and the two that did not agree — 12rem against 10.5rem — differed for a
+reason nobody had written down. The same held for the column itself: the list
+opened with `py-8` and the composer with `py-6`, and `AdminTopBar` took the width
+as a prop whose default (`max-w-5xl`) no caller passed.
+
+Separately, the panel had no motion at all. Every state change was a jump: the
+tab underline blinked from one tab to another, an alert appeared fully formed,
+the theme button swapped one icon for another in the same frame in which the
+whole page changed colour. A tool that is crossed dozens of times per proposal
+reads as a series of reloads rather than one application.
+
+**Decision.**
+
+- **The stack is measured once.** `src/styles/admin.css` declares `--admin-bar`
+  and `--admin-ruler`; `--admin-sticky`, `--admin-anchor` and `--admin-workspace`
+  are arithmetic on them. Every sticky offset in the panel now reads a variable.
+- **The column is one component.** `src/components/admin/ui/Page.tsx` exports
+  `ADMIN_COLUMN` (the width plus the gutter, for full-bleed strips like the top
+  bar) and `PageShell` (the `<main>`, with the padding and the brand wash).
+  `AdminTopBar` lost its width prop.
+- **Motion is two curves and four animations,** declared in a second `@theme`
+  block in `admin.css`: `--ease-out-quart` for anything that moves or enters,
+  `--ease-out-back` for what appears in place, and `rise` / `fade` / `pop` /
+  `sweep` as the only entry animations the panel has. Components spend them as
+  ordinary Tailwind utilities (`animate-rise`, `ease-out-quart`).
+
+**Rationale.** Naming the two measured heights and deriving the rest is what
+makes "the ruler grew by a line" a one-line edit instead of a hunt. It is the
+same argument `docs/estimate.md` won for the estimate figures, applied to
+layout: the repo has already lost the same number in three places once.
+
+Four animations and two curves, rather than a per-component judgement call, is
+the part that keeps this from becoming decoration. A panel where each screen
+invents its own duration is how motion ages badly; a shared set means a new
+screen is either `rise` or it is not animated, and there is nothing to tune.
+
+The `@keyframes` live inside `@theme` on purpose — Tailwind only emits the ones
+whose `animate-*` utility is actually used, so an animation that stops being
+used stops shipping.
+
+**Consequence.** `prefers-reduced-motion` is handled in exactly one place, the
+blanket rule at the end of `admin.css`, and it now also covers `scroll-behavior`.
+Any animation added to the panel later is covered by it without having to
+declare anything — which is the only way that rule survives contact with a
+codebase.
+
+Two colour values moved as part of the same pass, and they are the reason the
+depth reads at all: `--card` in the dark theme (0.14 → 0.165) and `--background`
+in the light one (0.99 → 0.974). In both cases a card and its page were within a
+hair of each other and the border was doing all the work of separating them. The
+shadow ramp was rebuilt at the same time, in two layers instead of one, with a
+separate and much more opaque set under `.dark` — a single-layer shadow at 1px
+and 8px is a displaced grey border, not depth, and at the light theme's opacity
+it is invisible over black.

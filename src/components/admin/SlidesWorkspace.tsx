@@ -130,13 +130,13 @@ export function SlidesWorkspace({
      * peças de um lado, o que elas produzem do outro. As outras três abas já
      * eram assim — edita-se à esquerda e confere-se o resultado à direita — e a
      * prévia é exatamente o painel de consequência delas, em tamanho grande. */
-    <div className="flex flex-col gap-4 lg:grid lg:h-[calc(100dvh-13.75rem)] lg:min-h-[34rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
+    <div className="flex flex-col gap-4 animate-fade lg:grid lg:h-[var(--admin-workspace)] lg:min-h-[34rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
       <form
         action={(formData) => {
           submittedPayload.current = String(formData.get("state") ?? "");
           action(formData);
         }}
-        className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-xs"
+        className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm"
       >
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="state" value={payload} />
@@ -186,9 +186,16 @@ export function SlidesWorkspace({
             Visão geral já a deixou para trás, e o fio sozinho separa igual. */}
         <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2.5">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            {/* O ponto laranja é a única coisa na tela que diz "há trabalho não
+                salvo aqui", e ele aparece em resposta a um clique em qualquer
+                lugar do rail. Escalando de zero, o olho o encontra no canto
+                inferior sem ter de procurá-lo. */}
             <span
               aria-hidden="true"
-              className={cn("size-1.5 rounded-full", dirty ? "bg-warning" : "bg-transparent")}
+              className={cn(
+                "size-1.5 rounded-full transition-[scale,background-color] duration-300 ease-out-back",
+                dirty ? "scale-100 bg-warning" : "scale-0 bg-transparent",
+              )}
             />
             {dirty ? "Alterações não salvas" : `${activeCount} de ${rows.length} slides ativos`}
           </p>

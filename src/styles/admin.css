@@ -26,7 +26,11 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.99 0 0);
+  /* 0.99 → 0.974. O card é branco puro, e sobre um fundo quase branco a única
+     coisa que o separava era a borda — a mesma queixa que o `--card` do tema
+     escuro resolveu subindo. Um cinza de verdade atrás dá ao branco do card o
+     trabalho de ser a superfície elevada, que é o que ele é. */
+  --background: oklch(0.974 0 0);
   --foreground: oklch(0 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0 0 0);
@@ -65,22 +69,55 @@
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  --radius: 0.5rem;
+  --radius: 0.625rem;
 
-  --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.09);
-  --shadow-xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.09);
-  --shadow-sm: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 1px 2px -1px hsl(0 0% 0% / 0.18);
-  --shadow: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 1px 2px -1px hsl(0 0% 0% / 0.18);
-  --shadow-md: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 2px 4px -1px hsl(0 0% 0% / 0.18);
-  --shadow-lg: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 4px 6px -1px hsl(0 0% 0% / 0.18);
-  --shadow-xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 8px 10px -1px hsl(0 0% 0% / 0.18);
-  --shadow-2xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.45);
+  /* Sombra em DUAS camadas — um contato curto e opaco, e um halo largo e
+     transparente. Uma camada só é a assinatura de painel administrativo dos anos
+     2010: a mesma opacidade a 1px e a 8px dá uma borda cinza deslocada, não
+     profundidade. A escala inteira compartilha o mesmo par; o que cresce é a
+     distância, não a força. */
+  --shadow-2xs: 0 1px 1px 0 hsl(0 0% 0% / 0.04);
+  --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.05), 0 1px 1px -0.5px hsl(0 0% 0% / 0.04);
+  --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.07), 0 1px 2px -1px hsl(0 0% 0% / 0.06);
+  --shadow: 0 2px 6px -1px hsl(0 0% 0% / 0.08), 0 1px 3px -1.5px hsl(0 0% 0% / 0.06);
+  --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.09), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
+  --shadow-lg: 0 12px 28px -8px hsl(0 0% 0% / 0.14), 0 4px 8px -4px hsl(0 0% 0% / 0.07);
+  --shadow-xl: 0 24px 48px -12px hsl(0 0% 0% / 0.18), 0 8px 16px -8px hsl(0 0% 0% / 0.1);
+  --shadow-2xl: 0 32px 64px -16px hsl(0 0% 0% / 0.28);
+
+  /* A névoa da marca no topo da coluna. É um `background-image` do `<main>` do
+     painel, não do `<body>`: o login tem enquadramento próprio e fica de fora.
+     Uma variável e não a receita inteira na classe porque claro e escuro pedem
+     luminosidades diferentes do MESMO verde — no preto, o tom de `--primary`
+     (0.5095) some antes de chegar a ser um brilho. */
+  --page-wash: radial-gradient(
+    72rem 30rem at 50% -16rem,
+    oklch(0.5095 0.0863 194.7841 / 0.11),
+    transparent 70%
+  );
+
+  /* ── As réguas grudentas, em um lugar só ──────────────────────────────────
+     Estas quatro medidas descreviam a mesma pilha em quatro arquivos, como
+     `top-[10.5rem]`, `scroll-mt-[12rem]` e `calc(100dvh-13.75rem)`. Encostar
+     uma delas exigia lembrar das outras três, e ninguém lembra. Agora a barra e
+     a régua do compositor são os dois números medidos; o resto é aritmética. */
+  --admin-bar: 3.5rem; /* a barra do painel — `h-14` */
+  --admin-ruler: 7rem; /* título da proposta + abas, no compositor */
+  --admin-sticky: calc(var(--admin-bar) + var(--admin-ruler));
+  /* Onde uma âncora (`#senha`) tem de parar para não ficar sob a régua. */
+  --admin-anchor: calc(var(--admin-sticky) + 1.5rem);
+  /* A aba Slides ocupa a janela menos a pilha grudenta e o `py-8` do `<main>`. */
+  --admin-workspace: calc(100dvh - var(--admin-sticky) - 4rem);
 }
 
 .dark {
   --background: oklch(0 0 0);
   --foreground: oklch(1 0 0);
-  --card: oklch(0.14 0 0);
+  /* 0.14 → 0.165. Sobre o preto puro, e com a sombra abaixo valendo quase nada
+     no escuro, a única coisa que separava um card do fundo era a borda — e uma
+     tela de seis cards virava seis retângulos desenhados a fio. O card agora se
+     separa por luminosidade, que é como o olho lê profundidade. */
+  --card: oklch(0.165 0 0);
   --card-foreground: oklch(1 0 0);
   --popover: oklch(0.18 0 0);
   --popover-foreground: oklch(1 0 0);
@@ -112,6 +149,25 @@
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(0.32 0 0);
   --sidebar-ring: oklch(0.72 0 0);
+
+  /* Preto sobre preto não faz sombra. No escuro a mesma escala tem de ser bem
+     mais opaca só para existir — abaixo de 0.4 ela é indistinguível de não a
+     ter, e é por isso que painéis escuros costumam abandonar a sombra e ficar
+     chapados. */
+  --shadow-2xs: 0 1px 1px 0 hsl(0 0% 0% / 0.3);
+  --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.4), 0 1px 1px -0.5px hsl(0 0% 0% / 0.3);
+  --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.5), 0 1px 2px -1px hsl(0 0% 0% / 0.4);
+  --shadow: 0 2px 6px -1px hsl(0 0% 0% / 0.55), 0 1px 3px -1.5px hsl(0 0% 0% / 0.4);
+  --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.6), 0 2px 4px -2px hsl(0 0% 0% / 0.45);
+  --shadow-lg: 0 12px 28px -8px hsl(0 0% 0% / 0.7), 0 4px 8px -4px hsl(0 0% 0% / 0.5);
+  --shadow-xl: 0 24px 48px -12px hsl(0 0% 0% / 0.75), 0 8px 16px -8px hsl(0 0% 0% / 0.55);
+  --shadow-2xl: 0 32px 64px -16px hsl(0 0% 0% / 0.85);
+
+  --page-wash: radial-gradient(
+    72rem 30rem at 50% -16rem,
+    oklch(0.72 0.0963 194.7841 / 0.1),
+    transparent 70%
+  );
 }
 
 @theme inline {
@@ -170,6 +226,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
 
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
@@ -179,6 +236,98 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
+}
+
+/* ============================================================================
+   Movimento.
+   ============================================================================
+
+   Um segundo bloco `@theme`, e NÃO `inline`: `@keyframes` declarado aqui dentro
+   só é emitido quando a utilidade `animate-*` correspondente é usada em algum
+   componente, que é o que impede esta folha de carregar quatro animações mortas.
+
+   Duas curvas, e só duas. `out-quart` é a de tudo que entra ou se move — sai
+   rápido e assenta devagar, que é o que faz uma transição parecer curta sem ser
+   brusca. `out-back` passa um fio do destino e volta, e existe só para o que
+   "aparece do nada": pílula copiada, menu da conta. Usá-la em movimento de
+   layout dá a elasticidade de apresentação que envelhece mal numa ferramenta que
+   se usa o dia inteiro.
+
+   As durações vivem nas utilidades (`duration-150`, `duration-200`), não aqui:
+   é lá que se lê quanto tempo um hover demora, junto do hover.
+
+   `prefers-reduced-motion` não precisa saber de nada disto — a regra geral no
+   fim deste arquivo zera duração de animação E de transição com `!important`,
+   então toda animação daqui já nasce coberta. */
+@theme {
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.32, 0.64, 1);
+
+  /* Entrada de bloco: sobe meio passo enquanto aparece. O `both` segura o
+     estado inicial antes do primeiro frame — sem ele o conteúdo pisca opaco e
+     depois anima. */
+  --animate-rise: rise 420ms var(--ease-out-quart) both;
+  --animate-fade: fade 260ms var(--ease-out-quart) both;
+  /* Para o que troca no lugar: "Copiar" → "Copiado", o menu da conta abrindo. */
+  --animate-pop: pop 200ms var(--ease-out-back) both;
+  /* Barras de proporção: crescem da esquerda em vez de já estarem lá. */
+  --animate-sweep: sweep 620ms var(--ease-out-quart) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 0.625rem;
+    }
+    to {
+      opacity: 1;
+      translate: none;
+    }
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      scale: 0.94;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  @keyframes sweep {
+    from {
+      scale: 0 1;
+    }
+    to {
+      scale: 1 1;
+    }
+  }
+}
+
+/* A névoa da marca, aplicada ao `<main>` das telas autenticadas.
+ *
+ * Uma utilidade e não uma regra no `body`: o login mora sob o MESMO root layout
+ * e tem enquadramento próprio — a coluna verde com grade e brilho. Duas fontes
+ * de atmosfera na mesma tela é uma a mais.
+ *
+ * `fixed` porque o gradiente é ambiente, não conteúdo: rolando a página ele fica
+ * onde está, em vez de subir junto e deixar a tela chapada no primeiro rolar. O
+ * centro em `-16rem` deixa o núcleo fora da tela, então o que se vê já é a parte
+ * fraca — é o que impede a névoa de virar uma mancha com contorno. */
+@utility page-wash {
+  background-image: var(--page-wash);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 @layer base {
@@ -199,10 +348,23 @@
     color-scheme: dark;
   }
 
+  /* A lista de conferência do painel de envio aponta para `#senha` duas telas
+     abaixo. Sem isto o salto é instantâneo e o vendedor perde de onde veio; com
+     isto o `scroll-mt` da `Section` mostra a seção deslizando para debaixo da
+     régua, que é a mesma coisa que ele veria se tivesse rolado. */
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    /* O painel tem duas colunas que rolam por dentro (o rail de slides e a
+       prévia) mais a página. Três barras de rolagem nativas gordas competindo
+       com o conteúdo é o que faz uma tela densa parecer bagunçada. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
   }
 
   /* Uma folha só do painel pode se dar ao luxo de estilizar elementos nus: não
@@ -217,32 +379,36 @@
      `@starting-style` é o estado de onde a abertura parte. */
   dialog {
     opacity: 0;
-    scale: 0.98;
+    scale: 0.97;
+    translate: 0 0.5rem;
     transition:
-      opacity 150ms ease,
-      scale 150ms ease,
-      overlay 150ms ease allow-discrete,
-      display 150ms ease allow-discrete;
+      opacity 180ms var(--ease-out-quart),
+      scale 180ms var(--ease-out-quart),
+      translate 180ms var(--ease-out-quart),
+      overlay 180ms var(--ease-out-quart) allow-discrete,
+      display 180ms var(--ease-out-quart) allow-discrete;
   }
 
   dialog[open] {
     opacity: 1;
     scale: 1;
+    translate: none;
   }
 
   @starting-style {
     dialog[open] {
       opacity: 0;
-      scale: 0.98;
+      scale: 0.97;
+      translate: 0 0.5rem;
     }
   }
 
   dialog::backdrop {
     opacity: 0;
     transition:
-      opacity 150ms ease,
-      overlay 150ms ease allow-discrete,
-      display 150ms ease allow-discrete;
+      opacity 180ms var(--ease-out-quart),
+      overlay 180ms var(--ease-out-quart) allow-discrete,
+      display 180ms var(--ease-out-quart) allow-discrete;
   }
 
   dialog[open]::backdrop {
@@ -255,7 +421,14 @@
     }
   }
 
+  /* Cobre TUDO que este arquivo e os componentes acrescentam: as animações de
+     entrada, os hovers que levantam, a régua de abas que desliza. Uma animação
+     nova no painel não precisa lembrar de se declarar aqui — ela já está. */
   @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
     *,
     *::before,
     *::after,
@@ -263,6 +436,7 @@
     dialog::backdrop {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }

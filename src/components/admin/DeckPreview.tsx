@@ -93,7 +93,7 @@ export function DeckPreview({
   return (
     <div
       className={cn(
-        "flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-xs",
+        "flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm",
         className,
       )}
     >
@@ -110,11 +110,11 @@ export function DeckPreview({
               aria-pressed={device === key}
               onClick={() => setDevice(key)}
               className={cn(
-                "rounded-[0.3125rem] px-2.5 py-1 text-xs font-medium transition-colors outline-none",
-                "focus-visible:ring-[3px] focus-visible:ring-ring/25",
+                "rounded-[0.3125rem] px-2.5 py-1 text-xs font-medium outline-none",
+                "transition-colors duration-200 focus-visible:ring-[3px] focus-visible:ring-ring/25",
                 device === key
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+                  ? "bg-secondary text-secondary-foreground shadow-2xs"
+                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
               )}
             >
               {DEVICES[key].label}
@@ -123,39 +123,67 @@ export function DeckPreview({
         </div>
 
         {stale && (
-          <p className="hidden min-w-0 truncate text-xs text-warning sm:block">
+          <p className="hidden min-w-0 truncate text-xs text-warning animate-fade sm:block">
             Prévia desatualizada — salve para atualizar.
           </p>
         )}
 
         <div className="ml-auto flex items-center gap-1">
+          {/* A seta gira meia volta no hover. O botão é o único da faixa cuja
+              consequência é invisível — a moldura repinta o mesmo deck — e o
+              giro é o que confirma que o clique foi o de recarregar. */}
           <Button
             variant="ghost"
             size="sm"
+            className="group"
             onClick={() => {
               setLoaded(false);
               frameRef.current?.contentWindow?.location.replace(src);
             }}
           >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="size-3.5 transition-transform duration-500 ease-out-quart group-hover:rotate-180"
+            >
+              <path
+                d="M13.25 8a5.25 5.25 0 1 1-1.6-3.78M13.5 2.5v3h-3"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             Recarregar
           </Button>
           <a
             href={src}
             target="_blank"
             rel="noreferrer"
-            className={buttonClass("ghost", "sm")}
+            className={buttonClass("ghost", "sm", "group")}
             /* Abre a mesma rota fora da moldura — é onde dá para conferir a
                demo do módulo, que num retângulo de 700px não diz nada. */
           >
-            Abrir <span aria-hidden="true">↗</span>
+            Abrir
+            <span
+              aria-hidden="true"
+              className="transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-px"
+            >
+              ↗
+            </span>
             <span className="sr-only">em uma nova aba</span>
           </a>
         </div>
       </div>
 
       <div ref={shellRef} className="relative min-h-0 flex-1 overflow-hidden bg-muted/30">
+        {/* `transition-[width,height,translate]` e não só as duas medidas: a
+            margem que centra a moldura muda junto quando se troca de aparelho, e
+            sem a terceira o retângulo redimensiona suavemente enquanto SALTA
+            para o novo centro. */}
         <div
-          className="absolute top-0 left-0 origin-top-left overflow-hidden rounded-lg border border-border bg-card shadow-lg transition-[width,height] duration-200"
+          className="absolute top-0 left-0 origin-top-left overflow-hidden rounded-xl border border-border bg-card shadow-lg transition-[width,height,margin] duration-300 ease-out-quart"
           style={{
             width,
             height,

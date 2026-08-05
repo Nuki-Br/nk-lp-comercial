@@ -16,7 +16,10 @@ import { cn } from "@/lib/cn";
  *
  * `scroll-mt` é a faixa grudenta do compositor (barra do painel + título +
  * abas): sem ela, um `#senha` vindo do painel de envio para embaixo do cabeçalho
- * e a seção some justamente na hora em que se clicou nela. */
+ * e a seção some justamente na hora em que se clicou nela. A medida é
+ * `--admin-anchor`, calculada em `admin.css` a partir da altura da barra e da
+ * régua — era um `12rem` cravado aqui, que só por sorte batia com o `10.5rem`
+ * cravado nos três painéis grudentos. */
 export function Section({
   id,
   title,
@@ -35,7 +38,8 @@ export function Section({
     <section
       id={id}
       className={cn(
-        "grid scroll-mt-[12rem] gap-x-10 gap-y-4 border-t border-border pt-6 xl:grid-cols-[13rem_minmax(0,1fr)]",
+        "grid scroll-mt-[var(--admin-anchor)] gap-x-10 gap-y-4 border-t border-border pt-6",
+        "xl:grid-cols-[13rem_minmax(0,1fr)]",
         className,
       )}
     >

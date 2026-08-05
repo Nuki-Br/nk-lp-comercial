@@ -23,9 +23,15 @@ export function StatTile({
   className?: string;
 }) {
   return (
+    /* O tile levanta um pixel no hover. Ele não é clicável, e é justamente por
+       isso que a resposta é mínima: o suficiente para o ponteiro saber em qual
+       dos quatro está pousado ao comparar dois números, e pouco o bastante para
+       não prometer um clique que não existe. */
     <div
       className={cn(
-        "flex flex-col gap-1 rounded-lg border border-border bg-card px-4 py-3.5 shadow-xs",
+        "group flex flex-col gap-1 rounded-xl border border-border bg-card px-4 py-3.5 shadow-sm",
+        "transition-[box-shadow,border-color,translate] duration-200 ease-out-quart",
+        "hover:-translate-y-px hover:border-ring/20 hover:shadow-md",
         className,
       )}
     >
@@ -44,12 +50,24 @@ export function StatTile({
     de chart, e uma div com `width` em porcentagem diz o mesmo — num markup que
     um leitor de tela lê e uma impressora imprime.
 
-    `aria-hidden` porque o número ao lado é o mesmo fato. */
+    `aria-hidden` porque o número ao lado é o mesmo fato.
+
+    A barra CRESCE da esquerda ao entrar (`animate-sweep`, com `origin-left`).
+    Uma lista de seis barras já desenhadas obriga a comparar seis comprimentos
+    parados; crescendo juntas, a mais longa se declara sozinha no meio da
+    animação. É a única coisa que uma biblioteca de gráfico daria aqui, e são
+    duas classes. */
 export function ShareBar({ share, className }: { share: number; className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn("h-1.5 min-w-[2px] rounded-full bg-primary", className)}
+      className={cn(
+        "h-1.5 min-w-[2px] origin-left rounded-full bg-primary animate-sweep",
+        /* A largura também transiciona: nas telas em que o número muda sem
+           recarregar, a barra acompanha em vez de saltar. */
+        "transition-[width] duration-500 ease-out-quart",
+        className,
+      )}
       style={{ width: `${Math.round(share * 100)}%` }}
     />
   );

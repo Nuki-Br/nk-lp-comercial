@@ -134,7 +134,7 @@ export function DeleteProposalForm({ id, title }: { id: string; title: string })
           parágrafo, exatamente como "Dados" e "Senha" ao lado dele: a única
           pista de que isto é diferente era a cor do próprio botão, tarde
           demais para quem só está passando o olho pela tela. */}
-      <div className="flex flex-col items-start gap-3 rounded-md border border-destructive/40 bg-destructive/8 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/8 px-4 py-3.5 transition-colors duration-200 hover:bg-destructive/12 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-prose text-[0.8125rem] leading-relaxed text-muted-foreground">
           O link para de abrir e a proposta some desta lista. O histórico de aberturas continua
           guardado.
@@ -150,7 +150,7 @@ export function DeleteProposalForm({ id, title }: { id: string; title: string })
 
       <dialog
         ref={dialog}
-        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-border bg-card p-0 text-card-foreground shadow-xl backdrop:bg-black/50 backdrop:backdrop-blur-sm"
+        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl border border-border bg-card p-0 text-card-foreground shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm"
       >
         <form action={action} className="flex flex-col">
           <input type="hidden" name="id" value={id} />
@@ -171,7 +171,7 @@ export function DeleteProposalForm({ id, title }: { id: string; title: string })
             </div>
           )}
 
-          <div className="flex justify-end gap-2 rounded-b-lg border-t border-border bg-muted/50 px-5 py-3">
+          <div className="flex justify-end gap-2 rounded-b-xl border-t border-border bg-muted/50 px-5 py-3">
             <Button variant="ghost" onClick={() => dialog.current?.close()}>
               Cancelar
             </Button>

@@ -147,7 +147,10 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+    /* `animate-fade` e não `animate-rise`: a coluna carrega um `<aside>`
+       grudento, e uma animação de entrada que translada mexeria com ele durante
+       os 260ms. Opacidade sozinha não move nada de lugar. */
+    <div className="grid gap-6 animate-fade lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       {/* Antes de mandar, esta tela é um formulário; depois de mandar, é um
           relatório. A ordem segue a pergunta que se volta aqui para fazer — e a
           troca acontece uma vez por proposta, na abertura do cliente. O primeiro
@@ -169,7 +172,7 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
 
       {/* Grudento, como os painéis das outras abas: a resposta para "dá pra
           mandar isto agora?" não deveria depender de onde a rolagem parou. */}
-      <aside className="order-first lg:order-none lg:sticky lg:top-[10.5rem]">
+      <aside className="order-first lg:order-none lg:sticky lg:top-[var(--admin-sticky)]">
         <PublishPanel
           id={proposal.id}
           url={publicUrl}

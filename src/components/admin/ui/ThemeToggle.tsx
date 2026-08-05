@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { buttonClass } from "@/components/admin/ui/Button";
+import { cn } from "@/lib/cn";
 
 /* Claro / escuro.
  *
@@ -50,34 +51,58 @@ function setDark(next: boolean) {
 export function ThemeToggle() {
   const isDark = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
+  /* OS DOIS ÍCONES FICAM MONTADOS, e o que muda é qual deles está visível.
+   *
+   * Trocar um pelo outro com um ternário é uma troca instantânea: o sol some e a
+   * lua aparece no mesmo frame em que a página inteira troca de cor, e o botão
+   * é a única coisa na tela que não participa da transição que ele mesmo
+   * disparou. Empilhados no mesmo `grid`, um gira e encolhe enquanto o outro
+   * cresce, e o gesto acompanha a troca de tema.
+   *
+   * Nada disso muda o que um leitor de tela ouve: os dois são `aria-hidden`, e o
+   * fato continua no `aria-label` e no `aria-pressed` do botão. */
   return (
     <button
       type="button"
       onClick={() => setDark(!getSnapshot())}
       aria-pressed={isDark}
       aria-label={isDark ? "Mudar para o tema claro" : "Mudar para o tema escuro"}
-      className={buttonClass("ghost", "icon")}
+      className={buttonClass("ghost", "icon", "grid place-items-center")}
     >
-      {isDark ? (
-        <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className="size-4">
-          <circle cx="8" cy="8" r="3.25" stroke="currentColor" strokeWidth="1.5" />
-          <path
-            d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.95 3.05l-1.06 1.06M4.11 11.89l-1.06 1.06M12.95 12.95l-1.06-1.06M4.11 4.11 3.05 3.05"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
-      ) : (
-        <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className="size-4">
-          <path
-            d="M13.5 9.7A5.75 5.75 0 0 1 6.3 2.5a5.75 5.75 0 1 0 7.2 7.2Z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 16 16"
+        fill="none"
+        className={cn(
+          "col-start-1 row-start-1 size-4 transition-[rotate,scale,opacity] duration-300 ease-out-quart",
+          isDark ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0",
+        )}
+      >
+        <circle cx="8" cy="8" r="3.25" stroke="currentColor" strokeWidth="1.5" />
+        <path
+          d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.95 3.05l-1.06 1.06M4.11 11.89l-1.06 1.06M12.95 12.95l-1.06-1.06M4.11 4.11 3.05 3.05"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 16 16"
+        fill="none"
+        className={cn(
+          "col-start-1 row-start-1 size-4 transition-[rotate,scale,opacity] duration-300 ease-out-quart",
+          isDark ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100",
+        )}
+      >
+        <path
+          d="M13.5 9.7A5.75 5.75 0 0 1 6.3 2.5a5.75 5.75 0 1 0 7.2 7.2Z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
     </button>
   );
 }

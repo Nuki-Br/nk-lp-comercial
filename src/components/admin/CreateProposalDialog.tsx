@@ -26,7 +26,7 @@ export function CreateProposalDialog() {
 
       <dialog
         ref={dialog}
-        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-border bg-card p-0 text-card-foreground shadow-xl backdrop:bg-black/50 backdrop:backdrop-blur-sm"
+        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-xl border border-border bg-card p-0 text-card-foreground shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm"
       >
         <form action={formAction} className="flex flex-col">
           <div className="border-b border-border px-5 py-4">
@@ -66,7 +66,7 @@ export function CreateProposalDialog() {
             )}
           </div>
 
-          <div className="flex justify-end gap-2 rounded-b-lg border-t border-border bg-muted/50 px-5 py-3">
+          <div className="flex justify-end gap-2 rounded-b-xl border-t border-border bg-muted/50 px-5 py-3">
             <Button variant="ghost" onClick={() => dialog.current?.close()}>
               Cancelar
             </Button>
