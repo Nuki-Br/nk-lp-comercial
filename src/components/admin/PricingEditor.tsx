@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useActionState, useState } from "react";
+import { type ReactNode, useActionState, useRef, useState } from "react";
 import {
   type PricingState,
   savePricingAction,
@@ -8,12 +8,13 @@ import {
 import { UnpublishedChangesBanner } from "@/components/admin/ComposerTabs";
 import { Alert, AlertList } from "@/components/admin/ui/Alert";
 import { Badge } from "@/components/admin/ui/Badge";
+import { Button } from "@/components/admin/ui/Button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/admin/ui/Card";
 import { FieldLabel, Input, Textarea } from "@/components/admin/ui/Field";
 import { SubmitButton } from "@/components/admin/ui/SubmitButton";
 import { Switch } from "@/components/admin/ui/Switch";
 import { cn } from "@/lib/cn";
-import type { BillingCycle } from "@/lib/estimateTypes";
+import { type BillingCycle, ESTIMATE_RANGES } from "@/lib/estimateTypes";
 import { formatCurrency } from "@/lib/format";
 import { cycleForMonths, discountedMonthlyPrice } from "@/lib/pricing";
 
@@ -50,6 +51,42 @@ export type CycleDraft = {
 
 const EMPTY: PricingState = { error: null, notice: null, issues: [], warnings: [] };
 
+/** Um plano no estado do formulário: o rascunho mais uma chave de React.
+ *
+ * A chave existe porque a lista passou a poder encolher. Com `key={index}`,
+ * remover o plano do meio faz o React reaproveitar o `<textarea>` do removido
+ * para o seguinte — os valores até chegam certos, porque tudo aqui é
+ * controlado, mas o cursor e a rolagem de dentro do campo pulam de plano. Ela
+ * NÃO viaja para o servidor: `payloadOf` a descarta. */
+type PlanRow = PlanDraft & { key: string };
+
+const NEW_PLAN_NAME = "Novo plano";
+
+/** Um nome que ainda não está na lista.
+ *
+ * Não é capricho: dois planos com o mesmo nome já foram um bug esperando
+ * acontecer, e "adicionar plano" transformaria isso em um clique. O deck
+ * também deixou de usar o nome como chave, então isto é a segunda camada — a
+ * primeira é o vendedor ler "Novo plano 2" e renomear. */
+function uniquePlanName(rows: PlanRow[]): string {
+  const taken = new Set(rows.map((row) => row.n.trim()));
+  if (!taken.has(NEW_PLAN_NAME)) return NEW_PLAN_NAME;
+  for (let suffix = 2; suffix <= ESTIMATE_RANGES.plans.max + 1; suffix++) {
+    const candidate = `${NEW_PLAN_NAME} ${suffix}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+  return NEW_PLAN_NAME;
+}
+
+/** O que atravessa para a action. A chave de React fica para trás. */
+function payloadOf(plans: PlanRow[], cycles: CycleDraft[], maxMonths: number): string {
+  return JSON.stringify({
+    plans: plans.map(({ key: _key, ...plan }) => plan),
+    billingCycles: cycles,
+    maxMonths,
+  });
+}
+
 export function PricingEditor({
   id,
   initialPlans,
@@ -69,13 +106,41 @@ export function PricingEditor({
   /** O formulário de tarifas de imagem — outra action, mesma coluna. */
   children?: ReactNode;
 }) {
-  const [plans, setPlans] = useState(initialPlans);
+  const [plans, setPlans] = useState<PlanRow[]>(() =>
+    initialPlans.map((plan, index) => ({ ...plan, key: `plan-${index}` })),
+  );
   const [cycles, setCycles] = useState(initialCycles);
   const [maxMonths, setMaxMonths] = useState(initialMaxMonths);
   const [state, action] = useActionState<PricingState, FormData>(savePricingAction, EMPTY);
 
+  /* Contador de chaves, semeado depois das que já existem. Mesmo truque do
+     `nextTypeId` do editor da calculadora, e pelo mesmo motivo: uma chave
+     reaproveitada é um campo que troca de dono. */
+  const nextPlanKey = useRef(initialPlans.length);
+
   const patchPlan = (index: number, patch: Partial<PlanDraft>) => {
     setPlans((prev) => prev.map((p, i) => (i === index ? { ...p, ...patch } : p)));
+  };
+
+  const addPlan = () => {
+    if (plans.length >= ESTIMATE_RANGES.plans.max) return;
+    setPlans((prev) => [
+      ...prev,
+      {
+        key: `plan-${nextPlanKey.current++}`,
+        n: uniquePlanName(prev),
+        items: [],
+        monthlyPrice: 0,
+        /* Nunca em destaque ao nascer: o destaque é o card que o cliente lê
+           primeiro, e dois deles é uma escolha que ninguém fez. */
+        featured: false,
+      },
+    ]);
+  };
+
+  const removePlan = (index: number) => {
+    if (plans.length <= ESTIMATE_RANGES.plans.min) return;
+    setPlans((prev) => prev.filter((_, i) => i !== index));
   };
 
   const patchCycle = (index: number, patch: Partial<CycleDraft>) => {
@@ -87,7 +152,7 @@ export function PricingEditor({
       prospect reads first. */
   const referencePrice = (plans.find((p) => p.featured) ?? plans[0])?.monthlyPrice ?? 0;
 
-  const payload = JSON.stringify({ plans, billingCycles: cycles, maxMonths });
+  const payload = payloadOf(plans, cycles, maxMonths);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
@@ -113,7 +178,7 @@ export function PricingEditor({
                 <div className="grid gap-3 md:grid-cols-2">
                   {plans.map((plan, index) => (
                     <div
-                      key={`plan-${index}`}
+                      key={plan.key}
                       className={cn(
                         "flex flex-col gap-3 rounded-lg border p-4 transition-colors",
                         /* O plano destacado é o que o cliente lê primeiro, e é o
@@ -127,14 +192,26 @@ export function PricingEditor({
                         <span className="text-[0.6875rem] font-medium tracking-wide text-muted-foreground uppercase">
                           Plano {index + 1}
                         </span>
-                        <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                          Destaque
-                          <Switch
-                            checked={plan.featured}
-                            onChange={(featured) => patchPlan(index, { featured })}
-                            label={`Destacar o plano ${plan.n || index + 1}`}
-                          />
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                            Destaque
+                            <Switch
+                              checked={plan.featured}
+                              onChange={(featured) => patchPlan(index, { featured })}
+                              label={`Destacar o plano ${plan.n || index + 1}`}
+                            />
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removePlan(index)}
+                            disabled={plans.length <= ESTIMATE_RANGES.plans.min}
+                            aria-label={`Remover o plano ${plan.n || index + 1}`}
+                            className="size-7 hover:text-destructive"
+                          >
+                            <span aria-hidden="true">×</span>
+                          </Button>
+                        </div>
                       </div>
 
                       <div className="flex flex-wrap gap-3">
@@ -177,6 +254,17 @@ export function PricingEditor({
                       </FieldLabel>
                     </div>
                   ))}
+                </div>
+
+                <div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addPlan}
+                    disabled={plans.length >= ESTIMATE_RANGES.plans.max}
+                  >
+                    + Adicionar plano
+                  </Button>
                 </div>
               </fieldset>
 
@@ -264,8 +352,8 @@ export function PricingEditor({
 
             <CardFooter
               hint={
-                <span className="inline-flex items-center gap-2">
-                  Base do simulador
+                <span className="inline-flex flex-wrap items-center gap-2">
+                  {plans.length} {plans.length === 1 ? "plano" : "planos"} · base do simulador
                   <Badge tone="neutral" dot={false}>
                     {formatCurrency(referencePrice)}/mês
                   </Badge>
@@ -320,7 +408,7 @@ function ClientView({
   maxMonths,
   previewHref,
 }: {
-  plans: PlanDraft[];
+  plans: PlanRow[];
   cycles: CycleDraft[];
   maxMonths: number;
   previewHref: string;
@@ -391,7 +479,7 @@ function ClientView({
                 const final = discountedMonthlyPrice(plan.monthlyPrice, active.discount);
                 return (
                   <li
-                    key={`view-${index}`}
+                    key={plan.key}
                     className={cn(
                       "flex items-baseline justify-between gap-3 rounded-md border px-3 py-2",
                       plan.featured ? "border-primary/40 bg-primary/5" : "border-border",

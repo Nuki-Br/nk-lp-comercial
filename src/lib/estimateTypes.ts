@@ -76,6 +76,13 @@ export const ESTIMATE_RANGES = {
       desenha uma pill por valor deste intervalo, então mexer aqui basta. */
   variants: { min: 1, max: 5 },
   unitTypes: { min: 1, max: 6 },
+  /** Quantos cards de preço o slide de planos aceita. O teto era um literal
+      dentro do schema Zod da action; ele subiu para cá quando o compositor
+      ganhou "adicionar plano" e passou a precisar do mesmo número para desligar
+      o botão. Um teto escrito em dois lugares é um teto que diverge — e o piso
+      não é 0 porque uma proposta sem plano nenhum abre o slide de preços sem
+      card de preço, que é o que o `no-plans` do validador já avisa. */
+  plans: { min: 1, max: 6 },
   dryOptions: { min: 1, max: 6 },
   wetOptions: { min: 1, max: 8 },
   baseImagePrice: { min: 1, max: 9999 },

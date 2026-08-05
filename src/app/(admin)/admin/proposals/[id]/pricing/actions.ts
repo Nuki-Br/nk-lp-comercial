@@ -40,7 +40,11 @@ const pricingState = z.object({
         featured: z.boolean(),
       }),
     )
-    .max(6),
+    /* Teto compartilhado com o botão "adicionar plano" do compositor. Sem piso
+       de propósito: zero planos é aceito aqui e o `no-plans` do validador
+       explica a consequência em uma frase que um vendedor entende, enquanto um
+       `.min(1)` devolveria o "confira os campos" genérico. */
+    .max(ESTIMATE_RANGES.plans.max),
   billingCycles: z
     .array(
       z.object({

@@ -2,7 +2,7 @@
 audience: human
 status: current
 verified_against: src/app/(admin)/admin/**, src/components/admin/{SlidesWorkspace,PricingEditor,EstimateEditor}.tsx, src/server/proposals/config.ts, src/server/tracking/readout.ts
-size: 165
+size: 170
 ---
 
 # Montando uma proposta no /admin
@@ -81,6 +81,11 @@ exatamente o que você quer.
 meses e ele mostra em que ciclo aquilo cai e por quanto sai cada plano — a mesma
 conta que o cliente vai ver, atualizada enquanto você digita. Se o número ali
 não é o que você quer dizer na reunião, ainda dá tempo.
+
+**Dá pra ter mais de um plano.** "+ Adicionar plano" cria um card novo (até seis)
+e o `×` no canto do card tira. O último não sai: uma proposta sem plano nenhum
+abre o slide de preços sem preço nenhum. O plano em **Destaque** é o que o
+cliente lê primeiro e o que o painel da direita usa de base.
 
 **O desconto se digita em porcentagem.** Escreva `10` para dez por cento. Ao lado
 do campo aparece quanto a mensalidade vira — confira ali antes de salvar, é o

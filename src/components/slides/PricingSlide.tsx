@@ -51,8 +51,17 @@ export function PricingSlide({ node, estimate }: { node: PricingNode; estimate: 
           {estimate.plans.map((p, i) => {
             const finalMonthlyPrice = discountedMonthlyPrice(p.monthlyPrice, cycle.discount);
             const subtotal = (months[i] ?? 0) * finalMonthlyPrice;
+            /* Chave por POSIÇÃO, não pelo nome. O compositor agora adiciona
+               planos, então dois cards com o mesmo nome deixaram de ser
+               hipótese — e por posição um plano renomeado mantém o mesmo nó,
+               que é o que o observer de `.reveal` precisa para não perder o
+               `is-visible` de um card já revelado. `months[i]` já indexava por
+               posição. */
             return (
-              <article className={`plan reveal${p.featured ? " is-featured" : ""}`} key={p.n}>
+              <article
+                className={`plan reveal${p.featured ? " is-featured" : ""}`}
+                key={`plan-${i}`}
+              >
                 <span className="n">{p.n}</span>
                 <ul>
                   {p.items.map((it) => (

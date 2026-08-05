@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: package.json scripts, ADR 7 and ADR 12, src/server/**/*.test.ts
-size: 265
+size: 269
 ---
 
 # Testing
@@ -235,6 +235,10 @@ window, and confirm each change reached `/p/[slug]`:
       a leftover button would scroll to nothing
 - [ ] A changed plan price and cycle discount show; a discount typed as `10`
       reads as −10%, never −1000%
+- [ ] An added plan reaches the published deck as a card of its own; removing it
+      takes the card away. The floor holds at one plan and the ceiling at six —
+      and after removing the plan in the MIDDLE, the surviving cards still carry
+      their own price and items, which is what the row keys exist for
 - [ ] Planos e preços: dragging the months slider in "O que o cliente vê" crosses
       each `minMonths` floor at the right month and quotes the same price the
       published deck does at that month — the panel runs `cycleForMonths`, so a
