@@ -341,29 +341,37 @@ export function CalculatorSlide({
           <div className="calc-grid reveal">
             {/* ============ INPUTS ============ */}
             <div className="calc-inputs">
-              {/* Presets de porte — substituem o estado inteiro da calculadora */}
-              <div className="calc-field calc-presets">
-                <label className="calc-label calc-label-sm">{labels.presets.label}</label>
-                <div
-                  className="calc-preset-list"
-                  role="radiogroup"
-                  aria-label={labels.presets.groupAria}
-                >
-                  {estimate.projectSizePresets.map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={activePresetId === preset.id}
-                      className={`calc-preset${activePresetId === preset.id ? " is-active" : ""}`}
-                      onClick={() => applyPreset(preset)}
-                    >
-                      <span className="calc-preset-name">{preset.name}</span>
-                      <span className="calc-preset-hint">{preset.hint}</span>
-                    </button>
-                  ))}
+              {/* Presets de porte — substituem o estado inteiro da calculadora.
+
+                  O bloco INTEIRO some quando a proposta não tem preset nenhum.
+                  O /admin pode podar a lista por cliente, e uma lista vazia
+                  renderizava um rótulo com um `radiogroup` vazio embaixo — um
+                  buraco na tela que não é opção de ninguém. Com os três presets
+                  padrão do /fast nada muda aqui. */}
+              {estimate.projectSizePresets.length > 0 && (
+                <div className="calc-field calc-presets">
+                  <label className="calc-label calc-label-sm">{labels.presets.label}</label>
+                  <div
+                    className="calc-preset-list"
+                    role="radiogroup"
+                    aria-label={labels.presets.groupAria}
+                  >
+                    {estimate.projectSizePresets.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={activePresetId === preset.id}
+                        className={`calc-preset${activePresetId === preset.id ? " is-active" : ""}`}
+                        onClick={() => applyPreset(preset)}
+                      >
+                        <span className="calc-preset-name">{preset.name}</span>
+                        <span className="calc-preset-hint">{preset.hint}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Bar global */}
               <div className="calc-global-bar">
