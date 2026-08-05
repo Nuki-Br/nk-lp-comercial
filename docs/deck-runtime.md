@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/components/deck/DeckBehaviors.tsx, src/components/slides/*.tsx, src/styles/*.css
-size: 182
+size: 199
 ---
 
 # Deck runtime
@@ -128,6 +128,27 @@ demo node survived — not off `demoUrl` being present. A deck whose demo was
 dropped would otherwise still render a button that scrolls to nothing. The
 precedence is `links` → demo → `learnMore`; `planner` and `personaliza` have
 `links`, so only `inspetor` reaches the demo branch.
+
+## PDF export
+
+`.pdf-download` (`src/components/deck/DownloadPdfButton.tsx`) calls
+`window.print()` — the browser's own "Save as PDF" destination does the export,
+so this needed no dependency (Rule 3). It renders unconditionally from `Deck.tsx`,
+same as `.keyboard-hint`, so it is present on `/fast`, `/p/[slug]` and
+`/preview/[id]` alike.
+
+The `@media print` block at the end of `deck.css` is the other half of that
+contract:
+
+- Hides `.progress-nav`, `.keyboard-hint`, `.pdf-download` and, per product
+  requirement, `.module-demo-slide` — the inspector iframe is never in the PDF.
+- Forces `.reveal` to `opacity: 1` — it starts at `0` and only flips on
+  `IntersectionObserver`, which a slide the visitor never scrolled to (or that
+  is printed cold, straight after load) never fires.
+- Forces `print-color-adjust: exact` so dark-tone sections keep their
+  background instead of printing white.
+- Breaks each `.slide` onto its own page (`break-before: page` on all but the
+  first) so the PDF reads one slide per page, not one continuous scroll.
 
 ## Styling
 

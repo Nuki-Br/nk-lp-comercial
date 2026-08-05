@@ -965,3 +965,42 @@
     animation: none;
   }
 }
+
+/* PRINT (PDF export) — triggered by `.pdf-download`'s window.print(). Cross-
+   cutting on purpose: it touches chrome owned by this file (.progress-nav,
+   .reveal, .slide) and one node owned by slides.css (.module-demo-slide), the
+   same way the reduced-motion block above already reaches into module-slide
+   selectors. Everything here is explicit rather than relying on the
+   max-width: 820px rules elsewhere coinciding with a narrow print page. */
+@media print {
+  .deck .progress-nav,
+  .deck .keyboard-hint,
+  .deck .pdf-download,
+  .deck .module-demo-slide {
+    display: none;
+  }
+  /* Without this, browsers drop background colors by default, and every
+     dark-tone section (cover, differentiators, pricing) prints white. */
+  .deck,
+  .deck * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* `.reveal` starts at opacity: 0 and only flips to .is-visible once
+     DeckBehaviors' IntersectionObserver fires — which never happens for a
+     slide the visitor scrolled past quickly or never reached before
+     printing. */
+  .deck .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .deck .slide {
+    min-height: 0;
+    padding: 32px 0;
+    break-inside: avoid;
+  }
+  .deck .slide:not(:first-of-type) {
+    break-before: page;
+  }
+}

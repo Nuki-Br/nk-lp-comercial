@@ -1,5 +1,6 @@
 import { DeckBehaviors } from "@/components/deck/DeckBehaviors";
 import { DeckNavigationProvider } from "@/components/deck/DeckNavigation";
+import { DownloadPdfButton } from "@/components/deck/DownloadPdfButton";
 import { EstimateProvider } from "@/components/deck/EstimateProvider";
 import { ProgressNav } from "@/components/deck/ProgressNav";
 import { Footer } from "@/components/layout/Footer";
@@ -53,6 +54,7 @@ export function Deck({
         <div className="keyboard-hint" aria-hidden="true">
           <RichText value={config.chrome.keyboardHint} />
         </div>
+        <DownloadPdfButton />
       </div>
     </DeckNavigationProvider>
   );
