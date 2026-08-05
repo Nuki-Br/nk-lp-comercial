@@ -2,7 +2,7 @@
 audience: both
 status: current
 verified_against: the stage files in this directory
-size: 110
+size: 107
 ---
 
 # Build stages
@@ -22,7 +22,7 @@ build's history.
 |---|---|---|---|
 | 0 | Commit the working tree | done | 5240a71 |
 | 1 | [Foundation](1-foundation.md) — `/fast`, `DeckConfig`, docs, tooling | **done** | 1ef10b6 |
-| 2 | [Proposals](2-proposals.md) — Supabase, `/admin` login, `/p/[slug]`, tracking | not started | — |
+| 2 | [Proposals](2-proposals.md) — Supabase, `/admin` login, `/p/[slug]`, tracking | **built, awaiting the authenticated walkthrough** | — |
 | 3 | [Composer](3-composer.md) — the editing UI and the tracking read-out | not started | — |
 
 Stage 1 merged to `main` as nine commits, fast-forward, `006c510..1ef10b6`. The

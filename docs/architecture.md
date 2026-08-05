@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/app/, src/components/, next.config.ts
-size: 110
+size: 194
 ---
 
 # Architecture
@@ -11,7 +11,7 @@ The system map. Deck internals are in `deck-runtime.md`; the math is in
 `estimate.md`; the route table is in `../AGENTS.md` Rule 4. This file is about
 what runs where and where the trust boundary sits.
 
-> Stage status: `stages/README.md`. Surfaces described here may not exist yet.
+> Stage status: `stages/README.md`. As of stage 2 every surface below exists.
 
 ## Three surfaces, two root layouts
 
@@ -20,16 +20,27 @@ src/app/
   favicon.ico              stays at the top level — the convention requires it
   (deck)/
     layout.tsx             ROOT #1 — html/body, Manrope, tokens + deck CSS, deck-root
-    fast/page.tsx          → /fast    code-driven, AccessGate, no database
+    fast/layout.tsx        AccessGate lives HERE, not in the root — see below
+    fast/page.tsx          → /fast    code-driven, no database
     p/[slug]/page.tsx      → /p/:slug DB-driven, server-verified password
+    p/[slug]/actions.ts    the unlock server action
   (admin)/
     layout.tsx             ROOT #2 — html/body, Manrope, tokens only
     admin/**               → /admin   Supabase Auth
   api/
-    p/[slug]/unlock        password → cookie
     p/[slug]/track         dwell flushes
 proxy.ts                   repo root. /admin only. Coarse. Not the boundary.
 ```
+
+**The unlock is a server action, not a route handler.** `api/p/[slug]/unlock`
+was planned and is not there: the gate is a form, a form posts to an action, and
+a route handler would have been a second way to do the same thing.
+
+**`AccessGate` is scoped to `/fast`.** It was in the root layout while `/fast`
+was the only route in the group; `/p/[slug]` joined that group in stage 2, and
+leaving it there would have put the Nuki team's shared password in front of every
+client link. `gate.css` stays in the root layout, because `ProposalGate` reuses
+the same `.gate*` markup and shares none of the logic. ADR 20.
 
 There is no `src/app/layout.tsx` and no `src/app/page.tsx`. `/` is a redirect in
 `next.config.ts`, which runs before filesystem routing — that is what lets both
@@ -151,4 +162,33 @@ Tracking keys on the **anchor id**, a stable string snapshotted into the row —
 not a foreign key to a slide record. Reordering a proposal then cannot
 misattribute a single millisecond of recorded attention.
 
-Details: `data-model.md`, `security.md`, `tracking.md` (written by stage 2).
+Details: `data-model.md`, `security.md`, `tracking.md`.
+
+## The server layer
+
+```
+src/server/
+  supabase/serverClient.ts   two factories: read-only for a render, mutable for an action
+  supabase/adminClient.ts    the secret key. Bypasses RLS. One caller in the public path
+  supabase/database.types.ts generated; excluded from Biome
+  auth/password.ts           scrypt hash / verify
+  auth/proposalSession.ts    HMAC sign / verify, and both cookie names
+  auth/requireAdmin.ts       getUser() in React cache(), reads admin_users
+  config/validate.ts         the validator that REJECTS
+  schemas/deckConfig.ts      zod over the stored JSONB, loose on purpose
+  proposals/dal.ts           THE BOUNDARY
+  proposals/access.ts        unlock, rate limit, session open
+  proposals/admin.ts         admin-side writes, including publish
+  tracking/record.ts         the RPC call and the bot filter
+  tracking/visitor.ts        the daily-rotating visitor hash
+```
+
+Every file opens with `import "server-only"`, which is **not** a dependency:
+Next's bundler aliases it to a copy it ships, and `next/types/global.d.ts`
+declares it. A `"use client"` module importing any of these fails the build with
+the import chain printed.
+
+`serverClient` is two functions rather than one with a flag. Swallowing a failed
+cookie write is right in a Server Component render, where cookies are read-only
+and the proxy has already refreshed, and is a silent intermittent logout
+anywhere else. Two names make that a choice you have to spell.

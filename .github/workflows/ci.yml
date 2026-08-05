@@ -4,6 +4,9 @@ name: CI
 # `build` roda separado porque só ele pega erro de rota/layout — a etapa 1
 # quebrou o build uma vez com um `page.tsx` sem root layout acima, e typecheck
 # passou.
+#
+# Depois do build vêm as duas asserções que mecanizam a promessa fundadora do
+# repositório. Ver docs/testing.md.
 on:
   push:
     branches: [main]
@@ -12,6 +15,23 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+
+    # Placeholders, não segredos. Desde a etapa 2 cada arquivo de src/server/
+    # lê sua variável NO CARREGAMENTO DO MÓDULO e estoura sem ela — de
+    # propósito, ver docs/deployment.md. Sem estes valores o build quebra no
+    # CI e o erro parece um bug de código.
+    #
+    # Valores falsos bastam porque toda rota que toca o banco é dinâmica: o
+    # build monta os módulos e nunca abre conexão. Se um dia alguma delas virar
+    # estática, o build passa a precisar de um banco de verdade — e é aqui que
+    # isso vai aparecer primeiro.
+    env:
+      SUPABASE_URL: https://placeholder.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_SECRET_KEY: sb_secret_ci_placeholder
+      PROPOSAL_COOKIE_SECRET: ci-placeholder-not-a-real-secret-000000
+      TRACKING_IP_SALT: ci-placeholder-not-a-real-salt-0000000
+
     steps:
       - uses: actions/checkout@v4
 
@@ -28,3 +48,16 @@ jobs:
       - run: npm run check
 
       - run: npm run build
+
+      # A chave secreta bypassa RLS. Se ela chegar no bundle do cliente, isso é
+      # incidente, não bug — e o único jeito de garantir que ninguém precise
+      # lembrar disso é falhar o CI.
+      #
+      # `!` invertido: `grep` sai 1 quando NÃO encontra, que aqui é o sucesso.
+      - name: A chave secreta não vazou pro cliente
+        run: |
+          ! grep -rq "SUPABASE_SECRET_KEY\|service_role" .next/static/
+
+      # Regra 2: zero requisições de terceiros. É a razão de este repositório
+      # existir. Ver ADR 2 e ADR 10.
+      - run: node scripts/check-no-third-party-origins.mjs

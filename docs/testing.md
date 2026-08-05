@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: package.json scripts, ADR 7 and ADR 12
-size: 145
+size: 213
 ---
 
 # Testing
@@ -33,8 +33,8 @@ is what makes its decision table testable at all.
 | `src/deck/defaults.ts` | JSON round trip; `resolve(base, null) === base`; `normalizeDeck` idempotence; disabled slides skipped by `anchorsOf`; orphan-demo drop; ordinal renumbering; arrays replace in `mergeEstimate`; `parseDeckOverride` never throws |
 | `src/server/auth/password.ts` | hash/verify round trip; wrong password fails; comparison is timing-safe |
 | `src/server/auth/proposalSession.ts` | valid cookie accepted; expired-by-1s rejected; one-byte-tampered rejected; proposal A's cookie rejected for proposal B |
-| `src/server/proposals/dal.ts` | the decision table `(row, cookie, now) → ok \| locked \| expired \| not-found`, fetcher injected |
-| `src/server/config/validate.ts` | rejects demo-without-module, total-without-calculator, negative price, discount ≥ 1 |
+| `src/server/proposals/dal.ts` | the decision table `(row, cookie, now) → ok \| locked \| expired \| not-found`, fetcher injected; drafts are not-found; a stale `access_epoch` locks out; `allowPriceOverride` is forced false; the `locked` result has exactly two keys |
+| `src/server/config/validate.ts` | rejects demo-without-module, total-without-calculator, negative price, discount ≥ 1 — and accepts the shipped default deck, which is what stops a validator that rejects everything from passing every other case |
 
 ## What is not tested, and why
 
@@ -52,20 +52,51 @@ posture: **RLS is defense in depth, not the primary control.** Public proposal
 reads never touch the anon key — they go through the DAL with the service key
 *after* cookie verification.
 
-`supabase/tests/rls.sql` is checked in to run by hand against a Supabase branch.
-It asserts that the `anon` role selects zero rows from `proposals` and errors on
-`proposal_access`. If RLS ever becomes the primary control, it needs a real
-harness and ADR 12 needs revisiting.
+`supabase/tests/rls.sql` is checked in to run by hand against a Supabase branch,
+because it needs `psql`. Four assertions, and the third is the one that
+exercises a POLICY rather than a grant:
+
+1. `anon` cannot reach a single `proposals` row.
+2. `anon` **errors** on `proposal_access` and on the tracking tables.
+3. A signed-in user with **no `admin_users` row** selects zero proposals.
+4. `anon` cannot execute `record_view_flush`.
+
+> The schema went further than this file originally anticipated. It revokes the
+> tables from `anon` outright, so the first assertion sees `permission denied`
+> rather than an empty set — strictly stronger, because it does not depend on a
+> policy being correct. The script accepts either and fails on data.
+
+The grant half of this was additionally verified over HTTP against the real
+project, which `scripts/db-smoke.mjs` now does on every run. The policy half —
+assertion 3 — has only ever been checked by reading. If RLS ever becomes the
+primary control, it needs a real harness and ADR 12 needs revisiting.
 
 ## Two CI assertions that mechanize the founding promise
 
+Both run in `.github/workflows/ci.yml`, after `npm run build`:
+
 ```bash
-grep -r "SUPABASE_SECRET_KEY\|service_role" .next/static/   # must find nothing
-node scripts/check-no-third-party-origins.mjs                # no non-allowlisted https:// in client chunks
+! grep -rq "SUPABASE_SECRET_KEY\|service_role" .next/static/   # must find nothing
+node scripts/check-no-third-party-origins.mjs                  # no third-party origin in client chunks
 ```
 
 The first proves the service key never reached a browser. The second proves Rule
-2 holds without anyone remembering to open a network tab.
+2 holds without anyone remembering to open a network tab: it greps the built
+client chunks for absolute origins and fails on anything not allowlisted, with a
+written reason per entry.
+
+**What the second one cannot do** is prove no request is made at runtime — a
+fetch to a computed URL is invisible to it. It closes the realistic hole,
+somebody adding an SDK whose origin lands in a bundle as a literal, not the
+adversarial one.
+
+**CI needs placeholder environment variables.** Every file in `src/server/` reads
+its variable at module load and throws without it, deliberately, so `npm run
+build` fails in CI with no `.env`. The workflow supplies obviously-fake values.
+They are enough only because every route that touches the database is dynamic —
+the build instantiates the modules and never opens a connection. If one of those
+routes ever becomes static, the build starts needing a real database, and this is
+where it will surface first.
 
 ---
 
@@ -140,15 +171,29 @@ The first item is the one that actually proves the trust boundary, and it is a
 one-liner:
 
 ```bash
-curl -s http://localhost:3000/p/<slug> | grep -c "1.599"   # must be 0
+curl -s http://localhost:3000/p/<slug> | grep -c "1.599"          # must be 0
+curl -s http://localhost:3000/p/<slug> | grep -ci "planejamento"  # must be 0
 ```
 
+> **Run the header and body checks against a production build.** In `next dev`,
+> Next overrides `Cache-Control` on every route — `/fast`, which is static and
+> cacheable in production, returns the same `no-cache, must-revalidate` string
+> there. A dev reading of that header proves nothing in either direction.
+
 - [ ] **Before unlocking**, the raw HTML contains no price and no slide copy
+- [ ] **…including the `<head>`.** Page metadata is shallow-merged, so a page
+      that does not override `description` and `openGraph` inherits the deck's
+      marketing copy from the `(deck)` root layout — which is why the second
+      grep above exists. It caught exactly this on its first run.
 - [ ] Wrong password rejected; correct password sets an **HttpOnly** cookie and
       the content appears
+- [ ] Failed attempts are rate limited: 8 per visitor or 60 per proposal in 15
+      minutes returns the "muitas tentativas" message
+- [ ] Every attempt takes ~300 ms, right and wrong alike
 - [ ] With `expires_at` in the past: expired view, and curl still shows nothing
 - [ ] A one-byte-tampered cookie is rejected
 - [ ] Proposal A's cookie presented for proposal B is rejected
+- [ ] Bumping `access_epoch` locks out an already-issued cookie
 - [ ] The rendered slide subset and order match the stored config
 - [ ] The progress nav has exactly the enabled dots; arrow keys walk exactly the
       enabled slides

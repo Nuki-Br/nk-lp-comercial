@@ -2,7 +2,7 @@
 audience: both
 status: current
 verified_against: next.config.ts, .env.example, supabase CLI 2.109.1
-size: 175
+size: 145
 ---
 
 # Deployment
@@ -52,7 +52,22 @@ Decide this before the proposal surface ships, not after.
 ## Migrations
 
 Files on disk, forward-only, one concern per file, **never edit an applied
-migration**.
+migration**. The Supabase CLI owns the timestamp — do not hand-name a file.
+
+```bash
+supabase migration new proposals_foundation
+supabase db push --db-url "$DIRECT_URL"
+supabase db lint --db-url "$DIRECT_URL" --level warning
+supabase gen types typescript --db-url "$DIRECT_URL" --schema public \
+  > src/server/supabase/database.types.ts
+```
+
+None of this needs OAuth, `supabase link`, or Docker. That matters: the Supabase
+**MCP server needs an interactive OAuth flow that a headless agent session cannot
+complete**, so no part of the build may depend on it.
+
+After applying, `node scripts/db-smoke.mjs` checks that every table is present
+and that the publishable key reaches none of them.
 
 ⚠ The connection string **must be percent-encoded**. Supabase-generated passwords
 routinely contain `@ : / ? #`, and a `db push` failing with an opaque parse error

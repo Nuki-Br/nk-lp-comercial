@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: the docs/ tree itself
-size: 120
+size: 104
 ---
 
 # Docs router
@@ -21,7 +21,7 @@ wins and the other is a bug.
 | touch pricing or image math | `estimate.md` |
 | touch auth, cookies, passwords, expiry | `security.md` |
 | add a table or column | `data-model.md` |
-| add or change tracking | `tracking.md` ¹ |
+| add or change tracking | `tracking.md` |
 | change deploy, env vars, redirects | `deployment.md` |
 | change deck copy or default prices | `content-guide.md` |
 | embed a module demo | `demo-embedding.md` (211 lines — load on demand) |
@@ -31,9 +31,9 @@ wins and the other is a bug.
 | make a factual claim about the product | `context/README.md` |
 | understand why something is the way it is | `decisions.md` |
 
-¹ Written by stage 2, alongside the tracking code itself. Absent until then —
-that is expected, not a gap. `security.md` and `data-model.md` were written at
-stage 2's design gate, before any SQL, which is why they arrived first.
+All three arrived with stage 2. `security.md` and `data-model.md` were written
+at its design gate, before any SQL; `tracking.md` came with the code it
+describes.
 
 Rules live in `../AGENTS.md`, not here. It holds no explanations by design.
 
@@ -90,6 +90,7 @@ README.md            this router
 architecture.md      system map: three surfaces, the trust boundary, data flow
 data-model.md        why each table and column is shaped the way it is
 security.md          auth, cookies, passwords, expiry, RLS posture
+tracking.md          what is collected, the three anti-double-count guards
 deck-runtime.md      slide contract + the DeckBehaviors DOM contract + CSS layers
 estimate.md          the pricing math and THE canonical numbers
 testing.md           test policy + the three manual checklists
