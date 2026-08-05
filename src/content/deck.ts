@@ -3,22 +3,51 @@
    e (b) contexto-de-produto-v2.md (§§ 1-12). Copy pode ser refinado pelo user;
    estrutura das seções serve como base. */
 
+import {
+  type BillingCycle,
+  materializeRooms,
+  type RoomAreaType,
+  type RoomConfig,
+  type RoomWeight,
+  type UnitTypeState,
+} from "@/lib/estimateTypes";
+
+/** Rótulo do ponto de cada seção no progress-nav, indexado pelo id da âncora.
+
+    Módulos não aparecem: o rótulo deles é o `title.strong` de `modules.ts`. */
+export const slideLabels: Record<string, string> = {
+  cover: "Capa",
+  problem: "O problema",
+  "what-is-nuki": "O que é a Nuki",
+  differentiators: "Diferenciais",
+  audience: "Pra quem serve",
+  cases: "Cases",
+  pricing: "Plano & contato",
+  calculator: "Estime o setup",
+  total: "Total estimado",
+};
+
+/** A ordem+rótulos que o `ProgressNav` ainda consome diretamente.
+
+    TRANSITÓRIO: `buildDefaultDeck()` passa a ser dono da ordem, e o `ProgressNav`
+    passa a receber `anchorsOf(config.slides)` por prop — aí este array sai e
+    `slideLabels` acima fica sendo a única fonte dos rótulos. Enquanto os dois
+    coexistem, `slideLabels` é a fonte de verdade dos textos; a ordem aqui tem
+    que bater com a do DOM ou os pontinhos andam pra trás. */
 export const deckNav = [
-  { id: "cover", label: "Capa" },
-  { id: "problem", label: "O problema" },
-  { id: "what-is-nuki", label: "O que é a Nuki" },
+  { id: "cover", label: slideLabels.cover },
+  { id: "problem", label: slideLabels.problem },
+  { id: "what-is-nuki", label: slideLabels["what-is-nuki"] },
   { id: "planner", label: "Planner" },
   { id: "personaliza", label: "Personaliza" },
   { id: "inspetor", label: "Inspetor" },
-  { id: "differentiators", label: "Diferenciais" },
-  { id: "audience", label: "Pra quem serve" },
-  { id: "cases", label: "Cases" },
-  /* Ordem tem que bater com a do DOM em src/app/page.tsx — pricing vem antes da
-     calculadora lá. Fora de ordem, os pontinhos do progresso andam pra trás. */
-  { id: "pricing", label: "Plano & contato" },
-  { id: "calculator", label: "Estime o setup" },
-  { id: "total", label: "Total estimado" },
-] as const;
+  { id: "differentiators", label: slideLabels.differentiators },
+  { id: "audience", label: slideLabels.audience },
+  { id: "cases", label: slideLabels.cases },
+  { id: "pricing", label: slideLabels.pricing },
+  { id: "calculator", label: slideLabels.calculator },
+  { id: "total", label: slideLabels.total },
+];
 
 export type ProblemCard = {
   step: string;
@@ -182,40 +211,26 @@ export const fitList = [
    Não é mais fonte primária — serve só de sanity check pros defaults.
    ============================================================ */
 
-/** Classe do ambiente decide qual multiplicador de opções usar. Áreas
-    molhadas (banho, cozinha, Área de Serviço) oferecem mais superfícies
-    personalizáveis do que secas (quartos, sala). */
-export type RoomAreaType = "seca" | "molhada";
-
-/** Categoria de "peso" visual do tile — 3 tiers só, pra ler à distância
-    sem virar um degradê contínuo difícil de decodificar. */
-export type RoomWeight = "light" | "medium" | "heavy";
-
-/** Configuração de um ambiente dentro de uma metragem. */
-export type RoomConfig = {
-  /** único por metragem: "quartos"/"banheiros" pros defaults, "custom-N" pros criados pelo user */
-  id: string;
-  name: string;
-  areaType: RoomAreaType;
-  weight: RoomWeight;
-  units: number;
-  components: number;
-  /** true = não pode ser removido nem tem nome/classe editáveis (defaults Quartos/Banheiros) */
-  locked?: boolean;
-};
-
-/** Ambientes impactados pelas variações extras da metragem — keyed pelo
-    ambient.id. Cada id marcado contribui com 1 unidade × img por variação
-    extra. Modelo simples que cobre "cozinha aberta", "1 quarto que vira
-    escritório", "banho reformulado" sem bundles fixos. */
-export type ImpactedRooms = Record<string, boolean>;
-
-export const noImpactedRooms = (): ImpactedRooms => ({});
+/* Os tipos e os clamps moram em `src/lib/estimateTypes.ts` — camada pura, pra
+   que `src/lib/estimate.ts` não precise importar de `content/` (seta invertida)
+   e pra que `CalculatorSlide` possa ler `ESTIMATE_RANGES` sem importar daqui.
+   Re-exportados pra que os consumidores de conteúdo continuem tendo um import só. */
+export type {
+  ImpactedRooms,
+  RoomAreaType,
+  RoomConfig,
+  RoomWeight,
+  UnitTypeState,
+} from "@/lib/estimateTypes";
+export { BASE_IMAGES_PER_ROOM_UNIT, ESTIMATE_RANGES } from "@/lib/estimateTypes";
 
 /** Ambientes com que toda metragem começa. Só Quartos + Banheiros — o
     resto o user adiciona via "+ Adicionar ambiente" digitando nome e
-    escolhendo seca/molhada. */
-export const buildDefaultRooms = (): RoomConfig[] => [
+    escolhendo seca/molhada.
+
+    DADO, não factory: precisa sobreviver ao round-trip JSON do `DeckConfig`.
+    Quem usa clona com `materializeRooms()`. */
+export const DEFAULT_ROOMS: readonly RoomConfig[] = [
   {
     id: "quartos",
     name: "Quartos",
@@ -237,8 +252,14 @@ export const buildDefaultRooms = (): RoomConfig[] => [
 ];
 
 /** Defaults aplicados a ambientes custom criados via "+ Adicionar". */
-export const CUSTOM_ROOM_DEFAULTS = {
-  weight: "medium" as RoomWeight,
+export type CustomRoomDefaults = {
+  weight: RoomWeight;
+  units: number;
+  components: number;
+};
+
+export const CUSTOM_ROOM_DEFAULTS: CustomRoomDefaults = {
+  weight: "medium",
   units: 1,
   components: 4,
 };
@@ -249,28 +270,18 @@ export const CUSTOM_ROOM_DEFAULTS = {
     editar depois nos controles do tile. Bate com a lista histórica de
     referência: Sala/Cozinha/Lavabo/Área de Serviço/Terraço. Cobre 3 molhadas +
     2 secas — as combinações mais comuns em apto residencial. */
-export const ROOM_PRESETS: readonly {
-  readonly name: string;
-  readonly areaType: RoomAreaType;
-}[] = [
+export type RoomPreset = {
+  name: string;
+  areaType: RoomAreaType;
+};
+
+export const ROOM_PRESETS: readonly RoomPreset[] = [
   { name: "Sala", areaType: "seca" },
   { name: "Lavabo", areaType: "molhada" },
   { name: "Cozinha", areaType: "molhada" },
   { name: "Área de Serviço", areaType: "molhada" },
   { name: "Terraço", areaType: "seca" },
 ];
-
-export type UnitTypeState = {
-  /** id estável pra React keys; muda por metragem, nunca reindex por posição */
-  id: number;
-  rooms: RoomConfig[];
-  variants: number;
-  impactedRooms: ImpactedRooms;
-};
-
-/** Imagens base por unidade de ambiente. Cada unidade é uma cena 3D própria:
-    2 quartos = 2 modelagens = 2 imagens base. */
-export const BASE_IMAGES_PER_ROOM_UNIT = 1;
 
 /* ------------------------------------------------------------------
    Presets de porte do empreendimento
@@ -290,10 +301,11 @@ export type ProjectSizePreset = {
   hint: string;
   dryOptions: number;
   wetOptions: number;
-  /** Factory: o state é mutável, cada aplicação precisa de objetos novos.
-      Atribui ids 1..N — a Calculadora reposiciona o contador de ids em cima
-      disso pra não colidir no "+ Adicionar" seguinte. */
-  buildUnitTypes: () => UnitTypeState[];
+  /** DADO, não factory — tem que sobreviver ao round-trip JSON do `DeckConfig`.
+      Traz ids 1..N; a Calculadora reposiciona o contador de ids em cima disso
+      pra não colidir no "+ Adicionar" seguinte, e clona com
+      `materializeUnitTypes()` antes de aplicar. */
+  unitTypes: UnitTypeState[];
 };
 
 /** Ambientes de preset são removíveis (sem `locked`) e repetições viram
@@ -351,7 +363,11 @@ const highEndRooms = (): RoomConfig[] => [
 /** Metragens de composição idêntica dentro de um preset — o vendedor
     diferencia depois. `variants` conta a planta base junto: base + N extras.
     Sem nenhum ambiente marcado como impactado as variações extras renderiam
-    0 imagens e os cards apareceriam vazios. */
+    0 imagens e os cards apareceriam vazios.
+
+    Helper de construção, avaliado UMA vez na carga do módulo: o que fica
+    exportado é dado puro. Chama `rooms()` por metragem, então cada uma sai com
+    seu próprio array — sem aliasing dentro do preset. */
 const sameUnitTypes = (
   count: number,
   rooms: () => RoomConfig[],
@@ -374,7 +390,7 @@ export const PROJECT_SIZE_PRESETS: readonly ProjectSizePreset[] = [
     wetOptions: 3,
     /* Terraço junto da Cozinha/Sala nos impactados: integrar ou fechar a
        varanda é a variação de planta clássica de studio. */
-    buildUnitTypes: () => sameUnitTypes(2, studioRooms, 2, ["cozinha-sala", "terraco"]),
+    unitTypes: sameUnitTypes(2, studioRooms, 2, ["cozinha-sala", "terraco"]),
   },
   {
     id: "standard",
@@ -382,7 +398,7 @@ export const PROJECT_SIZE_PRESETS: readonly ProjectSizePreset[] = [
     hint: "3 metragens · 7 ambientes",
     dryOptions: 3,
     wetOptions: 3,
-    buildUnitTypes: () => sameUnitTypes(3, standardRooms, 2, ["sala-de-estar", "cozinha"]),
+    unitTypes: sameUnitTypes(3, standardRooms, 2, ["sala-de-estar", "cozinha"]),
   },
   {
     id: "high-end",
@@ -390,7 +406,7 @@ export const PROJECT_SIZE_PRESETS: readonly ProjectSizePreset[] = [
     hint: "3 metragens · 8 ambientes",
     dryOptions: 3,
     wetOptions: 3,
-    buildUnitTypes: () => sameUnitTypes(3, highEndRooms, 3, ["sala-de-estar", "cozinha"]),
+    unitTypes: sameUnitTypes(3, highEndRooms, 3, ["sala-de-estar", "cozinha"]),
   },
 ];
 
@@ -403,49 +419,37 @@ export const ESTIMATE_DEFAULTS = {
   /** Valor em R$ da imagem de opção — recorte de material/acabamento sobre a
       imagem base, por isso mais barata. Mesmo painel escondido. */
   optionImagePrice: 28,
-  initialUnitTypes: (): UnitTypeState[] => [
+  /** DADO, não factory. Quem monta o state da calculadora clona com
+      `materializeUnitTypes()` — ver a nota de aliasing em `estimateTypes.ts`. */
+  initialUnitTypes: [
     {
       id: 1,
-      rooms: buildDefaultRooms(),
+      rooms: materializeRooms(DEFAULT_ROOMS),
       variants: 1,
-      impactedRooms: noImpactedRooms(),
+      impactedRooms: {},
     },
-  ],
+  ] as UnitTypeState[],
 };
 
-export const ESTIMATE_RANGES = {
-  units: { min: 0, max: 5 },
-  components: { min: 1, max: 15 },
-  /** Máximo 5 = planta base + 4 variações extras. Os presets param em 3; o
-      resto é folga pra configuração manual numa reunião. O seletor de variações
-      desenha uma pill por valor deste intervalo, então mexer aqui basta. */
-  variants: { min: 1, max: 5 },
-  unitTypes: { min: 1, max: 6 },
-  dryOptions: { min: 1, max: 6 },
-  wetOptions: { min: 1, max: 8 },
-  baseImagePrice: { min: 1, max: 9999 },
-  optionImagePrice: { min: 1, max: 999 },
-};
+/** Teto de meses do simulador de plano. Era `MAX_MONTHS` dentro do
+    `PricingSlide`; vem pra cá porque é um default de estimativa, e a etapa 1 o
+    move pra `EstimateConfig.maxMonths`. */
+export const MAX_MONTHS = 36;
 
 export type Plan = {
   n: string;
   items: string[];
-  /** Rótulo de exibição formatado (ex: "R$ 889/mês") */
-  priceLabel: string;
-  /** Valor mensal cru pra cálculos (soma × meses no simulador do CTA) */
+  /** Valor mensal cru. É a ÚNICA fonte do preço: o rótulo exibido é derivado
+      daqui via `formatCurrency` + `discountedMonthlyPrice`. O antigo
+      `priceLabel` duplicava este número numa string e ninguém renderizava —
+      um admin editando um campo e não o outro era bug garantido em pitch. */
   monthlyPrice: number;
   featured?: boolean;
 };
 
-/** Ciclo de cobrança — desconto aplicado sobre o preço mensal de cada plano.
-    `minMonths` é o piso de meses que ativa o ciclo: o simulador deriva o ciclo
-    dos meses contratados, então o valor precisa viver aqui junto do desconto. */
-export type BillingCycle = {
-  id: string;
-  label: string;
-  discount: number;
-  minMonths: number;
-};
+/* `BillingCycle` mora em `src/lib/estimateTypes.ts` — `src/lib/pricing.ts` opera
+   sobre ele. Re-exportado aqui pra manter o import único pros consumidores. */
+export type { BillingCycle } from "@/lib/estimateTypes";
 
 /** Descontos progressivos por ciclo. Sem trimestral — só semestral (−5%)
     e anual (−10%). Manter em ordem crescente de `minMonths`. */
@@ -462,7 +466,6 @@ export const plans: Plan[] = [
   {
     n: "Plano único",
     items: ["Planner", "Personaliza", "Inspetor", "Infraestrutura", "Suporte"],
-    priceLabel: "R$ 1.599/mês",
     monthlyPrice: 1599,
     featured: true,
   },

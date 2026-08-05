@@ -13,7 +13,7 @@ import {
   type RoomConfig,
   type RoomWeight,
   type UnitTypeState,
-} from "@/content/deck";
+} from "@/lib/estimateTypes";
 
 /** Contagem de imagens quebrada por tarifa. `total` é sempre base + option. */
 export type ImageMix = {

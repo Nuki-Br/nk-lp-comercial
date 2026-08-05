@@ -1,4 +1,4 @@
-import type { BillingCycle } from "@/content/deck";
+import type { BillingCycle } from "@/lib/estimateTypes";
 
 /** Preço mensal do plano já com o desconto do ciclo aplicado, arredondado.
     Usado pelo card de plano (PricingSlide) e pelo total consolidado (via
