@@ -1,8 +1,8 @@
 ---
 audience: both
 status: current
-verified_against: the stage files in this directory
-size: 107
+verified_against: the stage files in this directory, and git log 1ef10b6..4731d4b
+size: 154
 ---
 
 # Build stages
@@ -22,14 +22,61 @@ build's history.
 |---|---|---|---|
 | 0 | Commit the working tree | done | 5240a71 |
 | 1 | [Foundation](1-foundation.md) — `/fast`, `DeckConfig`, docs, tooling | **done** | 1ef10b6 |
-| 2 | [Proposals](2-proposals.md) — Supabase, `/admin` login, `/p/[slug]`, tracking | **built, awaiting the authenticated walkthrough** | — |
+| 2 | [Proposals](2-proposals.md) — Supabase, `/admin` login, `/p/[slug]`, tracking | **done** | 4731d4b |
 | 3 | [Composer](3-composer.md) — the editing UI and the tracking read-out | not started | — |
 
 Stage 1 merged to `main` as nine commits, fast-forward, `006c510..1ef10b6`. The
 route move, the estimate-defaults conversion and the `DeckConfig` layer are each
 their own commit, so `git show` on any one of them is reviewable on its own.
 
+Stage 2 landed as twelve commits, `1ef10b6..4731d4b`, one per work item. Five
+migrations, applied. `npm run check`, `npm run build` and 97 tests green; both CI
+assertions live in the workflow; `supabase/tests/rls.sql` run and passing 7/7;
+checklist A and checklist B walked end to end.
+
+**Three things it did not do, recorded here rather than discovered later:**
+
+- **Password recall through Supabase Vault is not built.** ADR 14 promises a
+  salesperson can re-read a proposal's password months later. The column
+  (`proposal_access.vault_secret_id`) exists and stays null: `vault.*` is outside
+  the exposed schema, so it needs a `public` wrapper function granted to
+  `service_role` only. The admin UI says so where a password is set, rather than
+  implying a recall that does not exist.
+- **"Exactly one tracking beacon per slide transition" was never observed.** The
+  ingest contract was verified end to end — three identical flushes, one applied,
+  totals exact — but an automated pane reports `visibilityState: hidden` and
+  `innerHeight: 0`, so the collector correctly accrues nothing and the observer
+  never fires. That item needs a human with a visible tab.
+- **`npm audit` reports high-severity advisories against `next@16.2.9`** and its
+  transitive `postcss` / `sharp`, including unauthenticated disclosure of
+  internal Server Function endpoints. None come from the three dependencies this
+  stage added. The fix is `next@16.3.0`, outside the pinned range, and it is a
+  deck-rendering risk — deliberately left as a decision, not taken quietly.
+
+## What stage 2 left for stage 3
+
+- **`config_override` is untouched.** Every proposal ships `{}`, so each one *is*
+  `buildDefaultDeck()`. Stage 3 is the first code to write into that column, and
+  `resolveDeckConfig` / `parseDeckOverride` already handle whatever it writes.
+- **`src/server/config/validate.ts` exists and rejects.** Call it before every
+  write. `normalizeDeck` is the tolerant half and must stay that way.
+- **`SLIDE_META` has never been read by anything.** It was built in stage 1 as
+  the composer's field schema (ADR 18) and stage 2 had no use for it. If it is
+  wrong, stage 3 is where that surfaces.
+- **Publishing already freezes the snapshot** through `forVisitor()`, so
+  `allowPriceOverride` cannot reach a client. Do not add a second publish path.
+- **The tracking read-out is stage 3's.** Stage 2 stores dwell per anchor and
+  shows only a raw open count. `docs/tracking.md` describes the data; Rule 3
+  still bans the chart library.
+- **`docs/admin-guide.md` does not exist.** `scripts/check-docs.mjs` already
+  lists it as a future file.
+
 ## What stage 1 left for stage 2
+
+> **History, kept rather than deleted.** Stage 2 is done, so every item below is
+> discharged — the first one reads like a live instruction and is not: `/` points
+> at `/admin` now. The bullets stay because they record what was decided and why,
+> which is the same reason an ADR body is never rewritten.
 
 Read these before starting stage 2; they are contract decisions, not trivia.
 
