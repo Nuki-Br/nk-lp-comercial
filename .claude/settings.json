@@ -38,19 +38,9 @@
       "Bash(curl -sI http://localhost:*)"
     ],
     "deny": [
-      "Read(./.env)",
-      "Read(./.env.local)",
-      "Read(./.env.production)",
       "Read(./public/demos/**)",
       "Read(./src/HTML/**)",
-      "Read(./package-lock.json)",
-      "Bash(supabase db push:*)",
-      "Bash(supabase db reset:*)",
-      "Bash(supabase link:*)",
-      "Bash(psql:*)",
-      "Bash(git push:*)",
-      "Bash(git commit:*)",
-      "Bash(vercel:*)"
+      "Read(./package-lock.json)"
     ]
   }
 }
