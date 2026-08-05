@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { AttentionTable } from "@/components/admin/AttentionTable";
 import { ComposerTabs } from "@/components/admin/ComposerTabs";
 import {
   CopyLinkButton,
@@ -10,6 +11,7 @@ import {
 import { requireAdmin } from "@/server/auth/requireAdmin";
 import { getProposal, listProposals } from "@/server/proposals/admin";
 import { loadProposalConfig } from "@/server/proposals/config";
+import { proposalAttention } from "@/server/tracking/readout";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,10 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
      round trip for one boolean is not worth a second code path. */
   const summary = (await listProposals()).find((p) => p.id === id);
   const config = await loadProposalConfig(id);
+  /* Labels come from the proposal's own resolved config, so a renamed or
+     reordered slide reads correctly — and an anchor the config no longer has
+     still shows, by its raw id. */
+  const attention = await proposalAttention(id, config.resolved.slides);
 
   const host = (await headers()).get("host") ?? "localhost:3000";
   const protocol = host.startsWith("localhost") ? "http" : "https";
@@ -70,6 +76,13 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
           Senha
         </h2>
         <PasswordForm id={proposal.id} hasPassword={Boolean(summary?.hasPassword)} />
+      </section>
+
+      <section className="rounded-2xl border border-nuki-gray-border bg-nuki-white p-6">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-nuki-gray-7">
+          Atenção do cliente
+        </h2>
+        <AttentionTable attention={attention} />
       </section>
 
       <section className="rounded-2xl border border-nuki-gray-border bg-nuki-white p-6">
