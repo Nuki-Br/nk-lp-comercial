@@ -20,10 +20,14 @@ build's history.
 
 | # | Stage | Status | Merged |
 |---|---|---|---|
-| 0 | Commit the working tree | done | — |
-| 1 | [Foundation](1-foundation.md) — `/fast`, `DeckConfig`, docs, tooling | **done, awaiting commit** | — |
+| 0 | Commit the working tree | done | 5240a71 |
+| 1 | [Foundation](1-foundation.md) — `/fast`, `DeckConfig`, docs, tooling | **done** | 1ef10b6 |
 | 2 | [Proposals](2-proposals.md) — Supabase, `/admin` login, `/p/[slug]`, tracking | not started | — |
 | 3 | [Composer](3-composer.md) — the editing UI and the tracking read-out | not started | — |
+
+Stage 1 merged to `main` as nine commits, fast-forward, `006c510..1ef10b6`. The
+route move, the estimate-defaults conversion and the `DeckConfig` layer are each
+their own commit, so `git show` on any one of them is reviewable on its own.
 
 ## What stage 1 left for stage 2
 
