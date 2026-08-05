@@ -1,8 +1,8 @@
 ---
 audience: human
 status: current
-verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,SlidesWorkspace,PricingEditor,EstimateEditor}.tsx, src/server/proposals/config.ts, src/server/tracking/readout.ts
-size: 216
+verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,ProposalDetailForms,SlidesWorkspace,PricingEditor,EstimateEditor}.tsx, src/server/proposals/{config,admin}.ts, src/server/tracking/readout.ts
+size: 232
 ---
 
 # Montando uma proposta no /admin
@@ -205,12 +205,28 @@ A pílula do painel "Envio" é o estado do link, em uma palavra:
 | No ar | o cliente abre com a senha desta proposta |
 | Alterações pendentes | publicada, com edições que ele ainda não vê |
 | Expirada | passou da data de "Expira em" |
+| Despublicada | você tirou do ar — o link mostra um aviso de indisponível |
+
+## Despublicar e excluir
+
+**Despublicar** fecha o link sem apagar nada: o cliente passa a ver um aviso de
+proposta indisponível no momento, e a fotografia publicada (`config_snapshot`)
+fica guardada. Publicar de novo — sem mexer em mais nada — devolve exatamente o
+que ele já tinha visto. Use para tirar uma proposta do ar temporariamente, sem
+perder o trabalho de configuração.
+
+**Excluir** vive na seção "Excluir" da Visão geral, atrás de uma confirmação. O
+link para de abrir, a proposta some desta lista — mas nada é apagado de verdade:
+o histórico de aberturas de um cliente real é registro demais para perder por um
+clique errado. Não há um "restaurar" nesta tela; se precisar reverter, fale com
+quem administra o banco.
 
 ## Quando algo não abre
 
 | O cliente diz… | Quase sempre é |
 |---|---|
-| "não encontrei nada" | a proposta ainda é rascunho, ou foi arquivada |
+| "não encontrei nada" | a proposta ainda é rascunho, ou foi excluída |
+| "diz que está indisponível no momento" | você despublicou a proposta — publique de novo |
 | "pede senha e não aceita" | senha trocada depois do envio — mande a nova |
 | "diz que expirou" | a data em "Expira em" já passou |
 | "travou depois de errar a senha" | limite de tentativas; espera 15 minutos |

@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview
-size: 553
+verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview, 23 unpublish and delete
+size: 617
 ---
 
 # Decisions
@@ -38,6 +38,8 @@ the only thing it was for.
 | 19 | The billing cycle is derived, not selected | current |
 | 20 | The shared-password gate is scoped to `/fast` | current |
 | 21 | The panel gets its own token sheet, not a component library | current |
+| 22 | The composer previews the deck in an iframe, on its own route | current |
+| 23 | Unpublish is a fourth status; delete is the existing archive | current |
 
 ## 1. Split out of nk-lp
 
@@ -551,3 +553,65 @@ itself after a successful save. Mirroring unsaved state live was rejected on
 honesty grounds rather than cost: reordering renumbers the modules `01/02/03` and
 re-anchors the nav dots, both in `normalizeDeck` on the server, so a DOM shuffled
 from the panel would show a presentation that does not exist.
+
+## 23. Unpublish is a fourth status; delete is the existing archive
+
+**Context.** The brief was "let an admin take a proposal offline, and let an
+admin delete one." Neither had a mutation, but the schema already had opinions
+that made the naive version of each wrong.
+
+For unpublish: `dal.ts`'s decision table already collapses `draft` into
+`not-found`, on purpose — a draft is a document being prepared, and a visitor
+must not learn it exists. Reusing `draft` for "this was live and got taken down"
+would have put a proposal the client already opened behind the same wall built
+to hide one they never received, and the two cases call for opposite messages.
+
+For delete: the proposals migration already ends with the schema forbidding it —
+no `DELETE` grant, no `DELETE` policy, and a comment naming `archived` as this
+schema's stand-in, because the tracking rows hanging off a proposal are the
+record of a real client's real attention. A "delete" that ran `DELETE FROM
+proposals` would reverse that decision silently, from a feature commit that
+never meant to touch it.
+
+**Decision.**
+
+- **Unpublish** adds a fourth `status`: `'unpublished'`, alongside `draft`,
+  `published`, `archived` (migration `20260805204117`). `resolveVisitorView`
+  gets its own branch for it, distinct from `not-found`, rendering "esta
+  proposta não está disponível no momento" instead of "não encontrada." It sits
+  between the not-found checks and the expiry check in the decision table's
+  order, and `config_snapshot` / `published_at` are left untouched on
+  unpublish — nothing reads them for a non-published status, so a later
+  `publishProposal` simply overwrites them, which is the whole republish flow.
+- **Delete** reuses `archived`. `deleteProposal` sets `status = 'archived'` and
+  nothing else. `listProposals` and `getProposal` both `.neq("status",
+  "archived")`, so a deleted proposal disappears from the list and its own
+  detail page 404s like any other missing id — there is no "it's gone" screen
+  to build, and no restore path exposed from the admin UI. `resolveVisitorView`
+  needed no change: `archived` already fell into `not-found`, before this ADR,
+  because nothing had ever set it.
+
+**Rationale.** A new status is more machinery than reusing `draft` with a side
+signal (e.g. "draft, but `published_at` is set"), and it was chosen anyway
+because the alternative makes the DAL's decision table stop being a single
+column read — every future reader of `resolveVisitorView` would need to know
+that `draft` means two different things depending on a second field. `docs/
+testing.md` requires that table stay enumerable by a human in one pass; a
+fourth status keeps it that way, a hidden signal would not.
+
+Delete deliberately does not get a confirmation-proof undo. The composer's
+`DeleteProposalForm` is a native `<dialog>` confirmation, which stops a
+misclick, not a change of mind ten minutes later — recovering a wrongly deleted
+proposal means an operator flipping `status` back in the database, which is the
+one appropriate cost model for the tracking rows are meant to protect. Building
+a restore screen for a path with no delete grant to abuse in the first place
+would be effort spent on a failure mode the schema had already made non-fatal.
+
+**Consequence.** `proposals_status_check` now allows four values; any code that
+pattern-matches on `status` and assumes three (there was exactly one:
+`resolveVisitorView`) needed a new branch, and got one. `docs/security.md`'s
+decision-order table and `docs/data-model.md`'s status column both gained the
+fourth value. A proposal that is unpublished keeps showing in the admin list —
+the checklist and pill on its detail page say why the link is down — while an
+archived one does not, because "come back later" and "gone" are different facts
+and the two screens now say so.

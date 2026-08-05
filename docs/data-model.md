@@ -68,7 +68,7 @@ One construtora, many proposals over time. `name`, `slug`, contact fields,
 | `client_id` | FK → `clients` |
 | `slug` | **unique**; this is the public URL segment in `/p/[slug]` |
 | `title` | admin-facing label, not the rendered document title |
-| `status` | `draft` \| `published` \| `archived`, checked |
+| `status` | `draft` \| `published` \| `unpublished` \| `archived`, checked |
 | `expires_at` | nullable. Null means no expiry, not "expired" |
 | `access_epoch` | integer, starts at 1. Bumping it invalidates every cookie already issued, with no cookie-side bookkeeping |
 | `config_override` | jsonb, the delta |

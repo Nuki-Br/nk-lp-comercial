@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: Next 16 authentication.md, @supabase/ssr Next.js guide (fetched), Supabase Vault docs (fetched), ADR 14, ADR 15
-size: 230
+size: 235
 ---
 
 # Security
@@ -40,7 +40,7 @@ where it would have covered `/p/[slug]` too.
 ### The decision function
 
 ```
-loadProposalForVisitor(slug) → not-found | expired | locked | unlocked
+loadProposalForVisitor(slug) → not-found | unpublished | expired | locked | unlocked
 ```
 
 It is the **only** path to proposal content. A second path re-opens the leak, and
@@ -48,12 +48,17 @@ nothing else may query the proposal tables for a visitor request.
 
 Checked in this order, stopping at the first failure:
 
-1. the row exists, `status = 'published'`, not archived
-2. `now() < expires_at`, or `expires_at` is null
-3. the access cookie is present
-4. its HMAC verifies, constant-time
-5. its payload names **this** proposal id
-6. its payload's `access_epoch` still matches the row
+1. the row exists and `status` is `draft` or `archived` → `not-found`. A draft
+   must not confirm it is being prepared, and `archived` is this schema's stand-in
+   for delete — both must read as though nothing is there.
+2. `status = 'unpublished'` → its own state, not `not-found`. Unlike a draft, the
+   client already holds this link, so there is nothing left to protect by
+   pretending it never existed.
+3. `now() < expires_at`, or `expires_at` is null
+4. the access cookie is present
+5. its HMAC verifies, constant-time
+6. its payload names **this** proposal id
+7. its payload's `access_epoch` still matches the row
 
 The fetcher is injected, so this table is testable with no database — which is
 also what keeps CI database-free (ADR 12).

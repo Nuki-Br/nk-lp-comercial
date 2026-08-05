@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import {
   type DetailState,
   publishProposalAction,
+  unpublishProposalAction,
 } from "@/app/(admin)/admin/proposals/[id]/actions";
 import { Feedback } from "@/components/admin/ProposalDetailForms";
 import { Badge, type BadgeTone } from "@/components/admin/ui/Badge";
@@ -26,7 +27,7 @@ import { cn } from "@/lib/cn";
  * verdes, e uma ausência de aviso não é a mesma coisa que uma confirmação. */
 
 /** O que impede — ou não — o link de abrir agora. */
-export type SendState = "draft" | "no-password" | "expired" | "stale" | "live";
+export type SendState = "draft" | "no-password" | "expired" | "stale" | "live" | "unpublished";
 
 /* O estado do envio é uma PÍLULA, como em qualquer construtor de site: uma
    palavra que se lê de relance no mesmo lugar, sempre. A frase ao lado é o mesmo
@@ -67,6 +68,12 @@ const STATE: Record<SendState, { badge: string; tone: BadgeTone; detail: string;
     detail: "O link abre com a senha desta proposta.",
     band: "bg-success/8",
   },
+  unpublished: {
+    badge: "Despublicada",
+    tone: "warning",
+    detail: "O cliente vê um aviso de indisponível até você publicar de novo.",
+    band: "bg-warning/8",
+  },
 };
 
 /** O rótulo do botão diz a AÇÃO, não o estado — o estado está na pílula acima. */
@@ -75,6 +82,13 @@ const publishLabel = (sendState: SendState): string => {
   if (sendState === "stale") return "Publicar alterações";
   return "Publicar de novo";
 };
+
+/** As pílulas em que existe algo publicado para se despublicar. */
+const canUnpublish = (sendState: SendState): boolean =>
+  sendState === "no-password" ||
+  sendState === "expired" ||
+  sendState === "stale" ||
+  sendState === "live";
 
 export type ChecklistItem = {
   key: string;
@@ -123,6 +137,7 @@ export function PublishPanel({
       </div>
 
       <PublishForm id={id} sendState={sendState} />
+      {canUnpublish(sendState) && <UnpublishForm id={id} />}
     </Card>
   );
 }
@@ -236,6 +251,38 @@ function PublishForm({ id, sendState }: { id: string; sendState: SendState }) {
           ? "Publicar tira uma fotografia do deck de hoje. A partir daí, editar preços ou textos padrão não muda o que o cliente recebeu."
           : "Publicar de novo substitui a fotografia que o cliente vê pelo estado de agora."}
       </p>
+    </form>
+  );
+}
+
+/* Um botão secundário, não um botão perigoso — despublicar não apaga nada, só
+ * fecha a porta até você decidir abrir de novo. A fotografia publicada
+ * (`config_snapshot`) fica intacta, exatamente para isso: publicar de novo sem
+ * mexer em mais nada devolve o cliente ao que ele já tinha visto. */
+function UnpublishForm({ id }: { id: string }) {
+  const [state, action] = useActionState<DetailState, FormData>(unpublishProposalAction, EMPTY);
+
+  return (
+    <form action={action} className="flex flex-col gap-2 border-t border-border px-5 py-3">
+      <input type="hidden" name="id" value={id} />
+
+      {/* Pequeno, ao lado do texto — não embaixo do "Publicar" com o mesmo
+          tamanho e a mesma largura. As duas ações parecidas em peso liam como
+          dois passos do mesmo fluxo; esta é o oposto do botão de cima, e o
+          tamanho precisa dizer isso antes do texto. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Tira do ar sem apagar nada — publique de novo quando quiser.
+        </p>
+        <SubmitButton
+          variant="outline"
+          size="sm"
+          label="Despublicar"
+          pendingLabel="Despublicando…"
+        />
+      </div>
+
+      <Feedback state={state} />
     </form>
   );
 }

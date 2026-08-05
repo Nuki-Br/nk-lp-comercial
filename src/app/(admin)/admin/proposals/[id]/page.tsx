@@ -1,7 +1,11 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { AttentionTable } from "@/components/admin/AttentionTable";
-import { DetailsForm, PasswordForm } from "@/components/admin/ProposalDetailForms";
+import {
+  DeleteProposalForm,
+  DetailsForm,
+  PasswordForm,
+} from "@/components/admin/ProposalDetailForms";
 import { type ChecklistItem, PublishPanel, type SendState } from "@/components/admin/PublishPanel";
 import { Section } from "@/components/admin/ui/Section";
 import { requireAdmin } from "@/server/auth/requireAdmin";
@@ -58,15 +62,18 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
   /* A ordem importa: o que impede o link de abrir vem antes do que só o
      enfraquece. Um rascunho expirado é um rascunho, e é isso que o vendedor
      precisa ler primeiro. */
-  const sendState: SendState = !published
-    ? "draft"
-    : !hasPassword
-      ? "no-password"
-      : expired
-        ? "expired"
-        : config.snapshotStale
-          ? "stale"
-          : "live";
+  const sendState: SendState =
+    proposal.status === "unpublished"
+      ? "unpublished"
+      : !published
+        ? "draft"
+        : !hasPassword
+          ? "no-password"
+          : expired
+            ? "expired"
+            : config.snapshotStale
+              ? "stale"
+              : "live";
 
   const checklist: ChecklistItem[] = [
     {
@@ -85,7 +92,9 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
       done: published,
       detail: published
         ? `congelada${frozenOn ? ` em ${frozenOn}` : ""}.`
-        : "ainda é um rascunho — o link responde “não encontrado”.",
+        : proposal.status === "unpublished"
+          ? "despublicada — o link responde “indisponível no momento”."
+          : "ainda é um rascunho — o link responde “não encontrado”.",
     },
     {
       key: "expiry",
@@ -119,6 +128,10 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
         description="Verificada no servidor a cada abertura. Ela ainda não pode ser lida de volta — anote na hora."
       >
         <PasswordForm id={proposal.id} hasPassword={hasPassword} />
+      </Section>
+
+      <Section id="excluir" title="Excluir" description="Não há como desfazer por esta tela.">
+        <DeleteProposalForm id={proposal.id} title={proposal.title} />
       </Section>
     </>
   );

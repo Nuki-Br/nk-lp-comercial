@@ -87,6 +87,10 @@ export async function listProposals(): Promise<ProposalSummary[]> {
   const { data, error } = await supabaseAdmin
     .from("proposals")
     .select("id, slug, title, status, expires_at, config_override, config_snapshot, clients(name)")
+    /* Archived is this schema's delete — the row and its tracking history stay,
+       but a deleted proposal has no business in the list a salesperson works
+       from every day. */
+    .neq("status", "archived")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(`Could not list proposals: ${error.message}`);
@@ -150,6 +154,10 @@ export async function getProposal(id: string) {
     .from("proposals")
     .select("id, slug, title, status, expires_at, access_epoch, published_at, clients(id, name)")
     .eq("id", id)
+    /* A deleted proposal is `neq`'d out, not fetched-and-hidden: the composer
+       has no "it's gone" screen to fall back to, and a 404 for an id that no
+       longer resolves to anything is the honest read. */
+    .neq("status", "archived")
     .maybeSingle();
 
   if (error) throw new Error(`Could not load the proposal: ${error.message}`);
@@ -343,4 +351,37 @@ export async function publishProposal(
 
   if (writeError) throw new Error(`Could not publish: ${writeError.message}`);
   return { ok: true, warnings };
+}
+
+/**
+ * Unpublish: the link stops opening, the document is not gone.
+ *
+ * `config_snapshot` and `published_at` are left as they are. Neither is read
+ * for a non-published proposal — `estimateForRow` and the DAL both branch on
+ * `status` — and keeping them means a later `publishProposal` overwrites stale
+ * data rather than an unpublish having to guess what to null out.
+ */
+export async function unpublishProposal(id: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("proposals")
+    .update({ status: "unpublished" })
+    .eq("id", id);
+
+  if (error) throw new Error(`Could not unpublish: ${error.message}`);
+}
+
+/**
+ * Delete, in the sense this schema allows: `status = 'archived'`. There is no
+ * DELETE grant on `public.proposals` — the migration says why, and it comes
+ * down to the tracking rows hanging off a proposal being the record of a real
+ * client's real attention, which a salesperson clicking "excluir" by mistake
+ * should not be able to erase.
+ */
+export async function deleteProposal(id: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("proposals")
+    .update({ status: "archived" })
+    .eq("id", id);
+
+  if (error) throw new Error(`Could not delete the proposal: ${error.message}`);
 }

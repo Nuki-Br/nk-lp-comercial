@@ -55,7 +55,7 @@ beforeAll(async () => {
   dal = await import("@/server/proposals/dal");
 });
 
-describe("resolveVisitorView — the four states", () => {
+describe("resolveVisitorView — the states", () => {
   it("not-found when there is no row", async () => {
     expect(await view(null)).toEqual({ state: "not-found" });
   });
@@ -68,6 +68,13 @@ describe("resolveVisitorView — the four states", () => {
   it("not-found for an archived proposal", async () => {
     const row = publishedRow({ status: "archived" });
     expect(await view(row, goodToken())).toEqual({ state: "not-found" });
+  });
+
+  /* Deliberately NOT not-found: unlike a draft, the client already holds this
+     link, so there is nothing left to protect by pretending it never existed. */
+  it("unpublished — even with a valid cookie — for a proposal taken down", async () => {
+    const row = publishedRow({ status: "unpublished" });
+    expect(await view(row, goodToken())).toEqual({ state: "unpublished" });
   });
 
   it("expired once past expires_at — even holding a valid cookie", async () => {

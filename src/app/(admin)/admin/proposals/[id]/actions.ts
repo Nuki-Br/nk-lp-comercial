@@ -1,9 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getAdmin } from "@/server/auth/requireAdmin";
-import { publishProposal, setProposalPassword, updateProposal } from "@/server/proposals/admin";
+import {
+  deleteProposal,
+  publishProposal,
+  setProposalPassword,
+  unpublishProposal,
+  updateProposal,
+} from "@/server/proposals/admin";
 
 /* Every action re-checks. Not the layout, not the page it was rendered from —
    Proxy matchers skip Server Functions, so an action is reachable even when the
@@ -115,4 +122,43 @@ export async function publishProposalAction(
     notice: "Proposta publicada. O link já abre para o cliente.",
     warnings: result.warnings,
   };
+}
+
+export async function unpublishProposalAction(
+  _prev: DetailState,
+  formData: FormData,
+): Promise<DetailState> {
+  const admin = await getAdmin();
+  if (!admin) return { error: "Sessão expirada. Entre novamente.", notice: null, warnings: [] };
+
+  const parsed = uuid.safeParse(formData.get("id"));
+  if (!parsed.success) return { error: "Proposta inválida.", notice: null, warnings: [] };
+
+  await unpublishProposal(parsed.data);
+
+  revalidatePath(`/admin/proposals/${parsed.data}`);
+  revalidatePath("/admin");
+  return {
+    error: null,
+    notice:
+      "Proposta despublicada. O cliente vê um aviso de indisponível até você publicar de novo.",
+    warnings: [],
+  };
+}
+
+export async function deleteProposalAction(
+  _prev: DetailState,
+  formData: FormData,
+): Promise<DetailState> {
+  const admin = await getAdmin();
+  if (!admin) return { error: "Sessão expirada. Entre novamente.", notice: null, warnings: [] };
+
+  const parsed = uuid.safeParse(formData.get("id"));
+  if (!parsed.success) return { error: "Proposta inválida.", notice: null, warnings: [] };
+
+  await deleteProposal(parsed.data);
+
+  revalidatePath(`/admin/proposals/${parsed.data}`);
+  revalidatePath("/admin");
+  redirect("/admin");
 }

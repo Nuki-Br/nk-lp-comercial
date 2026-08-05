@@ -40,6 +40,7 @@ export type LockReason =
  */
 export type VisitorView =
   | { state: "not-found" }
+  | { state: "unpublished" }
   | { state: "expired" }
   | { state: "locked"; reason: LockReason }
   | { state: "unlocked"; proposalId: string; config: DeckConfig };
@@ -60,19 +61,32 @@ export type VisitorDeps = {
  * The order is the order in docs/security.md, and each step is a gate:
  *
  *   1. published and not archived
- *   2. not past expires_at
- *   3. cookie present
- *   4. signature verifies, constant-time
- *   5. payload names THIS proposal
- *   6. payload's epoch still matches the row
+ *   2. not unpublished
+ *   3. not past expires_at
+ *   4. cookie present
+ *   5. signature verifies, constant-time
+ *   6. payload names THIS proposal
+ *   7. payload's epoch still matches the row
  */
 export async function resolveVisitorView(slug: string, deps: VisitorDeps): Promise<VisitorView> {
   const row = await deps.fetchRow(slug);
 
-  /* A draft is not-found rather than locked. A visitor must not learn that a
-     proposal is being prepared for them, and the only document we are willing
-     to render is the frozen snapshot — never live defaults. */
-  if (!row || row.status !== "published") return { state: "not-found" };
+  /* A draft or an archived proposal is not-found rather than locked. A visitor
+     must not learn that a proposal is being prepared for them, and an archived
+     proposal is this schema's stand-in for deleted — it must read as gone, not
+     as paused. The only document we are willing to render is the frozen
+     snapshot — never live defaults. */
+  if (!row || row.status === "draft" || row.status === "archived") return { state: "not-found" };
+
+  /* Unlike a draft, the client already has this link and may already have
+     opened it — there is nothing left to hide by pretending it never existed.
+     A distinct, honest message: this document is paused, not gone. */
+  if (row.status === "unpublished") return { state: "unpublished" };
+
+  /* Can't-happen: the CHECK constraint only allows the four values handled
+     above and below. If it happens anyway, not-found is the safe default —
+     never fall through to rendering a snapshot for a status nobody vetted. */
+  if (row.status !== "published") return { state: "not-found" };
 
   /* The document clock. Checked BEFORE the cookie, so an expired proposal reads
      as expired even to someone holding a perfectly valid cookie — that is the

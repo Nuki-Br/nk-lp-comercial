@@ -17,6 +17,7 @@ export const dynamic = "force-dynamic";
 const STATUS: Record<string, { label: string; tone: BadgeTone }> = {
   draft: { label: "Rascunho", tone: "neutral" },
   published: { label: "Publicada", tone: "success" },
+  unpublished: { label: "Despublicada", tone: "warning" },
   archived: { label: "Arquivada", tone: "neutral" },
 };
 

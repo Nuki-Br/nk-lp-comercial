@@ -33,6 +33,7 @@ const CONTAINER = "max-w-7xl";
 const STATUS: Record<string, { label: string; tone: BadgeTone }> = {
   draft: { label: "Rascunho", tone: "neutral" },
   published: { label: "Publicada", tone: "success" },
+  unpublished: { label: "Despublicada", tone: "warning" },
   archived: { label: "Arquivada", tone: "neutral" },
 };
 
@@ -68,13 +69,21 @@ export default async function ProposalLayout({
               /
             </span>
 
+            {/* O cliente vem antes do título, e com o mesmo peso — é o que a
+                lista em `/admin` já faz (construtora é a primeira coluna).
+                Uma proposta é "o deck da Construtora X", não "Proposta
+                comercial Nuki #42"; o título interno é só o rótulo que
+                distingue duas propostas do mesmo cliente. */}
+            <span className="min-w-0 shrink-0 truncate text-base font-semibold tracking-tight">
+              {proposal.clients?.name}
+            </span>
+            <span aria-hidden="true" className="text-border select-none">
+              /
+            </span>
             <h1 className="min-w-0 truncate text-base font-semibold tracking-tight">
               {proposal.title}
             </h1>
             <Badge tone={status.tone}>{status.label}</Badge>
-            <p className="min-w-0 truncate text-sm text-muted-foreground">
-              {proposal.clients?.name}
-            </p>
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
               {/* A mesma rota que a aba Slides mostra na moldura, em tamanho

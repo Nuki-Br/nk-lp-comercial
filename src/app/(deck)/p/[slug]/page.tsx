@@ -50,6 +50,15 @@ export default async function ProposalPage({ params }: { params: Promise<{ slug:
     return <Notice title="Proposta não encontrada" body="Confira o link que você recebeu." />;
   }
 
+  if (view.state === "unpublished") {
+    return (
+      <Notice
+        title="Proposta indisponível no momento"
+        body="Fale com o seu contato na Nuki — este link volta a funcionar assim que a proposta for publicada de novo."
+      />
+    );
+  }
+
   if (view.state === "expired") {
     return (
       <Notice
