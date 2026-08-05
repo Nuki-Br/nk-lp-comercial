@@ -23,7 +23,7 @@ build's history.
 | 0 | Commit the working tree | done | 5240a71 |
 | 1 | [Foundation](1-foundation.md) — `/fast`, `DeckConfig`, docs, tooling | **done** | 1ef10b6 |
 | 2 | [Proposals](2-proposals.md) — Supabase, `/admin` login, `/p/[slug]`, tracking | **done** | 4731d4b |
-| 3 | [Composer](3-composer.md) — the editing UI and the tracking read-out | **done** | 06308b7 |
+| 3 | [Composer](3-composer.md) — the editing UI and the tracking read-out | **done** | cdebbd4 |
 
 Stage 1 merged to `main` as nine commits, fast-forward, `006c510..1ef10b6`. The
 route move, the estimate-defaults conversion and the `DeckConfig` layer are each
@@ -53,7 +53,7 @@ checklist A and checklist B walked end to end.
   stage added. The fix is `next@16.3.0`, outside the pinned range, and it is a
   deck-rendering risk — deliberately left as a decision, not taken quietly.
 
-Stage 3 landed as eight commits, `4731d4b..06308b7`, one per work item plus one
+Stage 3 landed as nine commits, `4731d4b..cdebbd4`, one per work item plus one
 deck-layer fix that the composer's design uncovered. No migration — the composer
 writes a column stage 2 created. **V1 is complete at this point.**
 
