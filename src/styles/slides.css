@@ -328,8 +328,13 @@
    continuam com scroll livre. `scroll-snap-stop: always` preserva a intenção
    original (não passar batido pela demo) sem prender ninguém.
 
-   As duas regras são um par: mexer numa sem a outra desliga o snap em silêncio. */
-html {
+   As duas regras são um par: mexer numa sem a outra desliga o snap em silêncio.
+
+   `scroll-snap-type` tem que ficar no `<html>` — ele é o container de scroll, e
+   `.deck` não é um scroller. Por isso o escopo aqui é `html.deck-root`, a classe
+   que só o root layout do deck coloca: sem ela a regra vazaria pro /admin, que
+   compartilha o documento em navegação client-side. */
+html.deck-root {
   scroll-snap-type: y proximity;
 }
 .deck .module-demo-slide {
@@ -2293,92 +2298,3 @@ html {
   font-size: 11px;
 }
 @media (max-width: 820px) { .deck .keyboard-hint { display: none; } }
-
-/* ============================================================
-   Portão de senha (/comercial) — ComercialGate
-   ============================================================ */
-.gate {
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: var(--color-nuki-black, #0d0d0d);
-  color: var(--color-nuki-white, #fff);
-}
-.gate-card {
-  width: 100%;
-  max-width: 420px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 40px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.gate-tag {
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--color-nuki-green-soft, #e6fafa);
-}
-.gate-title {
-  font-size: clamp(24px, 4vw, 30px);
-  font-weight: 800;
-  line-height: 1.15;
-  margin: 0;
-}
-.gate-lead {
-  font-size: 15px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0 0 6px;
-}
-.gate-label {
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
-}
-.gate-input {
-  width: 100%;
-  padding: 13px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--color-nuki-white, #fff);
-  font: inherit;
-  font-size: 16px;
-  transition: border-color 0.18s ease;
-}
-.gate-input:focus {
-  outline: none;
-  border-color: var(--color-nuki-green-soft, #e6fafa);
-}
-.gate-input.has-error {
-  border-color: #ff6b6b;
-}
-.gate-error {
-  margin: 0;
-  font-size: 13px;
-  color: #ff8a8a;
-}
-.gate-submit {
-  margin-top: 6px;
-  padding: 14px 20px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--color-nuki-white, #fff);
-  color: var(--color-nuki-black, #0d0d0d);
-  font: inherit;
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.18s ease;
-}
-.gate-submit:hover {
-  background: var(--color-nuki-green-soft, #e6fafa);
-}

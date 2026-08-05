@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
 import { AccessGate } from "@/components/deck/AccessGate";
-import "@/styles/globals.css";
+import { manrope } from "@/styles/fonts";
+import "@/styles/tokens.css";
+import "@/styles/gate.css";
 import "@/styles/deck.css";
 import "@/styles/slides.css";
-
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://nukibr.com"),
@@ -38,21 +33,28 @@ export const metadata: Metadata = {
 };
 
 /**
- * Root layout. Este repo serve uma coisa só — a apresentação comercial — então
- * o portão de senha (`ComercialGate`) vive aqui e protege a aplicação inteira.
- * O CSS da apresentação também é importado aqui, pra estilizar o próprio gate
- * antes do `page.tsx` montar.
+ * Root layout #1 — as superfícies de deck (`/fast` e, na etapa 2, `/p/[slug]`).
  *
- * Sem analytics, por decisão de projeto: este repo foi separado do `nk-lp`
- * justamente pra que sessões de pitch não contaminem as métricas da landing.
+ * É um root layout de verdade (emite `<html>` e `<body>`), irmão do layout do
+ * `(admin)`. São dois porque o Next não remove stylesheets em navegação
+ * client-side: com um só, sair de um deck pro /admin deixaria `slides.css`
+ * grudado no documento — inclusive a regra de `scroll-snap-type` e o bloco
+ * `.gate*`, que não tem escopo. Dois roots forçam page load na fronteira, o que
+ * torna o isolamento demonstrável em vez de torcido. Ver ADR 17.
+ *
+ * `deck-root` no `<html>` é o que liga o `scroll-snap-type` de slides.css; sem
+ * a classe o snap do slide de demo morre em silêncio.
+ *
+ * O portão de senha mora aqui (e não no `page.tsx`) pra que o CSS já esteja
+ * carregado quando ele renderiza. Sem analytics, por decisão de projeto.
  */
-export default function RootLayout({
+export default function DeckRootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${manrope.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${manrope.variable} deck-root h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-nuki-gray-light text-nuki-black">
         <AccessGate>{children}</AccessGate>
       </body>
