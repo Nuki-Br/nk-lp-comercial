@@ -37,10 +37,6 @@
       "Bash(curl -s http://localhost:*)",
       "Bash(curl -sI http://localhost:*)"
     ],
-    "deny": [
-      "Read(./public/demos/**)",
-      "Read(./src/HTML/**)",
-      "Read(./package-lock.json)"
-    ]
+    "deny": ["Read(./public/demos/**)", "Read(./src/HTML/**)", "Read(./package-lock.json)"]
   }
 }
