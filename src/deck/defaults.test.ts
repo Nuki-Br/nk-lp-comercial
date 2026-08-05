@@ -160,6 +160,31 @@ describe("normalizeDeck — fatos derivados", () => {
     expect(planner && "childId" in planner).toBe(false);
   });
 
+  it("desligar só a demo tira o childId do módulo", () => {
+    /* O CTA "▷ Explorar" do ModuleSlide chaveia por `childId`, e o registry
+       devolve `null` pro nó desabilitado. Se `childId` sobrevivesse ao filho
+       desligado, sobraria um botão apontando pra uma âncora que não renderiza —
+       um clique que não faz nada, ao vivo. É o caminho que o checkbox "tem demo"
+       do compositor percorre toda vez que o vendedor desmarca a demo. */
+    const resolved = resolveDeckConfig(buildDefaultDeck(), { hidden: ["inspetor-demo"] });
+    const inspetor = resolved.slides.find((n) => n.id === "inspetor");
+
+    expect(inspetor?.enabled).toBe(true);
+    expect(inspetor && "childId" in inspetor).toBe(false);
+    // O nó continua lá, desligado, pra que `shown` o traga de volta no lugar.
+    expect(resolved.slides.find((n) => n.id === "inspetor-demo")?.enabled).toBe(false);
+    expect(walkableIdsOf(resolved.slides)).not.toContain("inspetor-demo");
+  });
+
+  it("religar a demo devolve o childId e a posição", () => {
+    const off = resolveDeckConfig(buildDefaultDeck(), { hidden: ["inspetor-demo"] });
+    const on = resolveDeckConfig(off, { shown: ["inspetor-demo"] });
+    const ids = walkableIdsOf(on.slides);
+
+    expect(on.slides.find((n) => n.id === "inspetor")?.childId).toBe("inspetor-demo");
+    expect(ids.indexOf("inspetor-demo")).toBe(ids.indexOf("inspetor") + 1);
+  });
+
   it("esconder o módulo derruba a demo junto", () => {
     /* O invariante do AGENTS.md: um config que esconde o módulo mas mantém a
        demo apontaria `data-nav-id` pra um ponto inexistente e apagaria o nav

@@ -127,10 +127,19 @@ export function normalizeDeck(config: DeckConfig): DeckConfig {
   for (const n of surviving) {
     if (n.parentId) continue;
     const kids = children.get(n.id) ?? [];
-    // 4. `childId` é derivado — e a CHAVE SOME quando não há filho. Setar
-    //    `undefined` quebraria o round-trip JSON (stringify descarta a chave).
+    /* 4. `childId` é derivado do filho HABILITADO — e a CHAVE SOME quando não há
+          um. Setar `undefined` quebraria o round-trip JSON (stringify descarta a
+          chave).
+
+          Habilitado, e não só presente: o `ModuleSlide` decide renderizar o CTA
+          "▷ Explorar" por `node.childId`, e o registry devolve `null` pra um nó
+          desabilitado. Derivar de um filho desligado deixaria o botão na tela
+          apontando pra uma âncora que não renderiza — um clique que não faz nada
+          na frente do cliente. O filho continua no array pra que reabilitá-lo
+          por `shown` o devolva na mesma posição. */
+    const liveKid = kids.find((k) => k.enabled);
     const { childId: _drop, ...rest } = n;
-    ordered.push(kids.length ? { ...rest, childId: kids[0].id } : (rest as SlideNode));
+    ordered.push(liveKid ? { ...rest, childId: liveKid.id } : (rest as SlideNode));
     ordered.push(...kids);
   }
 
