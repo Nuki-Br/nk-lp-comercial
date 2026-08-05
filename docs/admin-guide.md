@@ -1,8 +1,8 @@
 ---
 audience: human
 status: current
-verified_against: src/app/(admin)/admin/**, src/components/admin/SlidesWorkspace.tsx, src/server/proposals/config.ts, src/server/tracking/readout.ts
-size: 155
+verified_against: src/app/(admin)/admin/**, src/components/admin/{SlidesWorkspace,PricingEditor,EstimateEditor}.tsx, src/server/proposals/config.ts, src/server/tracking/readout.ts
+size: 165
 ---
 
 # Montando uma proposta no /admin
@@ -77,6 +77,11 @@ exatamente o que você quer.
 
 ### Planos e preços
 
+**O painel "O que o cliente vê", à direita, é o seu conferidor.** Arraste os
+meses e ele mostra em que ciclo aquilo cai e por quanto sai cada plano — a mesma
+conta que o cliente vai ver, atualizada enquanto você digita. Se o número ali
+não é o que você quer dizer na reunião, ainda dá tempo.
+
 **O desconto se digita em porcentagem.** Escreva `10` para dez por cento. Ao lado
 do campo aparece quanto a mensalidade vira — confira ali antes de salvar, é o
 número que o cliente vai ler.
@@ -100,6 +105,11 @@ trás da calculadora desta proposta.
 
 O ponto de partida da calculadora do cliente. Ele ainda pode mexer em tudo
 durante a apresentação; a diferença é começar a conversa no número certo.
+
+**O painel da direita mostra o número enquanto você monta:** quantas imagens e
+quanto de setup aquilo dá, com as tarifas desta proposta. Cada metragem também
+traz o seu subtotal no cabeçalho, e cada ambiente o dele na coluna "Imagens" —
+é assim que se descobre qual planta está pesando sem somar nada de cabeça.
 
 **Comece de um porte** (Studio, Padrão, Alto padrão) e ajuste. É bem mais rápido
 que montar do zero — o botão substitui tudo pela composição do preset.

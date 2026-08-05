@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: package.json scripts, ADR 7 and ADR 12, src/server/**/*.test.ts
-size: 258
+size: 265
 ---
 
 # Testing
@@ -235,6 +235,13 @@ window, and confirm each change reached `/p/[slug]`:
       a leftover button would scroll to nothing
 - [ ] A changed plan price and cycle discount show; a discount typed as `10`
       reads as −10%, never −1000%
+- [ ] Planos e preços: dragging the months slider in "O que o cliente vê" crosses
+      each `minMonths` floor at the right month and quotes the same price the
+      published deck does at that month — the panel runs `cycleForMonths`, so a
+      disagreement means the ORDER of the stored cycles is wrong (ADR 19)
+- [ ] Calculadora: the live panel's image count matches what the client's
+      calculator opens with, and the per-room "Imagens" column sums to the
+      per-metragem subtotal
 - [ ] Image tariffs move the calculator's cost, and `Ctrl+Alt+K` does **nothing**
 - [ ] Two preloaded unit types are there when the calculator opens
 - [ ] With every size preset unticked, the whole preset block is absent — not an
