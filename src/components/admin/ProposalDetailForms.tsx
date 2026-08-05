@@ -9,7 +9,7 @@ import {
   updateProposalAction,
 } from "@/app/(admin)/admin/proposals/[id]/actions";
 
-const EMPTY: DetailState = { error: null, notice: null };
+const EMPTY: DetailState = { error: null, notice: null, warnings: [] };
 
 function Submit({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus();
@@ -24,18 +24,31 @@ function Submit({ label, pendingLabel }: { label: string; pendingLabel: string }
   );
 }
 
+/* Warnings render ALONGSIDE the outcome, never instead of it: the action either
+   succeeded or it did not, and "salvo" plus "confira isto antes de mandar" are
+   two facts a salesperson needs at the same time. */
 function Feedback({ state }: { state: DetailState }) {
-  if (state.error) {
-    return (
-      <p role="alert" className="text-sm font-semibold text-nuki-orange">
-        {state.error}
-      </p>
-    );
-  }
-  if (state.notice) {
-    return <p className="text-sm font-semibold text-nuki-green-02">{state.notice}</p>;
-  }
-  return null;
+  if (!state.error && !state.notice && state.warnings.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2">
+      {state.error && (
+        <p role="alert" className="text-sm font-semibold text-nuki-orange">
+          {state.error}
+        </p>
+      )}
+      {state.notice && <p className="text-sm font-semibold text-nuki-green-02">{state.notice}</p>}
+      {state.warnings.length > 0 && (
+        <ul className="flex flex-col gap-1 rounded-xl bg-nuki-gray-light p-3">
+          {state.warnings.map((warning) => (
+            <li key={warning} className="text-sm text-nuki-gray-mid">
+              ⚠ {warning}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 const field =

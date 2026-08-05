@@ -15,9 +15,19 @@ const codesOf = (config: DeckConfig): string[] => {
   return result.ok ? [] : result.issues.map((i) => i.code);
 };
 
+const warningsOf = (config: DeckConfig): string[] =>
+  validateDeckConfig(config).warnings.map((i) => i.code);
+
+/** Disable by id the way the composer does, instead of splicing the node out —
+    the delta hides slides, it never deletes them. */
+const disable = (config: DeckConfig, ...ids: string[]): DeckConfig => {
+  for (const node of config.slides) if (ids.includes(node.id)) node.enabled = false;
+  return config;
+};
+
 describe("validateDeckConfig", () => {
-  it("accepts the shipped default deck", () => {
-    expect(validateDeckConfig(buildDefaultDeck())).toEqual({ ok: true });
+  it("accepts the shipped default deck, with nothing to warn about", () => {
+    expect(validateDeckConfig(buildDefaultDeck())).toEqual({ ok: true, warnings: [] });
   });
 
   it("rejects a demo whose module is disabled", () => {
@@ -118,5 +128,74 @@ describe("validateDeckConfig", () => {
     expect(codes).toEqual(
       expect.arrayContaining(["negative-price", "discount-out-of-range", "invalid-max-months"]),
     );
+  });
+
+  /* `cycleForMonths` seeds its reduce on cycles[0] and only ever moves to a
+     HIGHER floor, so both of these mis-quote a real proposal in silence. */
+  describe("billing cycles", () => {
+    it("rejects an empty cycle list — that one is a crash, not a wrong number", () => {
+      const config = base();
+      config.estimate.billingCycles = [];
+      expect(codesOf(config)).toContain("no-billing-cycles");
+    });
+
+    it("rejects cycles whose floors do not ascend", () => {
+      const config = base();
+      config.estimate.billingCycles = [
+        { id: "anual", label: "Anual", discount: 0.1, minMonths: 12 },
+        { id: "mensal", label: "Mensal", discount: 0, minMonths: 1 },
+      ];
+      expect(codesOf(config)).toContain("cycles-out-of-order");
+    });
+
+    it("rejects a first floor above one month", () => {
+      // Below the first floor nothing matches and the seed wins by default, so a
+      // one-month contract would be quoted at the semiannual discount.
+      const config = base();
+      config.estimate.billingCycles = [
+        { id: "semestral", label: "Semestral", discount: 0.05, minMonths: 6 },
+        { id: "anual", label: "Anual", discount: 0.1, minMonths: 12 },
+      ];
+      expect(codesOf(config)).toContain("cycles-out-of-order");
+    });
+
+    it("accepts the shipped cycles", () => {
+      expect(codesOf(base())).not.toContain("cycles-out-of-order");
+    });
+  });
+
+  /* The warning channel. These configs SAVE — refusing them would be the
+     validator deciding a commercial question. */
+  describe("warnings do not block", () => {
+    it("warns when total survives but pricing is disabled", () => {
+      const config = disable(base(), "pricing");
+
+      expect(validateDeckConfig(config).ok).toBe(true);
+      expect(warningsOf(config)).toContain("total-without-pricing");
+    });
+
+    it("says nothing when both are disabled together", () => {
+      const config = disable(base(), "pricing", "total");
+      expect(warningsOf(config)).not.toContain("total-without-pricing");
+    });
+
+    it("warns on an empty plan list without rejecting it", () => {
+      const config = base();
+      config.estimate.plans = [];
+
+      expect(validateDeckConfig(config).ok).toBe(true);
+      expect(warningsOf(config)).toContain("no-plans");
+    });
+
+    it("still reports warnings on a config that also has blocking issues", () => {
+      /* The arm a caller narrows on `ok === false` must still carry them, or the
+         admin loses them exactly when the form is already open in front of them. */
+      const config = disable(base(), "pricing");
+      config.estimate.maxMonths = 0;
+
+      const result = validateDeckConfig(config);
+      expect(result.ok).toBe(false);
+      expect(result.warnings.map((w) => w.code)).toContain("total-without-pricing");
+    });
   });
 });

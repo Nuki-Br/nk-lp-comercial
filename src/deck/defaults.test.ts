@@ -246,6 +246,77 @@ describe("mergeEstimate — arrays substituem, não concatenam", () => {
   });
 });
 
+describe("o delta como o Postgres devolve", () => {
+  /* A precondição 4 da etapa 3, fixada como teste em vez de anotada numa
+     mensagem de commit: um `config_override` gravado no jsonb e lido de volta
+     tem que continuar mudando o deck renderizado.
+
+     O literal abaixo é EXATAMENTE o que o PostgREST devolveu depois de um
+     round-trip contra o banco real — repare que a ordem das chaves não é a que
+     foi enviada. `jsonb` é uma representação binária parseada, não o texto que
+     você entregou: ele normaliza a ordem das chaves de objeto (por comprimento,
+     depois por bytes). ARRAYS mantêm a ordem, que é do que `order` depende.
+
+     Consequência que custa caro em outro lugar: comparar dois configs com
+     `JSON.stringify` para descobrir se um snapshot ficou obsoleto marca TODA
+     proposta publicada como obsoleta, porque um lado veio do banco e o outro do
+     `buildDefaultDeck()`. Compare em profundidade. */
+  const stored = {
+    order: ["cover", "problem", "pricing", "calculator", "total"],
+    shown: ["differentiators"],
+    hidden: ["cases"],
+    estimate: {
+      defaults: { dryOptions: 4, wetOptions: 5 },
+      maxMonths: 24,
+      imagePrices: { base: 99, option: 33 },
+    },
+  };
+
+  const resolved = resolveDeckConfig(buildDefaultDeck(), parseDeckOverride(stored));
+
+  it("muda o deck — o caminho não é morto", () => {
+    expect(resolved).not.toEqual(buildDefaultDeck());
+  });
+
+  it("aplica hidden, shown e order de uma vez só", () => {
+    const ids = anchorsOf(resolved.slides).map((a) => a.id);
+
+    expect(ids).not.toContain("cases");
+    expect(ids).toContain("differentiators");
+    expect(ids.slice(0, 2)).toEqual(["cover", "problem"]);
+    // Nós não citados na ordem vão pro fim, na ordem original.
+    expect(ids.indexOf("pricing")).toBeLessThan(ids.indexOf("calculator"));
+    expect(ids.indexOf("calculator")).toBeLessThan(ids.indexOf("total"));
+  });
+
+  it("aplica o patch de estimativa sem perder o que não foi citado", () => {
+    expect(resolved.estimate.imagePrices).toEqual({ base: 99, option: 33 });
+    expect(resolved.estimate.maxMonths).toBe(24);
+    expect(resolved.estimate.defaults.dryOptions).toBe(4);
+    expect(resolved.estimate.defaults.wetOptions).toBe(5);
+    // `defaults` mescla raso: unitTypes não foi citado e tem que sobreviver.
+    expect(resolved.estimate.defaults.unitTypes).toEqual(
+      buildDefaultDeck().estimate.defaults.unitTypes,
+    );
+  });
+
+  it("a ordem das chaves do objeto não muda o resultado", () => {
+    // O mesmo delta com as chaves em outra ordem — que é o que o jsonb devolve.
+    const reordered = {
+      estimate: {
+        imagePrices: { option: 33, base: 99 },
+        maxMonths: 24,
+        defaults: { wetOptions: 5, dryOptions: 4 },
+      },
+      hidden: ["cases"],
+      shown: ["differentiators"],
+      order: ["cover", "problem", "pricing", "calculator", "total"],
+    };
+
+    expect(resolveDeckConfig(buildDefaultDeck(), parseDeckOverride(reordered))).toEqual(resolved);
+  });
+});
+
 describe("parseDeckOverride — nunca lança", () => {
   it.each([null, undefined, 42, "texto", [], true])("lixo (%s) vira {}", (input) => {
     expect(parseDeckOverride(input)).toEqual({});

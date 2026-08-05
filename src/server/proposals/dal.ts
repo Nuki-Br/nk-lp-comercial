@@ -3,6 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import type { DeckConfig } from "@/deck/types";
 import { proposalCookieName, verifyProposalSession } from "@/server/auth/proposalSession";
+import { validateDeckConfig } from "@/server/config/validate";
 import { parseStoredDeckConfig } from "@/server/schemas/deckConfig";
 
 /* THE TRUST BOUNDARY.
@@ -101,6 +102,32 @@ export async function resolveVisitorView(slug: string, deps: VisitorDeps): Promi
      would quietly show the client a different commercial document from the one
      they were sent, which is the failure ADR 13 exists to prevent. */
   if (!config) return { state: "not-found" };
+
+  /* The read half of "validate at both boundaries", and it is deliberately NOT
+     symmetric with the write half.
+
+     On write, refusing costs an admin one more click. Here it costs a client
+     their link during a meeting — and every snapshot reaching this line was
+     already validated at publish, so a failure now usually means the VALIDATOR
+     grew a rule since, not that the document is broken. Refusing to render a
+     commercial document the client already received, because this deploy is
+     stricter than the one that sent it, is the live-pitch 500 that ADR 18 exists
+     to avoid. So: log, and render.
+
+     `empty-deck` is the exception, because it is the one issue whose render is
+     not "slightly wrong" but a blank page — and it is genuinely reachable, since
+     `deckConfigSchema` only requires one slide NODE, never one ENABLED node. A
+     blank page reads to a client as a dead link; a controlled not-found at least
+     reads as a link that expired. */
+  const configVerdict = validateDeckConfig(config);
+  if (!configVerdict.ok) {
+    console.warn(
+      `Proposal ${slug}: snapshot fails validation — ${configVerdict.issues
+        .map((i) => `${i.code}${i.at ? ` (${i.at})` : ""}`)
+        .join(", ")}`,
+    );
+    if (configVerdict.issues.some((i) => i.code === "empty-deck")) return { state: "not-found" };
+  }
 
   return {
     state: "unlocked",

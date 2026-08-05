@@ -9,7 +9,16 @@ import { publishProposal, setProposalPassword, updateProposal } from "@/server/p
    Proxy matchers skip Server Functions, so an action is reachable even when the
    page that renders its form is not. ADR 15. */
 
-export type DetailState = { error: string | null; notice: string | null };
+/** `warnings` are the validator's non-blocking channel: the save (or the
+    publish) went through, and there is still something the salesperson should
+    look at before sending the link. Rendered separately from `notice`, because
+    "salvo" and "salvo, mas o total vai fechar sem mensalidade" are not the same
+    message. */
+export type DetailState = {
+  error: string | null;
+  notice: string | null;
+  warnings: string[];
+};
 
 const uuid = z.string().uuid();
 
@@ -26,7 +35,7 @@ export async function updateProposalAction(
   formData: FormData,
 ): Promise<DetailState> {
   const admin = await getAdmin();
-  if (!admin) return { error: "Sessão expirada. Entre novamente.", notice: null };
+  if (!admin) return { error: "Sessão expirada. Entre novamente.", notice: null, warnings: [] };
 
   const parsed = details.safeParse({
     id: formData.get("id"),
@@ -34,7 +43,8 @@ export async function updateProposalAction(
     expiresAt: formData.get("expiresAt") ?? "",
   });
 
-  if (!parsed.success) return { error: "Confira o título e a data de expiração.", notice: null };
+  if (!parsed.success)
+    return { error: "Confira o título e a data de expiração.", notice: null, warnings: [] };
 
   /* End of day in the browser's terms is not a thing the server can know, so
      expiry lands at the end of the chosen day in UTC. A proposal that expires
@@ -47,7 +57,7 @@ export async function updateProposalAction(
 
   revalidatePath(`/admin/proposals/${parsed.data.id}`);
   revalidatePath("/admin");
-  return { error: null, notice: "Alterações salvas." };
+  return { error: null, notice: "Alterações salvas.", warnings: [] };
 }
 
 const password = z.object({
@@ -62,14 +72,15 @@ export async function setPasswordAction(
   formData: FormData,
 ): Promise<DetailState> {
   const admin = await getAdmin();
-  if (!admin) return { error: "Sessão expirada. Entre novamente.", notice: null };
+  if (!admin) return { error: "Sessão expirada. Entre novamente.", notice: null, warnings: [] };
 
   const parsed = password.safeParse({
     id: formData.get("id"),
     password: formData.get("password"),
   });
 
-  if (!parsed.success) return { error: "A senha precisa ter de 6 a 64 caracteres.", notice: null };
+  if (!parsed.success)
+    return { error: "A senha precisa ter de 6 a 64 caracteres.", notice: null, warnings: [] };
 
   await setProposalPassword(parsed.data.id, parsed.data.password, admin.id);
 
@@ -78,6 +89,7 @@ export async function setPasswordAction(
   return {
     error: null,
     notice: "Senha definida. Anote-a agora — ela ainda não pode ser lida de volta.",
+    warnings: [],
   };
 }
 
@@ -86,15 +98,21 @@ export async function publishProposalAction(
   formData: FormData,
 ): Promise<DetailState> {
   const admin = await getAdmin();
-  if (!admin) return { error: "Sessão expirada. Entre novamente.", notice: null };
+  if (!admin) return { error: "Sessão expirada. Entre novamente.", notice: null, warnings: [] };
 
   const parsed = uuid.safeParse(formData.get("id"));
-  if (!parsed.success) return { error: "Proposta inválida.", notice: null };
+  if (!parsed.success) return { error: "Proposta inválida.", notice: null, warnings: [] };
 
   const result = await publishProposal(parsed.data);
-  if (!result.ok) return { error: result.issues.join(" "), notice: null };
+  if (!result.ok) {
+    return { error: result.issues.join(" "), notice: null, warnings: result.warnings };
+  }
 
   revalidatePath(`/admin/proposals/${parsed.data}`);
   revalidatePath("/admin");
-  return { error: null, notice: "Proposta publicada. O link já abre para o cliente." };
+  return {
+    error: null,
+    notice: "Proposta publicada. O link já abre para o cliente.",
+    warnings: result.warnings,
+  };
 }

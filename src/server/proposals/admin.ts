@@ -234,7 +234,7 @@ export async function setProposalPassword(
  */
 export async function publishProposal(
   id: string,
-): Promise<{ ok: true } | { ok: false; issues: string[] }> {
+): Promise<{ ok: true; warnings: string[] } | { ok: false; issues: string[]; warnings: string[] }> {
   const { data: row, error } = await supabaseAdmin
     .from("proposals")
     .select("slug, config_override")
@@ -247,8 +247,9 @@ export async function publishProposal(
   const snapshot = forVisitor(resolved, row.slug);
 
   const validation = validateDeckConfig(snapshot);
+  const warnings = validation.warnings.map((i) => i.message);
   if (!validation.ok) {
-    return { ok: false, issues: validation.issues.map((i) => i.message) };
+    return { ok: false, issues: validation.issues.map((i) => i.message), warnings };
   }
 
   const { error: writeError } = await supabaseAdmin
@@ -265,5 +266,5 @@ export async function publishProposal(
     .eq("id", id);
 
   if (writeError) throw new Error(`Could not publish: ${writeError.message}`);
-  return { ok: true };
+  return { ok: true, warnings };
 }

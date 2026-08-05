@@ -158,3 +158,46 @@ describe("resolveVisitorView — what it hands the renderer", () => {
     }
   });
 });
+
+/* The read half of "validate at both boundaries", and it is asymmetric with the
+   write half on purpose. Refusing a save costs an admin a click; refusing a
+   render costs a client their link mid-meeting — and every snapshot here was
+   already validated at publish, so a failure now usually means this deploy's
+   validator is stricter than the one that sent the document. ADR 18: degrade. */
+describe("resolveVisitorView — a snapshot that fails today's validator", () => {
+  const unlocked = async (mutate: (config: ReturnType<typeof snapshot>) => void) => {
+    const config = snapshot();
+    mutate(config);
+    return view(publishedRow({ config_snapshot: config as unknown }), goodToken());
+  };
+
+  it("still renders a total placed before the calculator", async () => {
+    const result = await unlocked((config) => {
+      const total = config.slides.findIndex((n) => n.id === "total");
+      const calculator = config.slides.findIndex((n) => n.id === "calculator");
+      const [node] = config.slides.splice(total, 1);
+      config.slides.splice(calculator, 0, node);
+    });
+
+    expect(result.state).toBe("unlocked");
+  });
+
+  it("still renders a discount the write path would have refused", async () => {
+    const result = await unlocked((config) => {
+      config.estimate.billingCycles[0].discount = 2;
+    });
+
+    expect(result.state).toBe("unlocked");
+  });
+
+  it("but refuses a deck with nothing enabled", async () => {
+    /* The one exception, and it is reachable: `deckConfigSchema` requires one
+       slide NODE, never one ENABLED node, so this passes the parse and renders a
+       blank page. A blank page reads to a client as a broken link. */
+    const result = await unlocked((config) => {
+      for (const node of config.slides) node.enabled = false;
+    });
+
+    expect(result).toEqual({ state: "not-found" });
+  });
+});
