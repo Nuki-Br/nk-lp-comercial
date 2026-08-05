@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AccessGate } from "@/components/deck/AccessGate";
 import { manrope } from "@/styles/fonts";
 import "@/styles/tokens.css";
 import "@/styles/gate.css";
@@ -45,8 +44,13 @@ export const metadata: Metadata = {
  * `deck-root` no `<html>` é o que liga o `scroll-snap-type` de slides.css; sem
  * a classe o snap do slide de demo morre em silêncio.
  *
- * O portão de senha mora aqui (e não no `page.tsx`) pra que o CSS já esteja
- * carregado quando ele renderiza. Sem analytics, por decisão de projeto.
+ * O portão de senha NÃO mora mais aqui: ele desceu pro `fast/layout.tsx`. Este
+ * layout cobre as duas superfícies de deck, e o `AccessGate` é a senha
+ * compartilhada do time — deixá-lo aqui colocaria a senha da Nuki na frente do
+ * link de cada cliente. `gate.css` continua importado aqui de propósito: o
+ * `ProposalGate` do `/p/[slug]` reaproveita a mesma marcação `.gate*`.
+ *
+ * Sem analytics, por decisão de projeto.
  */
 export default function DeckRootLayout({
   children,
@@ -56,7 +60,7 @@ export default function DeckRootLayout({
   return (
     <html lang="pt-BR" className={`${manrope.variable} deck-root h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-nuki-gray-light text-nuki-black">
-        <AccessGate>{children}</AccessGate>
+        {children}
       </body>
     </html>
   );
