@@ -25,6 +25,12 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PATH_ALLOWLIST = new Map([
   // Named precisely BECAUSE it must not exist — the Next 16 rename invariant.
   ["middleware.ts", "the trap: Next 16 renamed it to proxy.ts"],
+  // Same category as middleware.ts: stage 1 deleted these, and architecture.md +
+  // ADR 17 name them precisely to say they are gone. An ADR body is never
+  // rewritten, so this cannot be fixed by editing the doc.
+  ["src/app/layout.tsx", "deleted by stage 1; named to assert its absence (ADR 17)"],
+  ["src/app/page.tsx", "deleted by stage 1; named to assert its absence (ADR 17)"],
+  ["src/styles/globals.css", "renamed to tokens.css by stage 1; named as history"],
   // Naming conventions, not files.
   ["PascalCase.tsx", "naming convention"],
   ["camelCase.ts", "naming convention"],
@@ -57,33 +63,21 @@ const FUTURE_FILES = new Set([
   "record.ts",
   "database.types.ts",
   "serverClient.ts",
-  "types.ts",
-  "defaults.ts",
-  "estimate.test.ts",
-  "tokens.css",
-  "gate.css",
-  "fonts.ts",
-  "Deck.tsx",
   "DeckTracking.tsx",
   "seed.sql",
   "rls.sql",
   "db-smoke.mjs",
   "seed-admin.mjs",
   "check-no-third-party-origins.mjs",
-  "ci.yml",
 ]);
 
 /* Directory prefixes a later stage creates. */
 const FUTURE_DIRS = [
   "src/server/",
-  "src/deck/",
   "src/components/admin/",
-  "src/app/(deck)",
-  "src/app/(admin)",
   "src/app/api/",
   "src/styles/slides/",
   "supabase/",
-  ".github/",
 ];
 
 /* Every file basename in the repo, so a bare `slides.css` in prose resolves the

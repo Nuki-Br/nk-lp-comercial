@@ -29,8 +29,8 @@ is what makes its decision table testable at all.
 
 | File | Assertions |
 |---|---|
-| `src/lib/estimate.ts` | the four canonical scenarios, image count **and** cost — the table in `estimate.md` |
-| `src/deck/defaults.ts` | `buildDefaultDeck()` survives `JSON.parse(JSON.stringify(...))` deep-equal |
+| `src/lib/estimate.ts` | the four canonical scenarios, image count **and** cost — the table in `estimate.md`; the materialize/aliasing guards; `formatCurrency`'s NBSP |
+| `src/deck/defaults.ts` | JSON round trip; `resolve(base, null) === base`; `normalizeDeck` idempotence; disabled slides skipped by `anchorsOf`; orphan-demo drop; ordinal renumbering; arrays replace in `mergeEstimate`; `parseDeckOverride` never throws |
 | `src/server/auth/password.ts` | hash/verify round trip; wrong password fails; comparison is timing-safe |
 | `src/server/auth/proposalSession.ts` | valid cookie accepted; expired-by-1s rejected; one-byte-tampered rejected; proposal A's cookie rejected for proposal B |
 | `src/server/proposals/dal.ts` | the decision table `(row, cookie, now) → ok \| locked \| expired \| not-found`, fetcher injected |
@@ -80,6 +80,36 @@ cannot see a screen.
 > value and the closing frame shows R$ 0. **That is not a failure.** Read raw
 > values, or make the pane visible. Agents report this as a bug constantly.
 
+### What an automated pane cannot tell you
+
+Stage 1 lost time to four separate measurement artifacts. All four look exactly
+like regressions and none of them are:
+
+| Symptom | Cause | Tell |
+|---|---|---|
+| Closing frame reads zero; animated numbers stale after a preset click | rAF frozen | the **non**-animated readouts (`738 imagens estimadas`, the `N base · M de opção` line) are correct |
+| No progress-nav dot ever lights; arrow keys do nothing; `scrollIntoView` does nothing | `window.innerHeight === 0`, so a `-50%` rootMargin observer can never fire and the document cannot scroll | check `window.innerHeight` first; a **direct** `scrollIntoView` failing proves it is the pane, not the handler |
+| `.gate` computes `min-height: 0px` | `100dvh` against a zero-height viewport | `offsetHeight` is correct anyway |
+| Nested `<html>`/`<body>`, "mounting a new html component" | stale HMR in a tab left open across a layout edit | `curl` the route: one `<html>`. A fresh tab is clean |
+
+Clearing `.next` is **not** enough after a layout move — the browser tab holds
+stale HMR state too. Open a new tab.
+
+To prove the keyboard handler ran without a scrollable viewport: dispatch the
+`keydown` and read `event.defaultPrevented`. `DeckBehaviors` calls
+`preventDefault()` on the arrow branch, so `true` means the handler reached it.
+
+### Comparing the DOM between two runs
+
+Raw `outerHTML` is **not stable between two loads of the same code** —
+`DeckBehaviors` mutates the DOM through observers and timers, so which classes
+are present depends on scroll position, tab age and wall clock. Normalise first:
+strip `.is-visible`, `.is-active`, `.progress-nav[data-tone]` and inline
+`transform` on `[data-parallax]`, and nothing else. Everything authored —
+`data-tone` on sections, `data-nav-id`, ids, real classes — must still compare
+byte-for-byte. Then poll until the closing frame stops reading zero before
+trusting the capture.
+
 ## A — `/fast` regression
 
 The standing pixel-identity guard. **Run it in every stage**, not just the one
@@ -87,10 +117,10 @@ that touches the deck.
 
 - [ ] The gate appears; the password unlocks; the unlock survives a reload
 - [ ] Arrow keys walk every rendered anchor, in order, including `#inspetor-demo`
-- [ ] Every progress-nav dot scrolls somewhere. **Two are currently dead** —
-      `differentiators` and `audience` are commented out in the page but still
-      listed in `deckNav`. See `tech-debt.md` §6; do not "fix" it by un-hiding
-      the slides, which was a deliberate content decision.
+- [ ] Every progress-nav dot scrolls somewhere — **10 dots**, not 12.
+      `differentiators` and `audience` are `enabled: false` nodes, so `anchorsOf`
+      skips them and no dead dot can be rendered. Do not "fix" this by un-hiding
+      the slides; that was a deliberate content decision.
 - [ ] The reveal stagger fires on each section
 - [ ] The Inspetor iframe loads; **ESC pressed inside it exits**; scrolling passes
       through while the frame is inert

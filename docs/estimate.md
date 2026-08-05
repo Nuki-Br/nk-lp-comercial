@@ -73,12 +73,17 @@ too; do not collapse them.
 | `dryOptions` / `wetOptions` (3 / 3) | `ESTIMATE_DEFAULTS` | yes |
 | initial unit types | `ESTIMATE_DEFAULTS.initialUnitTypes` | yes |
 | `PROJECT_SIZE_PRESETS` | `src/content/deck.ts` | yes — prunable per client |
-| min/max for every field | `ESTIMATE_RANGES` | no, code-only |
+| min/max for every field | `ESTIMATE_RANGES` in `src/lib/estimateTypes.ts` | no, code-only |
 | `plans`, `billingCycles` | `src/content/deck.ts` | yes |
-| `maxMonths` (36) | was `PricingSlide.tsx`, now `EstimateConfig` | yes |
+| `maxMonths` (36) | `EstimateConfig.maxMonths` | yes |
 
 `ESTIMATE_RANGES` stays in code on purpose. It is the clamp that keeps an admin
 typo from producing an absurd quote, so it is not something an admin edits.
+
+It lives in `src/lib/estimateTypes.ts` rather than `src/content/` because
+`src/lib/estimate.ts` used to import it *from* content — a backwards arrow for a
+layer that is supposed to be pure — and because a slide may not import from
+`src/content/` at all. Content now imports from `lib`, not the reverse.
 
 ## The hidden price panel
 
@@ -93,18 +98,33 @@ cost basis is a discoverable leak — and the salesperson sets those numbers in
 
 ## Serialization: no functions in config
 
-`ESTIMATE_DEFAULTS.initialUnitTypes` and `PROJECT_SIZE_PRESETS[].buildUnitTypes`
-are **factories**, not data — deliberately, because `UnitTypeState` is mutated in
-place and each application needs fresh objects.
+**Done in stage 1.** `ESTIMATE_DEFAULTS.initialUnitTypes` and
+`PROJECT_SIZE_PRESETS[].buildUnitTypes` used to be factories; they are plain data
+now, and `materializeUnitTypes()` / `materializeRooms()` in
+`src/lib/estimateTypes.ts` deep-clone on use, so the cloning responsibility sits
+with the consumer.
 
-A config carrying functions can never reach JSONB. The conversion is: store the
-factory's **output**, plus a `materializeUnitTypes()` helper that deep-clones on
-use, so the cloning responsibility moves to the consumer.
+**The old rationale here was wrong, and the correction matters.** This file used
+to say the factories existed "because `UnitTypeState` is mutated in place". It is
+not: every updater in `CalculatorSlide` is immutable (`prev.map` + spread). The
+real hazard is **aliasing** — with plain data, the N unit types of one preset
+would share a single `rooms` array reference, and two applications of the same
+preset would move together. That is why the clone is still required, and it is
+what `src/deck/defaults.test.ts` pins down.
 
 Store the output, never a reference to the factory. `{"preset": "studio"}` would
 look tidier and would be wrong: re-tuning `studioRooms()` in code would
 retroactively change the numbers in a proposal a client already received and
 screenshotted.
+
+## `Intl` uses a non-breaking space
+
+`formatCurrency` is pt-BR via `Intl`, so the separator between `R$` and the
+digits is **U+00A0**, not the space you type. A string comparison against the
+table above fails against *correct* values unless you normalise it — this cost
+two debugging detours during stage 1, once making all four scenarios report a
+false failure. The tests assert on numbers for exactly this reason, and
+`formatCurrency`'s own test pins the NBSP.
 
 ## Presets are a commercial target, not a derivation
 

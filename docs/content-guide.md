@@ -40,7 +40,9 @@ Quase tudo vive em dois arquivos: `src/content/deck.ts` e `src/content/modules.t
 
 | Quero mudar… | Arquivo | Procure por |
 |---|---|---|
-| Os nomes na navegação lateral | `content/deck.ts` | `deckNav` |
+| Os nomes na navegação lateral | `content/deck.ts` | `slideLabels` |
+| Títulos e textos de cada slide | `content/slides.ts` | o bloco do slide |
+| Rótulos internos da calculadora | `content/slides.ts` | `calculatorLabels` |
 | Os 3 cards de "O problema" | `content/deck.ts` | `problemCards` |
 | As 3 fases (Planner/Personaliza/Inspetor) | `content/deck.ts` | `moduleFlow` |
 | Os diferenciais | `content/deck.ts` | `differentiators` |
@@ -51,7 +53,7 @@ Quase tudo vive em dois arquivos: `src/content/deck.ts` e `src/content/modules.t
 | **Ciclos e descontos** | `content/deck.ts` | `billingCycles` → `discount` |
 | **Meses que ativam cada ciclo** | `content/deck.ts` | `billingCycles` → `minMonths` |
 | Defaults da calculadora | `content/deck.ts` | `ESTIMATE_DEFAULTS` |
-| Limites dos campos da calculadora | `content/deck.ts` | `ESTIMATE_RANGES` |
+| Limites dos campos da calculadora | `lib/estimateTypes.ts` | `ESTIMATE_RANGES` |
 | **Preço da imagem base** | `content/deck.ts` | `ESTIMATE_DEFAULTS.baseImagePrice` |
 | **Preço da imagem de opção** | `content/deck.ts` | `ESTIMATE_DEFAULTS.optionImagePrice` |
 | Presets de porte (Studio/Padrão/Alto padrão) | `content/deck.ts` | `PROJECT_SIZE_PRESETS` |
@@ -60,10 +62,19 @@ Quase tudo vive em dois arquivos: `src/content/deck.ts` e `src/content/modules.t
 | Link "Saiba mais" de um módulo | `content/modules.ts` | `learnMoreHref` |
 | Botão que abre o app do módulo | `content/modules.ts` | `links` |
 
-Três slides ainda têm o texto dentro do próprio componente: a capa
-(`components/slides/CoverSlide.tsx`), os logos de cases
-(`components/slides/CasesSlide.tsx`) e o frame de fechamento
-(`components/slides/EstimatedTotalSlide.tsx`).
+**Nenhum slide guarda mais texto dentro do componente.** Toda string que um
+humano lê está em `src/content/slides.ts` — inclusive as que o painel ainda não
+expõe (os logos de cases, os rótulos internos da calculadora). Um componente de
+slide não importa de `src/content/`: a configuração entra por prop.
+
+Títulos com destaque laranja são uma lista de pedaços, não HTML:
+
+```ts
+title: ["Construtoras que já ", { em: "saíram da planilha." }]
+```
+
+O `{ em: … }` vira o `<em>` laranja. Repare no **espaço no fim** do primeiro
+pedaço — sem ele as duas partes se colam.
 
 ## Detalhes que confundem
 

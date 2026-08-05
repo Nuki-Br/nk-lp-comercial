@@ -20,24 +20,29 @@ build's history.
 
 | # | Stage | Status | Merged |
 |---|---|---|---|
-| 0 | Commit the working tree (see below) | **required first** | — |
-| 1 | [Foundation](1-foundation.md) — `/fast`, `DeckConfig`, docs, tooling | not started | — |
+| 0 | Commit the working tree | done | — |
+| 1 | [Foundation](1-foundation.md) — `/fast`, `DeckConfig`, docs, tooling | **done, awaiting commit** | — |
 | 2 | [Proposals](2-proposals.md) — Supabase, `/admin` login, `/p/[slug]`, tracking | not started | — |
 | 3 | [Composer](3-composer.md) — the editing UI and the tracking read-out | not started | — |
 
-## Before stage 1 — do this yourself
+## What stage 1 left for stage 2
 
-The working tree has uncommitted changes to `AGENTS.md`, `docs/architecture.md`
-and `src/content/deck.ts` that **fix the calculator preset compositions**. The
-committed `AGENTS.md` claims preset totals of 208 / 678 / 1.544; the code now
-produces 284 / 507 / 738.
+Read these before starting stage 2; they are contract decisions, not trivia.
 
-```bash
-git status --short
-```
-
-Commit or stash them before starting. Stage 1 refuses to run on a dirty tree, and
-losing that work reintroduces the stale numbers.
+- **`/` redirects to `/fast`, not `/admin`.** The admin is a stub. Flip it in
+  `next.config.ts` once there is something there. `AGENTS.md`'s route table
+  already says `/admin`; that divergence is deliberate and temporary.
+- **`chrome.allowPriceOverride` is deliberately absent from `DeckOverride`.** It
+  is decided at the render site and never persisted, because `config_snapshot`
+  stores the *resolved* config — if it were in the delta, `/fast`'s `true` would
+  freeze into every published proposal and ship the `Ctrl+Alt+K` cost panel to
+  clients. `/p/[slug]` must resolve with `false`.
+- **`DeckOverride.shown` exists** alongside `hidden`, so a proposal can re-enable
+  a slide that ships disabled (today: `differentiators`, `audience`).
+- **`normalizeDeck` is tolerant, not rejecting** — it warns and repairs. The
+  validator that *rejects* is stage 2's `src/server/config/validate.ts`.
+- **`RoomAreaType` is `"seca" | "molhada"`.** Stage 2 persists those strings into
+  JSONB. Rename them before that or accept a data migration — `tech-debt.md` §9.
 
 ## Why the stages are cut this way
 

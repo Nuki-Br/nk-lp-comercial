@@ -43,20 +43,24 @@ no painel. A âncora é o `id` da seção.
 | 1 | Capa | `CoverSlide` | `#cover` | |
 | 2 | O problema | `ProblemSlide` | `#problem` | |
 | 3 | O que é a Nuki | `WhatIsNukiSlide` | `#what-is-nuki` | |
-| 4 | Planner | `ModuleSlides` | `#planner` | |
-| 5 | Personaliza | `ModuleSlides` | `#personaliza` | |
-| 6 | Inspetor | `ModuleSlides` | `#inspetor` | |
-| 7 | Demo do Inspetor | `ModuleDemoSlide` | `#inspetor-demo` | |
-| 8 | Diferenciais | `DifferentiatorsSlide` | `#differentiators` | ⚠ oculto |
-| 9 | Pra quem serve | `AudienceSlide` | `#audience` | ⚠ oculto |
+| 4 | Planner | `ModuleSlide` | `#planner` | |
+| 5 | Personaliza | `ModuleSlide` | `#personaliza` | |
+| 6 | Inspetor | `ModuleSlide` | `#inspetor` | |
+| 7 | Demo do Inspetor | `ModuleDemoSlide` | `#inspetor-demo` | sem ponto próprio |
+| 8 | Diferenciais | `DifferentiatorsSlide` | `#differentiators` | ⚠ desligado |
+| 9 | Pra quem serve | `AudienceSlide` | `#audience` | ⚠ desligado |
 | 10 | Cases | `CasesSlide` | `#cases` | |
 | 11 | Plano & contato | `PricingSlide` | `#pricing` | |
 | 12 | Estime o setup | `CalculatorSlide` | `#calculator` | |
 | 13 | Total estimado | `EstimatedTotalSlide` | `#total` | |
 
-⚠ **Os dois marcados como ocultos estão comentados em `src/app/page.tsx`**
-(commit `e49dd8e`) mas continuam no `deckNav` — então o nav lateral tem dois
-pontos que não levam a lugar nenhum. Ver [`docs/tech-debt.md`](docs/tech-debt.md) §6.
+A ordem vem de `buildDefaultDeck()` em [`src/deck/defaults.ts`](src/deck/defaults.ts),
+e o componente de cada nó sai de [`src/deck/registry.tsx`](src/deck/registry.tsx).
+
+⚠ **Os dois desligados são nós com `enabled: false`**, não slides ausentes: eles
+existem na configuração e o nav simplesmente não os lista. O nav e o render saem
+do mesmo array, então um ponto que não leva a lugar nenhum deixou de ser possível.
+O slide 7 é navegável por seta mas empresta o ponto do Inspetor.
 
 Navegação: `←` `→`, `PageUp` / `PageDown`, `Espaço`, `Home` / `End`, ou os pontos
 na lateral direita.
@@ -81,9 +85,12 @@ altera um documento que o cliente já recebeu.
 | `npm run dev` | servidor de desenvolvimento |
 | `npm run build` | build de produção |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` | Biome |
+| `npm run format` | Biome, escrevendo |
+| `npm run lint` | Biome (format + lint + imports), só checando |
 | `npm run lint:next` | ESLint, só as regras do Next |
-| `npm run check` | typecheck + Biome + ESLint + Vitest |
+| `npm run test` | Vitest |
+| `npm run check:docs` | referências de arquivo nos `.md` |
+| `npm run check` | typecheck + Biome + ESLint + check-docs + Vitest |
 
 ## Deploy
 

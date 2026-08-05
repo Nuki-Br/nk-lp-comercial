@@ -47,9 +47,9 @@ the DOM, and it is coupled **by name** to markup and CSS.
 | # | Reads / writes | Behavior |
 |---|---|---|
 | 1 | `[data-reveal-group]`, descendant `.reveal` → `.is-visible` | stagger-in on scroll, `i × 90 ms`, one-shot (unobserves after firing) |
-| 2 | `.slide, .module`, `section.dataset.navId \|\| section.id`, `.progress-nav a` → `.is-active` matched on `dataset.sectionId` | active-section tracking, `rootMargin: "-50% 0px -50% 0px"` |
+| 2 | the walkable ids from config → `getElementById`, `section.dataset.navId \|\| section.id`, `.progress-nav a` → `.is-active` matched on `dataset.sectionId` | active-section tracking, `rootMargin: "-50% 0px -50% 0px"` |
 | 3 | `section.dataset.tone` → `.progress-nav[data-tone]` | palette flip, `"dark"` or `"light"` |
-| 4 | `.slide, .module` filtered by having an `id` | the walkable list for keyboard nav |
+| 4 | `walkableIdsOf(config.slides)` via `DeckNavigationProvider` | the walkable list for keyboard nav |
 | 5 | `postMessage` type `nuki-demo:esc` → window event `nuki-demo:exit` | ESC pressed *inside* the demo iframe |
 | 6 | `[data-parallax]` → inline `transform` | background-numeral parallax **fallback** |
 | 7 | `.keyboard-hint` → `.is-visible` | the ← → hint, shown at 800 ms, hidden at 5000 ms |
@@ -62,21 +62,28 @@ forward; `Home` / `End` to the ends. Suppressed while typing (`INPUT`,
 `document.documentElement.style.scrollBehavior` is set to `smooth` unless the
 user prefers reduced motion.
 
-### The walkable list should come from config, not the DOM
+### The walkable list comes from config, not the DOM
 
-Historically it was derived from the DOM, which is order-agnostic and survives a
-data-driven refactor by accident. Derive it from `DeckConfig.slides` instead and
-publish it through a small client context, because:
+**Done in stage 1.** `walkableIdsOf(config.slides)` is published through
+`DeckNavigationProvider` (`src/components/deck/DeckNavigation.tsx`) and consumed
+by both `DeckBehaviors` and `ModuleDemoSlide.navigate()`. That:
 
-- it makes the order authoritative rather than incidental;
-- it lets a slide opt out of the walk without a DOM hack;
-- it deletes the dead `.module` selector;
-- **it removes a duplicated contract.** `ModuleDemoSlide.navigate()` rebuilds the
-  identical query by hand today, so two places encode "what is walkable" and they
-  will drift the first time someone adds a `.slide` without an `id`.
+- makes the order authoritative rather than incidental;
+- lets a slide opt out of the walk via `walkable: false`, with no DOM hack;
+- deleted the dead `.module` selector from both query sites;
+- **removed a duplicated contract.** `ModuleDemoSlide.navigate()` used to rebuild
+  the identical query by hand, so two places encoded "what is walkable".
 
-Keep the mount-once `useEffect(…, [])` and read ids through a ref so the listener
-identity never changes.
+The provider exposes a stable **function**, not the array — an array prop changes
+identity every render and invites a consumer to put it in a dependency array. The
+value is created once with a `useState` initializer (not `useRef`: reading
+`ref.current` during render is a React rule violation and `eslint-config-next`
+rejects it), and the ids are read through a ref at keypress time. `DeckBehaviors`
+lists `getWalkableIds` in its dependency array and still mounts exactly once,
+because that identity never changes.
+
+`DeckNavigationProvider` renders no DOM node. Anything else would break the
+`.deck` identity the stage had to prove.
 
 ### The ESC bridge is a two-part contract
 
@@ -93,9 +100,16 @@ It carries `data-nav-id="inspetor"` so the module's dot stays lit while the demo
 is on screen — without it the nav goes blank there.
 
 That borrowing is a live invariant: a config that hides the `inspetor` module but
-keeps its demo points `data-nav-id` at a dot that no longer exists. Model the
-demo as a checkbox on the module in the admin, so the orphan cannot be
-constructed, and have config normalization drop orphaned demos as a backstop.
+keeps its demo points `data-nav-id` at a dot that no longer exists.
+
+**Both halves exist now.** In the config the demo is its own node — it needs an
+id of its own, because it is arrow-navigable, stage 2's tracking keys on the
+anchor id, and `DeckOverride.order` is keyed by id. What makes it a *checkbox* is
+`SLIDE_META.module.fields` carrying `hasDemo`, with `module-demo` marked
+`addable: false` — so the admin cannot construct the orphan. `normalizeDeck` is
+the backstop for configs written by hand or by an older deploy: any node whose
+`parentId` names an absent-or-disabled node is dropped, and `navId` is derived
+rather than authored, so it cannot point at a dot that is gone.
 
 **It snaps; it does not lock.** `.module-demo-slide` carries
 `scroll-snap-align: start` and the root carries `scroll-snap-type: y proximity`.
@@ -109,9 +123,11 @@ embedded document has `overscroll-behavior: none` and no internal scroller, so a
 live iframe swallows the wheel and the deck reads as frozen. The `▷ Explorar` CTA
 dispatches `nuki-demo:activate` so the pitch path costs no extra click.
 
-The CTA branch must key off resolved config, not off `demoUrl` being present —
-otherwise a deck whose demo slide was dropped still renders a button that scrolls
-to nothing.
+The CTA branch keys off **`node.childId`** — set by `normalizeDeck` only when the
+demo node survived — not off `demoUrl` being present. A deck whose demo was
+dropped would otherwise still render a button that scrolls to nothing. The
+precedence is `links` → demo → `learnMore`; `planner` and `personaliza` have
+`links`, so only `inspetor` reaches the demo branch.
 
 ## Styling
 

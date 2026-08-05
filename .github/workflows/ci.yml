@@ -1,0 +1,30 @@
+name: CI
+
+# `check` = typecheck + Biome + ESLint (regras do Next) + check-docs + Vitest.
+# `build` roda separado porque só ele pega erro de rota/layout — a etapa 1
+# quebrou o build uma vez com um `page.tsx` sem root layout acima, e typecheck
+# passou.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `npm ci`, não `npm install`: falha se o lockfile divergir do
+      # package.json, que é como a lista de dependências continua sendo um
+      # artefato revisado (AGENTS.md Regra 3).
+      - run: npm ci
+
+      - run: npm run check
+
+      - run: npm run build

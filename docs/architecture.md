@@ -53,11 +53,37 @@ override — or renders the frozen snapshot, if published. Nothing else differs.
 
 "A proposal with no customization looks exactly like the deck" is therefore not a
 property to maintain by hand: it is the identity `resolve(base, null) === base`,
-which is one assertion.
+which is one assertion. `resolveDeckConfig` always runs `normalizeDeck`, even
+with no override — a `if (!override) return base` short-circuit would make that
+identity true by vacuity and hide `buildDefaultDeck()` drifting out of normal form.
+
+```
+src/deck/
+  types.ts      the SlideNode union, DeckConfig, EstimateConfig, RichText   React-free
+  meta.ts       SLIDE_META — admin field schema; labels from src/content/   React-free
+  defaults.ts   buildDefaultDeck() — returns an already-normalized config   React-free
+  overrides.ts  DeckOverride + parseDeckOverride(), which never throws      React-free
+  resolve.ts    resolveDeckConfig / normalizeDeck / mergeEstimate           React-free
+  anchors.ts    anchorsOf / walkableIdsOf / visibleSlides                   React-free
+  registry.tsx  renderSlide(node, ctx) — the only switch on `kind`
+```
 
 `src/deck/` is React-free above the registry, so the admin, the validator and the
 DAL can import the types without pulling a single slide component into their
 bundle.
+
+**Nothing outside `registry.tsx` switches on `kind`.** Everything the chrome
+needs — is it rendered, does it get a dot, is it arrow-navigable, what ordinal,
+does it have a surviving child — lives on `SlideNodeBase` as `enabled`, `inNav`,
+`walkable`, `ordinal`, `childId`. That is what keeps a future bespoke slide from
+breaking `ProgressNav` somewhere nobody is looking.
+
+`normalizeDeck` recomputes every derived fact from scratch after ordering and
+hiding, which makes it idempotent: id uniqueness (throws in dev), orphan drop by
+`parentId`, `navId`/`childId` derivation, ordinal renumbering. Optional fields are
+**omitted rather than set to `undefined`** — `JSON.stringify` drops undefined
+keys, so an explicit `undefined` silently breaks the JSONB round trip. There is a
+test that names the offending field.
 
 ## The trust boundary
 
