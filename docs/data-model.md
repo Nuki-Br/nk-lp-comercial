@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: src/deck/types.ts, src/content/deck.ts, src/lib/estimateTypes.ts, Supabase Vault docs (fetched), ADR 13
-size: 172
+verified_against: src/deck/types.ts, src/server/proposals/config.ts, supabase/migrations/*.sql, ADR 13
+size: 202
 ---
 
 # Data model
@@ -155,6 +155,36 @@ Two fields of `DeckConfig` are **not** in `DeckOverride` and cannot be: `key` an
 with `allowPriceOverride: false`, and the publish path must write the snapshot
 with `false` too — otherwise `/fast`'s `true` freezes into the document and every
 published link ships the `Ctrl+Alt+K` cost panel to a client.
+
+### Writing the delta
+
+`src/server/proposals/config.ts` is the **only** writer of `config_override`.
+Every composer form goes through `saveProposalOverride`, which resolves the
+merged delta, validates the RESOLVED config, and writes nothing if it fails.
+Validating the resolved config rather than the delta is not a preference: "total
+after calculator" is meaningless until the order has been applied.
+
+Top-level keys of the delta replace, because each form owns one. `estimate` is
+the exception and merges one level, because three forms write disjoint parts of
+it — replacing it wholesale would make saving the image tariffs discard the plan
+price set minutes earlier, silently.
+
+Keys carrying no information are pruned, so an untouched proposal's
+`config_override` is literally `{}` — the identity `resolve(base, null) === base`
+visible in a row.
+
+### Comparing two configs
+
+**`jsonb` does not preserve object key order.** It is a parsed binary
+representation: keys come back sorted by length then bytes, while a freshly built
+config has them in source order. Arrays keep their order, which is what
+`DeckOverride.order` depends on.
+
+The consequence is load-bearing for the "unpublished changes" banner. Deciding
+whether a snapshot is stale with `JSON.stringify(a) === JSON.stringify(b)` is
+always false across that boundary, so every published proposal would report
+unpublished changes forever. `isSnapshotStale` deep-compares, and
+`config.test.ts` reverses key order to pin it.
 
 `RoomAreaType` values reach JSONB as `"dry"` / `"wet"`. They were pt-BR until the
 commit immediately before this schema was designed, precisely so that this

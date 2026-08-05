@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: the docs/ tree itself
-size: 104
+size: 106
 ---
 
 # Docs router
@@ -24,6 +24,7 @@ wins and the other is a bug.
 | add or change tracking | `tracking.md` |
 | change deploy, env vars, redirects | `deployment.md` |
 | change deck copy or default prices | `content-guide.md` |
+| build or publish a proposal in `/admin` | `admin-guide.md` |
 | embed a module demo | `demo-embedding.md` (211 lines — load on demand) |
 | understand what runs where | `architecture.md` |
 | know what is deliberately broken | `tech-debt.md` |
@@ -96,6 +97,7 @@ estimate.md          the pricing math and THE canonical numbers
 testing.md           test policy + the three manual checklists
 deployment.md        Vercel + Supabase, env matrix, migrations
 content-guide.md     editing copy and default prices, for non-developers
+admin-guide.md       building, publishing and reading a proposal, for salespeople
 demo-embedding.md    turning a Claude Design export into an iframe demo
 tech-debt.md         known-dead code and deferred cleanups, each with its proof command
 decisions.md         ADRs — why, not what

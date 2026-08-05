@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: package.json scripts, ADR 7 and ADR 12
-size: 213
+verified_against: package.json scripts, ADR 7 and ADR 12, src/server/**/*.test.ts
+size: 246
 ---
 
 # Testing
@@ -34,7 +34,9 @@ is what makes its decision table testable at all.
 | `src/server/auth/password.ts` | hash/verify round trip; wrong password fails; comparison is timing-safe |
 | `src/server/auth/proposalSession.ts` | valid cookie accepted; expired-by-1s rejected; one-byte-tampered rejected; proposal A's cookie rejected for proposal B |
 | `src/server/proposals/dal.ts` | the decision table `(row, cookie, now) → ok \| locked \| expired \| not-found`, fetcher injected; drafts are not-found; a stale `access_epoch` locks out; `allowPriceOverride` is forced false; the `locked` result has exactly two keys |
-| `src/server/config/validate.ts` | rejects demo-without-module, total-without-calculator, negative price, discount ≥ 1 — and accepts the shipped default deck, which is what stops a validator that rejects everything from passing every other case |
+| `src/server/config/validate.ts` | rejects demo-without-module, total-without-calculator, negative price, discount ≥ 1, an empty or non-ascending cycle list — and accepts the shipped default deck, which is what stops a validator that rejects everything from passing every other case; warns without blocking on total-without-pricing |
+| `src/server/proposals/config.ts` | the delta merge (`estimate` merges one level so two forms cannot overwrite each other); `enabledDelta` against the shipped defaults; `isSnapshotStale` deep-compares and survives reordered keys |
+| `src/deck/v2Hooks.test.ts` | the ADR 18 hooks: the union stays open, `slideMetaOf` degrades, `copy` round-trips unread, `custom` is the only addable kind |
 
 ## What is not tested, and why
 
@@ -203,11 +205,42 @@ curl -s http://localhost:3000/p/<slug> | grep -ci "planejamento"  # must be 0
 
 ## C — `/admin`
 
+Access:
+
 - [ ] `/` redirects to `/admin`
-- [ ] Unauthenticated `/admin` redirects to the login page
+- [ ] Unauthenticated `/admin` **and every composer sub-route** redirect to login
 - [ ] An `auth.users` account with no `admin_users` row is denied
 - [ ] A deactivated admin loses access on the next page load
-- [ ] Create → configure → copy link → open in a private window round-trips
-- [ ] The dwell numbers for that session appear on the proposal detail page
 - [ ] No deck CSS on the page: `getComputedStyle(document.documentElement).scrollSnapType`
       is `none`
+
+The composer, end to end. Create → configure → publish → open in a private
+window, and confirm each change reached `/p/[slug]`:
+
+- [ ] Three disabled slides are gone; the nav has exactly the enabled dots, and
+      arrow keys walk exactly those, in the configured order
+- [ ] A reordered pair renders in the new order; module numerals renumber
+      01/02/03 with no gap
+- [ ] Unticking a module's demo removes the demo **and** its "▷ Explorar" button —
+      a leftover button would scroll to nothing
+- [ ] A changed plan price and cycle discount show; a discount typed as `10`
+      reads as −10%, never −1000%
+- [ ] Image tariffs move the calculator's cost, and `Ctrl+Alt+K` does **nothing**
+- [ ] Two preloaded unit types are there when the calculator opens
+- [ ] With every size preset unticked, the whole preset block is absent — not an
+      empty one
+
+Validation and the freeze (ADR 13):
+
+- [ ] Total-before-calculator and an all-disabled deck are refused, each with a
+      sentence a salesperson could act on
+- [ ] Disabling `pricing` while `total` survives **warns and still saves**
+- [ ] Editing a published proposal banners every composer tab and leaves the
+      client's link on the old version; republishing clears both
+- [ ] Changing a default in `src/content/deck.ts` and reloading the published
+      proposal changes **nothing**
+
+The read-out:
+
+- [ ] A real session's dwell appears on the detail page, longest first
+- [ ] Opening the client's link while signed in to `/admin` does **not** move it

@@ -49,27 +49,15 @@ const PATH_ALLOWLIST = new Map([
 ]);
 
 /* Files a later build stage creates. docs/stages/README.md is the status board;
-   these are expected to be missing until their stage merges. */
-const FUTURE_FILES = new Set([
-  "data-model.md",
-  "security.md",
-  "tracking.md",
-  "admin-guide.md",
-  "proxy.ts",
-  "dal.ts",
-  "validate.ts",
-  "password.ts",
-  "proposalSession.ts",
-  "record.ts",
-  "database.types.ts",
-  "serverClient.ts",
-  "DeckTracking.tsx",
-  "seed.sql",
-  "rls.sql",
-  "db-smoke.mjs",
-  "seed-admin.mjs",
-  "check-no-third-party-origins.mjs",
-]);
+   these are expected to be missing until their stage merges.
+
+   EMPTIED BY STAGE 3, and that is the point of the list rather than a cleanup
+   detail: every entry here is a file exempted from the staleness check. Once the
+   file exists, leaving its name in place quietly excuses the newest doc in the
+   repo from the one check that keeps docs honest. Stages 2 and 3 created all of
+   them, so the set is empty — add a name only while its file is genuinely still
+   in the future, and delete it in the commit that creates the file. */
+const FUTURE_FILES = new Set([]);
 
 /* Directory prefixes a later stage creates. */
 const FUTURE_DIRS = [

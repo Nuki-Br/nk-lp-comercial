@@ -9,9 +9,8 @@ a landing page pública) porque os dois dividiam o mesmo app Next.js e as sessõ
 de pitch contaminavam as métricas de marketing. **Este repo não tem analytics de
 terceiros, de propósito.**
 
-> **Em construção.** A migração do deck estático pra aplicação acontece em três
-> etapas. O status de cada uma está em [`docs/stages/README.md`](docs/stages/README.md)
-> — consulte antes de assumir que uma rota existe.
+> **V1 completa.** As três etapas da migração do deck estático pra aplicação
+> foram entregues; o histórico está em [`docs/stages/README.md`](docs/stages/README.md).
 
 ## As superfícies
 
@@ -20,6 +19,11 @@ terceiros, de propósito.**
 | `/admin` | painel onde as propostas são montadas | login (Supabase Auth) |
 | `/p/[slug]` | a proposta de um cliente | senha própria, validada no servidor |
 | `/fast` | o deck genérico, pra pitch rápido | senha compartilhada |
+
+O painel tem quatro abas por proposta — visão geral, slides, planos e preços, e
+calculadora. Quem vai **usar** o painel deve ler
+[`docs/admin-guide.md`](docs/admin-guide.md), que é escrito pra isso e não exige
+saber programar.
 
 ## Rodando local
 
@@ -111,6 +115,7 @@ tarefa e manda ler *um* documento, não cinco.
 | [`docs/deck-runtime.md`](docs/deck-runtime.md) | contrato dos slides e do DOM |
 | [`docs/estimate.md`](docs/estimate.md) | a matemática da calculadora e os números canônicos |
 | [`docs/content-guide.md`](docs/content-guide.md) | editar copy e preços sem mexer em código |
+| [`docs/admin-guide.md`](docs/admin-guide.md) | montar, publicar e acompanhar uma proposta no painel |
 | [`docs/testing.md`](docs/testing.md) | o que é testado, o que não é, e os checklists manuais |
 | [`docs/deployment.md`](docs/deployment.md) | Vercel, Supabase, env, migrations |
 | [`docs/decisions.md`](docs/decisions.md) | por que as coisas são como são |

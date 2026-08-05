@@ -1,8 +1,8 @@
 ---
 audience: both
 status: current
-verified_against: the stage files in this directory, and git log 1ef10b6..4731d4b
-size: 154
+verified_against: the stage files in this directory, and git log 1ef10b6..06308b7
+size: 203
 ---
 
 # Build stages
@@ -23,7 +23,7 @@ build's history.
 | 0 | Commit the working tree | done | 5240a71 |
 | 1 | [Foundation](1-foundation.md) — `/fast`, `DeckConfig`, docs, tooling | **done** | 1ef10b6 |
 | 2 | [Proposals](2-proposals.md) — Supabase, `/admin` login, `/p/[slug]`, tracking | **done** | 4731d4b |
-| 3 | [Composer](3-composer.md) — the editing UI and the tracking read-out | not started | — |
+| 3 | [Composer](3-composer.md) — the editing UI and the tracking read-out | **done** | 06308b7 |
 
 Stage 1 merged to `main` as nine commits, fast-forward, `006c510..1ef10b6`. The
 route move, the estimate-defaults conversion and the `DeckConfig` layer are each
@@ -52,6 +52,55 @@ checklist A and checklist B walked end to end.
   internal Server Function endpoints. None come from the three dependencies this
   stage added. The fix is `next@16.3.0`, outside the pinned range, and it is a
   deck-rendering risk — deliberately left as a decision, not taken quietly.
+
+Stage 3 landed as eight commits, `4731d4b..06308b7`, one per work item plus one
+deck-layer fix that the composer's design uncovered. No migration — the composer
+writes a column stage 2 created. **V1 is complete at this point.**
+
+**What stage 3 found that these docs had wrong:**
+
+- **`maxMonths` is not a plan field.** The brief lists it under "Plans: name,
+  items, `monthlyPrice`, `featured`, `maxMonths`". `Plan` is
+  `{ n, items, monthlyPrice, featured? }`; `maxMonths` is deck-level on
+  `EstimateConfig`, and the name field is `n`, not `name`.
+- **Billing cycles have a third field and it is load-bearing.** The brief says
+  "Cycles: label and discount". `minMonths` decides which cycle a month count
+  falls into, and because `cycleForMonths` seeds its reduce on `cycles[0]` and
+  only moves to a higher floor, the ARRAY ORDER is pricing logic. Two new
+  rejections came out of reading it.
+- **`Ctrl+Alt+K` on `/p/[slug]` needed no human confirmation.** The brief lists
+  it as a human step; `forVisitor` already forces `allowPriceOverride` false at
+  publish and at render, and `dal.test.ts` already asserted it.
+- **`childId` survived a disabled child.** Found while designing the "tem demo"
+  checkbox: `ModuleSlide` renders its "▷ Explorar" CTA off `node.childId`, so
+  disabling only the demo left a button pointing at an anchor that renders
+  nothing. The docs anticipated the opposite orphan and not this one.
+
+**What stage 3 did not do:**
+
+- **Nobody has walked the composer in a browser.** Every server path was
+  exercised against the real database — the delta write, the cross-form
+  `estimate` merge, a refused invalid config leaving the row untouched,
+  staleness in both directions, and the read-out over rows written through the
+  real ingest RPC — and `/fast` was re-verified against checklist A. But
+  `requireAdmin()` needs a Supabase session, and the agent that built this could
+  not sign in. **Checklist C is unrun.**
+- **Password recall through Vault is still not built.** Unchanged from stage 2.
+- **`npm audit` still reports highs against `next@16.2.9`.** Unchanged, and still
+  a decision rather than an oversight.
+
+## What stage 3 left for V2
+
+- **Per-slide copy overrides and bespoke slides**, ADR 18. Typed, validated,
+  unbuilt — `src/deck/v2Hooks.test.ts` is what stops the hooks rotting. V2 needs
+  a form driven by `SLIDE_META[kind].fields` writing into `DeckOverride.slides`,
+  and a `custom` renderer in the registry.
+- **`SLIDE_META.fields` is still only half-read.** The composer uses `hasDemo`,
+  `addable`, `description` and `label`; the `text`/`richtext`/`textarea`/`list`
+  specs exist for V2's copy editor and nothing consumes them yet.
+- **The dead-CSS cleanup**, still queued in `tech-debt.md`.
+- **`CalculatorSlide.tsx`'s Portuguese identifiers**, still queued there too. This
+  stage touched that file in one place and deliberately did not rename around it.
 
 ## What stage 2 left for stage 3
 

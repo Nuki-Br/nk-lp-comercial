@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: src/components/deck/DeckTracking.tsx, src/app/api/p/[slug]/track/route.ts, supabase/migrations/20260805015559_proposals_tracking.sql
-size: 129
+verified_against: src/components/deck/DeckTracking.tsx, src/app/api/p/[slug]/track/route.ts, src/server/tracking/readout.ts
+size: 151
 ---
 
 # Tracking
@@ -122,8 +122,30 @@ A tracking request that also carries a valid admin session sets `is_internal` on
 the session, so a salesperson opening the client's own link to check it does not
 pollute the client's numbers. The admin list counts only `is_internal = false`.
 
+## The read-out
+
+`src/server/tracking/readout.ts` aggregates it; `AttentionTable` renders it on
+the proposal detail page. Sessions where `is_internal` is true are excluded from
+every number, the same way the admin list already counts opens.
+
+**Sorted by dwell descending.** The question is "where did they stop", so that is
+the first row rather than whichever slide comes first in the deck.
+
+**A table and CSS bars** — a column of divs with a percentage width, per Rule 3.
+The bar is `aria-hidden`, because the duration beside it is the same fact.
+
+**An anchor the config no longer contains is kept, labelled by its raw id.**
+That is the payoff of `anchor_id` being a text snapshot: the row proves the
+client read a slide that has since been removed, and dropping it would undo the
+reason the column is not a foreign key.
+
+Aggregation is a JavaScript loop over two queries rather than a `group by`. It is
+two queries because `proposal_slide_views` carries no `proposal_id` — by design —
+and a loop because a proposal is read by a handful of people at one construtora.
+If one ever accumulates thousands of sessions, that becomes a function and a
+migration; the file says so at the top.
+
 ## What is not built yet
 
-The read-out. Stage 2 shows a raw open count on the proposal list and nothing
-else — per-slide attention, ordering and time-on-slide charts are stage 3, which
-is also where "a table and CSS bars" replaces the chart library Rule 3 bans.
+Nothing in this document. Tracking is complete as specified — collection in
+stage 2, read-out in stage 3. Anything beyond dwell was out of scope for both.
