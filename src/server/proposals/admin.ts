@@ -6,7 +6,7 @@ import { parseDeckOverride } from "@/deck/overrides";
 import { resolveDeckConfig } from "@/deck/resolve";
 import { hashPassword } from "@/server/auth/password";
 import { validateDeckConfig } from "@/server/config/validate";
-import { forVisitor } from "@/server/proposals/dal";
+import { forVisitor, isProposalExpired } from "@/server/proposals/dal";
 import { supabaseAdmin } from "@/server/supabase/adminClient";
 import type { Json } from "@/server/supabase/database.types";
 
@@ -113,6 +113,41 @@ export async function getProposal(id: string) {
 
   if (error) throw new Error(`Could not load the proposal: ${error.message}`);
   return data;
+}
+
+/** O que decide se o link do cliente abre AGORA. */
+export type SendReadiness = {
+  hasPassword: boolean;
+  expired: boolean;
+};
+
+/**
+ * As duas condições que a Visão geral reporta, das duas fontes que as sabem.
+ *
+ * O relógio mora aqui, e não na página, por dois motivos que dão no mesmo: um
+ * componente que chama `Date.now()` no render é impuro (a regra de lint do React
+ * recusa, e com razão), e a pergunta "já expirou?" é da camada que também a
+ * responde para o visitante — daí `isProposalExpired`, e não uma segunda conta.
+ *
+ * A senha vem de uma linha indexada, não da lista inteira. A página antes lia
+ * `listProposals()` e procurava um id lá dentro para extrair um booleano.
+ */
+export async function proposalSendReadiness(
+  id: string,
+  expiresAt: string | null,
+): Promise<SendReadiness> {
+  /* `limit(1)`: nada impede duas credenciais vivas para a mesma proposta — o
+     Set em `proposalsWithLiveCredential` já contava com isso — e `maybeSingle`
+     sozinho estouraria justamente aí. */
+  const { data } = await supabaseAdmin
+    .from("proposal_access")
+    .select("proposal_id")
+    .eq("proposal_id", id)
+    .is("revoked_at", null)
+    .limit(1)
+    .maybeSingle();
+
+  return { hasPassword: Boolean(data), expired: isProposalExpired(expiresAt, Date.now()) };
 }
 
 /**

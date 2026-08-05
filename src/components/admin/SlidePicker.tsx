@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Switch } from "@/components/admin/ui/Switch";
 import { cn } from "@/lib/cn";
 
 /* O rail de slides — a lista arrastável ao lado da prévia.
@@ -206,11 +205,10 @@ export function SlidePicker({
                 )}
               </div>
 
-              <Switch
-                checked={row.enabled}
-                onChange={(next) => onToggle(row.id, next)}
-                label={`Incluir "${row.label}" nesta apresentação`}
-                className="mt-0.5"
+              <VisibilityToggle
+                enabled={row.enabled}
+                label={row.label}
+                onToggle={() => onToggle(row.id, !row.enabled)}
               />
             </li>
           );
@@ -223,5 +221,58 @@ export function SlidePicker({
         {announcement}
       </p>
     </>
+  );
+}
+
+/** O olho que inclui ou tira o slide da apresentação.
+ *
+ * Era um interruptor, e o olho diz melhor o que o controle faz: a linha não é
+ * ligada nem desligada, ela é vista ou não vista pelo cliente — é a mesma
+ * metáfora que a camada de qualquer editor visual usa, e a mesma que a prévia ao
+ * lado torna literal.
+ *
+ * Continua um botão de alternar de verdade: `aria-pressed` é o que um leitor de
+ * tela lê como "ativado", e o rótulo nomeia o slide, porque um olho sozinho não
+ * diz de quem ele é. O `title` existe para o mouse, que não ouve nada. */
+function VisibilityToggle({
+  enabled,
+  label,
+  onToggle,
+}: {
+  enabled: boolean;
+  label: string;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={enabled}
+      aria-label={`Incluir "${label}" nesta apresentação`}
+      title={enabled ? "Tirar da apresentação" : "Incluir na apresentação"}
+      onClick={onToggle}
+      className={cn(
+        "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md outline-none transition-colors",
+        "focus-visible:ring-[3px] focus-visible:ring-ring/25",
+        enabled
+          ? "text-muted-foreground hover:bg-accent hover:text-foreground"
+          : "text-muted-foreground/40 hover:bg-accent hover:text-muted-foreground",
+      )}
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="size-4"
+      >
+        <path d="M1.5 8S3.9 3.75 8 3.75 14.5 8 14.5 8 12.1 12.25 8 12.25 1.5 8 1.5 8Z" />
+        <circle cx="8" cy="8" r="1.75" />
+        {/* A pálpebra: a barra que atravessa o olho quando o slide está fora. */}
+        {!enabled && <path d="M2.75 13.25 13.25 2.75" />}
+      </svg>
+    </button>
   );
 }

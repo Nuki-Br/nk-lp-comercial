@@ -8,8 +8,9 @@ import {
 import { UnpublishedChangesBanner } from "@/components/admin/ComposerTabs";
 import { Alert, AlertList } from "@/components/admin/ui/Alert";
 import { Button } from "@/components/admin/ui/Button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/admin/ui/Card";
+import { Card, CardContent, CardHeader } from "@/components/admin/ui/Card";
 import { Checkbox, FieldLabel, Input, Select } from "@/components/admin/ui/Field";
+import { Section, SectionActions } from "@/components/admin/ui/Section";
 import { SubmitButton } from "@/components/admin/ui/SubmitButton";
 import type { ProjectSizePreset, RoomPreset } from "@/deck/types";
 import { computeEstimate, computeUnitType, estimateCost } from "@/lib/estimate";
@@ -232,334 +233,334 @@ export function EstimateEditor({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
-      <div className="flex min-w-0 flex-col gap-6">
+      {/* Mesma coluna de ajustes das outras abas — ver a nota no editor de
+          preços. */}
+      <div className="flex min-w-0 flex-col gap-8 [&>section:first-of-type]:border-t-0 [&>section:first-of-type]:pt-0">
         {snapshotStale && <UnpublishedChangesBanner id={id} />}
 
-        <Card>
-          <CardHeader
-            title="Como a calculadora abre"
-            description="O cliente ainda pode mexer em tudo durante a apresentação. Isto é o ponto de partida — se o empreendimento dele já estiver modelado aqui, a conversa começa no número certo."
-          />
-          <form action={action}>
+        <Section
+          title="Como a calculadora abre"
+          description="O cliente ainda pode mexer em tudo durante a apresentação. Isto é o ponto de partida — se o empreendimento dele já estiver modelado aqui, a conversa começa no número certo."
+        >
+          <form action={action} className="flex flex-col gap-7">
             <input type="hidden" name="id" value={id} />
             <input type="hidden" name="state" value={payload} />
-
-            <CardContent className="flex flex-col gap-7">
-              <fieldset className="flex flex-col gap-3">
-                <legend className="sr-only">Começar de um porte</legend>
-                <GroupTitle hint="Substitui tudo abaixo pela composição do preset. Depois é só ajustar para o empreendimento do cliente.">
-                  Começar de um porte
-                </GroupTitle>
-                <div className="flex flex-wrap gap-2">
-                  {presets.map((preset) => (
-                    <Button
-                      key={preset.id}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => seedFrom(preset)}
-                    >
-                      {preset.name}
-                      <span className="font-normal text-muted-foreground">{preset.hint}</span>
-                    </Button>
-                  ))}
-                </div>
-              </fieldset>
-
-              <fieldset className="flex flex-col gap-3">
-                <legend className="sr-only">Opções por componente</legend>
-                <GroupTitle hint="Quantos acabamentos alternativos cada componente oferece. É o multiplicador de imagens de opção.">
-                  Opções por componente
-                </GroupTitle>
-                <div className="flex flex-wrap gap-3">
-                  <NumberField
-                    label="Área seca"
-                    value={dryOptions}
-                    min={ESTIMATE_RANGES.dryOptions.min}
-                    max={ESTIMATE_RANGES.dryOptions.max}
-                    onChange={setDryOptions}
-                  />
-                  <NumberField
-                    label="Área molhada"
-                    value={wetOptions}
-                    min={ESTIMATE_RANGES.wetOptions.min}
-                    max={ESTIMATE_RANGES.wetOptions.max}
-                    onChange={setWetOptions}
-                  />
-                </div>
-              </fieldset>
-
-              <fieldset className="flex flex-col gap-3">
-                <legend className="sr-only">Metragens</legend>
-                <GroupTitle hint="Uma por tipo de planta do empreendimento, com os ambientes que a compõem.">
-                  Metragens
-                </GroupTitle>
-
-                {unitTypes.map((type, typeIndex) => (
-                  <div
-                    key={type.id}
-                    className="flex flex-col gap-3 rounded-lg border border-border bg-muted/20 p-4"
+            <fieldset className="flex flex-col gap-3">
+              <legend className="sr-only">Começar de um porte</legend>
+              <GroupTitle hint="Substitui tudo abaixo pela composição do preset. Depois é só ajustar para o empreendimento do cliente.">
+                Começar de um porte
+              </GroupTitle>
+              <div className="flex flex-wrap gap-2">
+                {presets.map((preset) => (
+                  <Button
+                    key={preset.id}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => seedFrom(preset)}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-baseline gap-2">
-                        <h4 className="text-sm font-semibold">Metragem {typeIndex + 1}</h4>
-                        {/* O subtotal por metragem, no lugar onde a metragem é
+                    {preset.name}
+                    <span className="font-normal text-muted-foreground">{preset.hint}</span>
+                  </Button>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="flex flex-col gap-3">
+              <legend className="sr-only">Opções por componente</legend>
+              <GroupTitle hint="Quantos acabamentos alternativos cada componente oferece. É o multiplicador de imagens de opção.">
+                Opções por componente
+              </GroupTitle>
+              <div className="flex flex-wrap gap-3">
+                <NumberField
+                  label="Área seca"
+                  value={dryOptions}
+                  min={ESTIMATE_RANGES.dryOptions.min}
+                  max={ESTIMATE_RANGES.dryOptions.max}
+                  onChange={setDryOptions}
+                />
+                <NumberField
+                  label="Área molhada"
+                  value={wetOptions}
+                  min={ESTIMATE_RANGES.wetOptions.min}
+                  max={ESTIMATE_RANGES.wetOptions.max}
+                  onChange={setWetOptions}
+                />
+              </div>
+            </fieldset>
+
+            <fieldset className="flex flex-col gap-3">
+              <legend className="sr-only">Metragens</legend>
+              <GroupTitle hint="Uma por tipo de planta do empreendimento, com os ambientes que a compõem.">
+                Metragens
+              </GroupTitle>
+
+              {unitTypes.map((type, typeIndex) => (
+                <div
+                  key={type.id}
+                  className="flex flex-col gap-3 rounded-lg border border-border bg-muted/20 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-baseline gap-2">
+                      <h4 className="text-sm font-semibold">Metragem {typeIndex + 1}</h4>
+                      {/* O subtotal por metragem, no lugar onde a metragem é
                             editada. É o que responde "qual das plantas está
                             pesando" sem somar nada de cabeça. */}
-                        <span className="text-xs text-muted-foreground tabular-nums">
-                          {breakdowns[typeIndex]?.total.total ?? 0} imagens
-                        </span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeUnitType(typeIndex)}
-                        disabled={unitTypes.length <= ESTIMATE_RANGES.unitTypes.min}
-                      >
-                        Remover metragem
-                      </Button>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {breakdowns[typeIndex]?.total.total ?? 0} imagens
+                      </span>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeUnitType(typeIndex)}
+                      disabled={unitTypes.length <= ESTIMATE_RANGES.unitTypes.min}
+                    >
+                      Remover metragem
+                    </Button>
+                  </div>
 
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[34rem] border-collapse text-left text-sm">
-                        <thead>
-                          <tr className="border-b border-border">
-                            <th scope="col" className={TH}>
-                              Ambiente
-                            </th>
-                            <th scope="col" className={TH}>
-                              Classe
-                            </th>
-                            <th scope="col" className={TH}>
-                              Qtd.
-                            </th>
-                            <th scope="col" className={TH}>
-                              Componentes
-                            </th>
-                            <th scope="col" className={TH}>
-                              Varia
-                            </th>
-                            <th scope="col" className={`${TH} text-right`}>
-                              Imagens
-                            </th>
-                            <th className={TH} />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {type.rooms.map((room) => (
-                            <tr key={room.id} className="border-b border-border last:border-0">
-                              <td className="py-1.5 pr-2">
-                                <Input
-                                  value={room.name}
-                                  aria-label="Nome do ambiente"
-                                  onChange={(e) =>
-                                    patchRoom(typeIndex, room.id, { name: e.target.value })
-                                  }
-                                  className="h-8"
-                                />
-                              </td>
-                              <td className="py-1.5 pr-2">
-                                <Select
-                                  value={room.areaType}
-                                  aria-label="Classe do ambiente"
-                                  onChange={(e) =>
-                                    patchRoom(typeIndex, room.id, {
-                                      areaType: e.target.value as RoomAreaType,
-                                    })
-                                  }
-                                  className="h-8 w-28"
-                                >
-                                  <option value="dry">Seca</option>
-                                  <option value="wet">Molhada</option>
-                                </Select>
-                              </td>
-                              <td className="py-1.5 pr-2">
-                                <Input
-                                  type="number"
-                                  aria-label="Quantidade"
-                                  min={ESTIMATE_RANGES.units.min}
-                                  max={ESTIMATE_RANGES.units.max}
-                                  value={room.units}
-                                  onChange={(e) =>
-                                    patchRoom(typeIndex, room.id, {
-                                      units: clamp(
-                                        Math.trunc(Number(e.target.value) || 0),
-                                        ESTIMATE_RANGES.units.min,
-                                        ESTIMATE_RANGES.units.max,
-                                      ),
-                                    })
-                                  }
-                                  className="h-8 w-20"
-                                />
-                              </td>
-                              <td className="py-1.5 pr-2">
-                                <Input
-                                  type="number"
-                                  aria-label="Componentes"
-                                  min={ESTIMATE_RANGES.components.min}
-                                  max={ESTIMATE_RANGES.components.max}
-                                  value={room.components}
-                                  onChange={(e) =>
-                                    patchRoom(typeIndex, room.id, {
-                                      components: clamp(
-                                        Math.trunc(Number(e.target.value) || 0),
-                                        ESTIMATE_RANGES.components.min,
-                                        ESTIMATE_RANGES.components.max,
-                                      ),
-                                    })
-                                  }
-                                  className="h-8 w-20"
-                                />
-                              </td>
-                              <td className="py-1.5 pr-2">
-                                {/* Impacted by the extra floor-plan variants: each
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[34rem] border-collapse text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th scope="col" className={TH}>
+                            Ambiente
+                          </th>
+                          <th scope="col" className={TH}>
+                            Classe
+                          </th>
+                          <th scope="col" className={TH}>
+                            Qtd.
+                          </th>
+                          <th scope="col" className={TH}>
+                            Componentes
+                          </th>
+                          <th scope="col" className={TH}>
+                            Varia
+                          </th>
+                          <th scope="col" className={`${TH} text-right`}>
+                            Imagens
+                          </th>
+                          <th className={TH} />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {type.rooms.map((room) => (
+                          <tr key={room.id} className="border-b border-border last:border-0">
+                            <td className="py-1.5 pr-2">
+                              <Input
+                                value={room.name}
+                                aria-label="Nome do ambiente"
+                                onChange={(e) =>
+                                  patchRoom(typeIndex, room.id, { name: e.target.value })
+                                }
+                                className="h-8"
+                              />
+                            </td>
+                            <td className="py-1.5 pr-2">
+                              <Select
+                                value={room.areaType}
+                                aria-label="Classe do ambiente"
+                                onChange={(e) =>
+                                  patchRoom(typeIndex, room.id, {
+                                    areaType: e.target.value as RoomAreaType,
+                                  })
+                                }
+                                className="h-8 w-28"
+                              >
+                                <option value="dry">Seca</option>
+                                <option value="wet">Molhada</option>
+                              </Select>
+                            </td>
+                            <td className="py-1.5 pr-2">
+                              <Input
+                                type="number"
+                                aria-label="Quantidade"
+                                min={ESTIMATE_RANGES.units.min}
+                                max={ESTIMATE_RANGES.units.max}
+                                value={room.units}
+                                onChange={(e) =>
+                                  patchRoom(typeIndex, room.id, {
+                                    units: clamp(
+                                      Math.trunc(Number(e.target.value) || 0),
+                                      ESTIMATE_RANGES.units.min,
+                                      ESTIMATE_RANGES.units.max,
+                                    ),
+                                  })
+                                }
+                                className="h-8 w-20"
+                              />
+                            </td>
+                            <td className="py-1.5 pr-2">
+                              <Input
+                                type="number"
+                                aria-label="Componentes"
+                                min={ESTIMATE_RANGES.components.min}
+                                max={ESTIMATE_RANGES.components.max}
+                                value={room.components}
+                                onChange={(e) =>
+                                  patchRoom(typeIndex, room.id, {
+                                    components: clamp(
+                                      Math.trunc(Number(e.target.value) || 0),
+                                      ESTIMATE_RANGES.components.min,
+                                      ESTIMATE_RANGES.components.max,
+                                    ),
+                                  })
+                                }
+                                className="h-8 w-20"
+                              />
+                            </td>
+                            <td className="py-1.5 pr-2">
+                              {/* Impacted by the extra floor-plan variants: each
                                     ticked room contributes one more unit of images per
                                     extra variant. Without any, the extra variants
                                     render zero. */}
-                                <input
-                                  type="checkbox"
-                                  aria-label={`${room.name} muda nas variações extras`}
-                                  checked={Boolean(type.impactedRooms[room.id])}
-                                  onChange={(e) =>
-                                    patchType(typeIndex, {
-                                      impactedRooms: {
-                                        ...type.impactedRooms,
-                                        [room.id]: e.target.checked,
-                                      },
-                                    })
-                                  }
-                                  className="size-4 accent-primary"
-                                />
-                              </td>
-                              <td className="py-1.5 pr-2 text-right text-xs text-muted-foreground tabular-nums">
-                                {/* O que esta linha contribui na Variação 01 — é
+                              <input
+                                type="checkbox"
+                                aria-label={`${room.name} muda nas variações extras`}
+                                checked={Boolean(type.impactedRooms[room.id])}
+                                onChange={(e) =>
+                                  patchType(typeIndex, {
+                                    impactedRooms: {
+                                      ...type.impactedRooms,
+                                      [room.id]: e.target.checked,
+                                    },
+                                  })
+                                }
+                                className="size-4 accent-primary"
+                              />
+                            </td>
+                            <td className="py-1.5 pr-2 text-right text-xs text-muted-foreground tabular-nums">
+                              {/* O que esta linha contribui na Variação 01 — é
                                     o que responde "qual ambiente está pesando". */}
-                                {roomImages(room)}
-                              </td>
-                              <td className="py-1.5 text-right">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => removeRoom(typeIndex, room.id)}
-                                  aria-label={`Remover ${room.name}`}
-                                  className="size-8 hover:text-destructive"
-                                >
-                                  <span aria-hidden="true">×</span>
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="flex flex-wrap items-end justify-between gap-3">
-                      <div className="flex flex-wrap gap-1.5">
-                        {roomPresets.map((preset) => (
-                          <Button
-                            key={preset.name}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => addRoom(typeIndex, preset.name, preset.areaType)}
-                            className="h-7 px-2.5 text-xs"
-                          >
-                            + {preset.name}
-                          </Button>
+                              {roomImages(room)}
+                            </td>
+                            <td className="py-1.5 text-right">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeRoom(typeIndex, room.id)}
+                                aria-label={`Remover ${room.name}`}
+                                className="size-8 hover:text-destructive"
+                              >
+                                <span aria-hidden="true">×</span>
+                              </Button>
+                            </td>
+                          </tr>
                         ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div className="flex flex-wrap gap-1.5">
+                      {roomPresets.map((preset) => (
                         <Button
+                          key={preset.name}
                           variant="outline"
                           size="sm"
-                          onClick={() => addRoom(typeIndex, "Novo ambiente", "dry")}
+                          onClick={() => addRoom(typeIndex, preset.name, preset.areaType)}
                           className="h-7 px-2.5 text-xs"
                         >
-                          + Personalizado
+                          + {preset.name}
                         </Button>
-                      </div>
-
-                      <NumberField
-                        label="Variações"
-                        value={type.variants}
-                        min={ESTIMATE_RANGES.variants.min}
-                        max={ESTIMATE_RANGES.variants.max}
-                        onChange={(variants) => patchType(typeIndex, { variants })}
-                      />
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addRoom(typeIndex, "Novo ambiente", "dry")}
+                        className="h-7 px-2.5 text-xs"
+                      >
+                        + Personalizado
+                      </Button>
                     </div>
 
-                    {/* O caso que o admin-guide chama pelo nome: variações extras
+                    <NumberField
+                      label="Variações"
+                      value={type.variants}
+                      min={ESTIMATE_RANGES.variants.min}
+                      max={ESTIMATE_RANGES.variants.max}
+                      onChange={(variants) => patchType(typeIndex, { variants })}
+                    />
+                  </div>
+
+                  {/* O caso que o admin-guide chama pelo nome: variações extras
                         sem nenhum ambiente marcado não somam imagem nenhuma. Dito
                         aqui, na metragem em que acontece. */}
-                    {type.variants > 1 && breakdowns[typeIndex]?.perExtraVariant.total === 0 && (
-                      <p className="text-xs leading-relaxed text-warning">
-                        {type.variants} variações, e nenhum ambiente marcado em “Varia” — as
-                        variações extras não somam imagem nenhuma.
-                      </p>
-                    )}
-                  </div>
+                  {type.variants > 1 && breakdowns[typeIndex]?.perExtraVariant.total === 0 && (
+                    <p className="text-xs leading-relaxed text-warning">
+                      {type.variants} variações, e nenhum ambiente marcado em “Varia” — as variações
+                      extras não somam imagem nenhuma.
+                    </p>
+                  )}
+                </div>
+              ))}
+
+              <div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addUnitType}
+                  disabled={unitTypes.length >= ESTIMATE_RANGES.unitTypes.max}
+                >
+                  + Adicionar metragem
+                </Button>
+              </div>
+            </fieldset>
+
+            <fieldset className="flex flex-col gap-3">
+              <legend className="sr-only">Atalhos de porte visíveis ao cliente</legend>
+              <GroupTitle hint="Os chips que aparecem no topo da calculadora. Desmarque todos e o bloco inteiro some da apresentação do cliente.">
+                Atalhos de porte visíveis ao cliente
+              </GroupTitle>
+              <div className="flex flex-col gap-2.5">
+                {presets.map((preset) => (
+                  <Checkbox
+                    key={preset.id}
+                    label={preset.name}
+                    description={preset.hint}
+                    checked={keptPresetIds.includes(preset.id)}
+                    onChange={(e) =>
+                      setKeptPresetIds((prev) =>
+                        e.target.checked
+                          ? [...prev, preset.id]
+                          : prev.filter((keptId) => keptId !== preset.id),
+                      )
+                    }
+                  />
                 ))}
+              </div>
+            </fieldset>
 
-                <div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={addUnitType}
-                    disabled={unitTypes.length >= ESTIMATE_RANGES.unitTypes.max}
-                  >
-                    + Adicionar metragem
-                  </Button>
-                </div>
-              </fieldset>
+            {(state.issues.length > 0 ||
+              state.error ||
+              state.notice ||
+              state.warnings.length > 0) && (
+              <div className="flex flex-col gap-2">
+                <AlertList tone="danger" items={state.issues} />
+                {state.error && (
+                  <Alert tone="danger" live>
+                    {state.error}
+                  </Alert>
+                )}
+                {state.notice && (
+                  <Alert tone="success" live>
+                    {state.notice}
+                  </Alert>
+                )}
+                <AlertList tone="warning" items={state.warnings} live={false} />
+              </div>
+            )}
 
-              <fieldset className="flex flex-col gap-3">
-                <legend className="sr-only">Atalhos de porte visíveis ao cliente</legend>
-                <GroupTitle hint="Os chips que aparecem no topo da calculadora. Desmarque todos e o bloco inteiro some da apresentação do cliente.">
-                  Atalhos de porte visíveis ao cliente
-                </GroupTitle>
-                <div className="flex flex-col gap-2.5">
-                  {presets.map((preset) => (
-                    <Checkbox
-                      key={preset.id}
-                      label={preset.name}
-                      description={preset.hint}
-                      checked={keptPresetIds.includes(preset.id)}
-                      onChange={(e) =>
-                        setKeptPresetIds((prev) =>
-                          e.target.checked
-                            ? [...prev, preset.id]
-                            : prev.filter((keptId) => keptId !== preset.id),
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              </fieldset>
-
-              {(state.issues.length > 0 ||
-                state.error ||
-                state.notice ||
-                state.warnings.length > 0) && (
-                <div className="flex flex-col gap-2">
-                  <AlertList tone="danger" items={state.issues} />
-                  {state.error && (
-                    <Alert tone="danger" live>
-                      {state.error}
-                    </Alert>
-                  )}
-                  {state.notice && (
-                    <Alert tone="success" live>
-                      {state.notice}
-                    </Alert>
-                  )}
-                  <AlertList tone="warning" items={state.warnings} live={false} />
-                </div>
-              )}
-            </CardContent>
-
-            <CardFooter
-              hint={`${unitTypes.length} metragem${unitTypes.length === 1 ? "" : "s"} · ${keptPresetIds.length} atalho${keptPresetIds.length === 1 ? "" : "s"} visível${keptPresetIds.length === 1 ? "" : "eis"}`}
+            <SectionActions
+              /* "visível" pluraliza trocando o -l por -is, não somando -eis: o
+                 rodapé vinha dizendo "3 atalhos visíveleis". */
+              hint={`${unitTypes.length} metragem${unitTypes.length === 1 ? "" : "s"} · ${keptPresetIds.length} atalho${keptPresetIds.length === 1 ? "" : "s"} visíve${keptPresetIds.length === 1 ? "l" : "is"}`}
             >
               <SubmitButton label="Salvar calculadora" pendingLabel="Salvando…" />
-            </CardFooter>
+            </SectionActions>
           </form>
-        </Card>
+        </Section>
       </div>
 
       {/* Numa coluna só o painel vem PRIMEIRO — ver a nota igual no editor de

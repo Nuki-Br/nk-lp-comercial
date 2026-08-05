@@ -77,9 +77,7 @@ export async function resolveVisitorView(slug: string, deps: VisitorDeps): Promi
   /* The document clock. Checked BEFORE the cookie, so an expired proposal reads
      as expired even to someone holding a perfectly valid cookie — that is the
      point of having two clocks rather than one. */
-  if (row.expires_at !== null && Date.parse(row.expires_at) <= deps.now) {
-    return { state: "expired" };
-  }
+  if (isProposalExpired(row.expires_at, deps.now)) return { state: "expired" };
 
   const token = deps.readCookie(proposalCookieName(row.id));
   if (!token) return { state: "locked", reason: "no-cookie" };
@@ -134,6 +132,19 @@ export async function resolveVisitorView(slug: string, deps: VisitorDeps): Promi
     proposalId: row.id,
     config: forVisitor(config, slug),
   };
+}
+
+/**
+ * The document clock, as one predicate.
+ *
+ * Extracted so the composer can ask the SAME question the visitor path answers.
+ * "Já expirou?" appearing twice, written twice, is how the boundary and the
+ * screen that reports on it drift apart — and `<=` versus `<` is exactly the
+ * kind of difference nobody notices until a proposal reads open in `/admin` and
+ * expired to the client.
+ */
+export function isProposalExpired(expiresAt: string | null, now: number): boolean {
+  return expiresAt !== null && Date.parse(expiresAt) <= now;
 }
 
 function lockReasonFor(

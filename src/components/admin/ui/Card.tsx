@@ -57,29 +57,11 @@ export function CardContent({ className, children }: { className?: string; child
   return <div className={cn("px-5 py-5", className)}>{children}</div>;
 }
 
-/** Rodapé em faixa `muted` — é onde mora o submit, como no Vercel dashboard. */
-export function CardFooter({
-  className,
-  children,
-  hint,
-}: {
-  className?: string;
-  children: ReactNode;
-  /** Texto à esquerda do botão: a consequência de salvar, em uma linha. */
-  hint?: ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center justify-between gap-3 rounded-b-lg border-t border-border bg-muted/50 px-5 py-3",
-        className,
-      )}
-    >
-      <p className="text-xs text-muted-foreground">{hint}</p>
-      <div className="flex items-center gap-2">{children}</div>
-    </div>
-  );
-}
+/* Havia um `CardFooter` aqui: a faixa `muted` com a dica à esquerda e o submit à
+   direita. Ele saiu junto com as caixas — todo formulário do compositor virou
+   uma `Section`, e o submit passou a ser `SectionActions`, que é a mesma linha
+   sem a faixa. O último uso de card com rodapé era o rail de slides, que agora
+   fecha com um fio. */
 
 /** Título de página — acima dos cards, nunca dentro de um. */
 export function PageHeader({

@@ -124,26 +124,19 @@ export function SlidesWorkspace({
     /* Altura de janela, não de conteúdo: as duas colunas rolam por dentro e a
        página não rola. O valor desconta a barra do painel, a faixa grudenta do
        compositor e o respiro do `<main>` — e é `lg:` porque abaixo disso as
-       colunas empilham e cada uma volta a ter a altura que pedir. */
-    <div className="flex flex-col gap-4 lg:grid lg:h-[calc(100dvh-13.75rem)] lg:min-h-[34rem] lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-stretch">
-      <DeckPreview
-        src={previewSrc}
-        frameRef={frameRef}
-        reloadToken={reloadToken}
-        stale={dirty}
-        /* Depois de recarregar, volta para onde o vendedor estava olhando. */
-        onFrameLoad={() => {
-          if (activeIdRef.current) scrollPreviewTo(activeIdRef.current);
-        }}
-        className="order-2 h-[28rem] lg:order-1 lg:h-auto"
-      />
-
+       colunas empilham e cada uma volta a ter a altura que pedir.
+     *
+     * O RAIL FICA À ESQUERDA. Como em qualquer construtor de site: a lista das
+     * peças de um lado, o que elas produzem do outro. As outras três abas já
+     * eram assim — edita-se à esquerda e confere-se o resultado à direita — e a
+     * prévia é exatamente o painel de consequência delas, em tamanho grande. */
+    <div className="flex flex-col gap-4 lg:grid lg:h-[calc(100dvh-13.75rem)] lg:min-h-[34rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
       <form
         action={(formData) => {
           submittedPayload.current = String(formData.get("state") ?? "");
           action(formData);
         }}
-        className="order-1 flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-xs lg:order-2"
+        className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card shadow-xs"
       >
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="state" value={payload} />
@@ -152,7 +145,7 @@ export function SlidesWorkspace({
           <div>
             <h2 className="text-sm font-semibold tracking-tight">Slides desta proposta</h2>
             <p className="mt-1 text-[0.8125rem] leading-relaxed text-muted-foreground">
-              Arraste para reordenar, desligue o que não vai, clique para ver na prévia.
+              Arraste para reordenar, esconda com o olho o que não vai, clique para ver na prévia.
             </p>
           </div>
           {/* No rail e não acima da área de trabalho: a altura das duas colunas
@@ -189,7 +182,9 @@ export function SlidesWorkspace({
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-3 border-t border-border bg-muted/50 px-3 py-2.5">
+        {/* Sem a faixa cinza que o rodapé de card tinha: o painel de envio da
+            Visão geral já a deixou para trás, e o fio sozinho separa igual. */}
+        <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2.5">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span
               aria-hidden="true"
@@ -200,6 +195,18 @@ export function SlidesWorkspace({
           <SubmitButton label="Salvar slides" pendingLabel="Salvando…" size="sm" />
         </div>
       </form>
+
+      <DeckPreview
+        src={previewSrc}
+        frameRef={frameRef}
+        reloadToken={reloadToken}
+        stale={dirty}
+        /* Depois de recarregar, volta para onde o vendedor estava olhando. */
+        onFrameLoad={() => {
+          if (activeIdRef.current) scrollPreviewTo(activeIdRef.current);
+        }}
+        className="h-[28rem] lg:h-auto"
+      />
     </div>
   );
 }
