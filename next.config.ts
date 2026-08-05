@@ -9,16 +9,22 @@ const nextConfig: NextConfig = {
    * permanent redirect is painful to undo. A 307 also preserves the `#hash`,
    * so `/comercial#calculator` still lands on the right slide.
    *
-   * `/` points at `/fast`, NOT at `/admin`, for as long as the admin is a stub —
-   * sending the team's bookmark to an empty page would be worse than what it
-   * replaced. Stage 2 flips it once there is something there.
+   * `/` now points at `/admin`, which is what AGENTS.md's route table has always
+   * said. It pointed at `/fast` only while the admin was a stub; stage 2 gave it
+   * a login, a proposal list and a detail page, so the team's bookmark lands
+   * somewhere useful. An unauthenticated visitor is bounced to `/admin/login`
+   * by proxy.ts.
+   *
+   * `/comercial` still goes to `/fast`, not to `/admin`: those are pitch links
+   * that were shared with prospects, and landing a prospect on a login screen
+   * would be worse than any tidiness gained.
    *
    * These redirects run before filesystem routing, which is what lets both root
    * layouts live inside route groups with no page at `/`. See ADR 17.
    */
   async redirects() {
     return [
-      { source: "/", destination: "/fast", permanent: false },
+      { source: "/", destination: "/admin", permanent: false },
       { source: "/comercial", destination: "/fast", permanent: false },
     ];
   },
