@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: the decisions themselves; ADRs 9+ record the proposal-app build
-size: 300
+verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split
+size: 453
 ---
 
 # Decisions
@@ -35,6 +35,8 @@ the only thing it was for.
 | 16 | Biome for format and lint, ESLint kept for Next rules | current |
 | 17 | Two root layouts | current |
 | 18 | V2 is typed in V1 and built later | current |
+| 19 | The billing cycle is derived, not selected | current |
+| 20 | The shared-password gate is scoped to `/fast` | current |
 
 ## 1. Split out of nk-lp
 
@@ -157,24 +159,7 @@ slide was already 850 lines. If the pricing is ever disputed in a sales call,
 that single file is now the thing to test, and it is the only file in the repo
 worth a test at all.
 
-## 8. The billing cycle is derived, not selected
-
-**Decision.** `EstimateProvider` has no `cycle` state. The cycle is computed from
-the contracted months (`cycleForMonths` in `src/lib/pricing.ts`, thresholds in
-`billingCycles[].minMonths`), and the toggle in `PricingSlide` renders that
-result. Clicking a cycle writes months, not cycle.
-
-**Rationale.** The discount is the counterpart of the commitment, so the two were
-never independent. As separate state they could disagree — 12 months contracted
-while the toggle said "Mensal", quoting full price for a commitment that earns
-−10% — and the prospect sees both numbers on the same frame. Deriving one from
-the other makes that state unrepresentable instead of merely unlikely.
-
-**Consequence.** `selectCycle` only writes `months[0]`. That is correct while
-`plans` has a single entry; if the tiers come back, the distribution across tiers
-has to be decided before the toggle means anything again.
-
-## 9. Committed demo artifact
+## 8. Committed demo artifact
 
 `public/demos/inspetor/index.html` (5.7 MB) is committed rather than generated
 during the build, because `scripts/prepare-inspetor-demo.mjs` is a manual step
@@ -183,7 +168,9 @@ size; the benefit is that a stale patch regex cannot silently break a deploy.
 
 ---
 
-The records below cover the move from a single static deck to a proposal app.
+The records below cover the move from a single static deck to a proposal app —
+with one exception, ADR 19, which is a deck-era decision that lost its number and
+was given the next free one rather than displacing a cited record.
 
 ## 9. The deck moves to `/fast` and stays code-driven
 
@@ -415,3 +402,52 @@ admin-facing field schema rather than just a label.
 config in V1 — including the ones the V1 admin never exposes. If `CasesSlide`'s
 logo list and `CalculatorSlide`'s inline labels are still module imports when V1
 ships, V2 has to re-open all ten slide files. One pass now, two passes later.
+
+## 19. The billing cycle is derived, not selected
+
+> **Renumbered, not new.** This ADR was written as number 8 and never appeared in
+> the table above; the number it was using had been given to "Committed demo
+> artifact", and a second ADR had ended up numbered 9. Of the two self-consistent
+> repairs, this is the one that breaks no citation: `.env.example` and
+> `src/app/(deck)/fast/layout.tsx` both cite ADR 9 meaning "the deck moves to
+> `/fast`", and nothing anywhere cites ADR 8. The body below is untouched.
+
+**Decision.** `EstimateProvider` has no `cycle` state. The cycle is computed from
+the contracted months (`cycleForMonths` in `src/lib/pricing.ts`, thresholds in
+`billingCycles[].minMonths`), and the toggle in `PricingSlide` renders that
+result. Clicking a cycle writes months, not cycle.
+
+**Rationale.** The discount is the counterpart of the commitment, so the two were
+never independent. As separate state they could disagree — 12 months contracted
+while the toggle said "Mensal", quoting full price for a commitment that earns
+−10% — and the prospect sees both numbers on the same frame. Deriving one from
+the other makes that state unrepresentable instead of merely unlikely.
+
+**Consequence.** `selectCycle` only writes `months[0]`. That is correct while
+`plans` has a single entry; if the tiers come back, the distribution across tiers
+has to be decided before the toggle means anything again.
+
+## 20. The shared-password gate is scoped to `/fast`, not to the deck group
+
+**Context.** `AccessGate` was mounted in `src/app/(deck)/layout.tsx`, which was
+correct while `/fast` was the only route in the `(deck)` group. Stage 2 adds
+`/p/[slug]` to that same group, because a proposal is a deck and needs the deck
+stylesheets and the `deck-root` class.
+
+**Decision.** Move the gate down into `src/app/(deck)/fast/layout.tsx`. Keep
+`gate.css` imported by the root layout.
+
+**Rationale.** Left where it was, the root layout would have put the Nuki team's
+own shared password in front of every client link, and a client holding a valid
+proposal cookie would have been shown a form asking for a password nobody gave
+them. The two gates are not variants of one idea, they are opposites: ADR 9's
+gate is a client-side speed bump that must keep working with Supabase down, and
+the proposal gate is a server-verified boundary that must never emit content it
+has not authorized. Only the first kind belongs in a layout.
+
+`gate.css` stays in the root layout because `ProposalGate` reuses the `.gate*`
+markup — the same CSS, deliberately, so the two surfaces look like one product
+while sharing none of the logic.
+
+**Consequence.** `/fast` gains a one-line nested layout, which looks like
+indirection until you know why it exists. That is what this record is for.

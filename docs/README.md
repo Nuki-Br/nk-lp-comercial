@@ -19,8 +19,8 @@ wins and the other is a bug.
 | run one of the three build stages | `stages/README.md`, then your stage file |
 | add or change a slide kind | `deck-runtime.md` |
 | touch pricing or image math | `estimate.md` |
-| touch auth, cookies, passwords, expiry | `security.md` ¹ |
-| add a table or column | `data-model.md` ¹ |
+| touch auth, cookies, passwords, expiry | `security.md` |
+| add a table or column | `data-model.md` |
 | add or change tracking | `tracking.md` ¹ |
 | change deploy, env vars, redirects | `deployment.md` |
 | change deck copy or default prices | `content-guide.md` |
@@ -31,7 +31,9 @@ wins and the other is a bug.
 | make a factual claim about the product | `context/README.md` |
 | understand why something is the way it is | `decisions.md` |
 
-¹ Written by stage 2. Absent until then — that is expected, not a gap.
+¹ Written by stage 2, alongside the tracking code itself. Absent until then —
+that is expected, not a gap. `security.md` and `data-model.md` were written at
+stage 2's design gate, before any SQL, which is why they arrived first.
 
 Rules live in `../AGENTS.md`, not here. It holds no explanations by design.
 
@@ -86,6 +88,8 @@ earlier would be writing fiction with a filename.
 ```
 README.md            this router
 architecture.md      system map: three surfaces, the trust boundary, data flow
+data-model.md        why each table and column is shaped the way it is
+security.md          auth, cookies, passwords, expiry, RLS posture
 deck-runtime.md      slide contract + the DeckBehaviors DOM contract + CSS layers
 estimate.md          the pricing math and THE canonical numbers
 testing.md           test policy + the three manual checklists
