@@ -40,6 +40,19 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
+      /**
+       * A proposal is one named client's document. `force-dynamic` alone gets
+       * `no-cache, must-revalidate`, which permits a shared cache to hold the
+       * response as long as it revalidates — and the thing being held would be
+       * one client's priced proposal. `private` says "browser only", `no-store`
+       * says "not even there". testing.md checklist B asserts this exact string.
+       *
+       * The tracking route sets its own on the response; this covers the page.
+       */
+      {
+        source: "/p/:slug",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
     ];
   },
 };

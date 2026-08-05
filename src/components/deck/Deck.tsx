@@ -16,7 +16,23 @@ import type { DeckConfig } from "@/deck/types";
  * Calculator + Total. Com ordem vinda de config não dá pra detectar o trio, e
  * envolver tudo é inofensivo e independente de ordem — ver docs/architecture.md.
  */
-export function Deck({ config }: { config: DeckConfig }) {
+export function Deck({
+  config,
+  behaviors,
+}: {
+  config: DeckConfig;
+  /**
+   * Extra null-rendering behaviour, mounted inside the navigation provider.
+   *
+   * Exists so `/p/[slug]` can add `DeckTracking` without this file importing
+   * it. That is a bundle boundary, not a style preference: an import here would
+   * put the collector in the chunk `/fast` loads, and Rule 2's second test —
+   * "is the collecting code reachable from /fast" — would fail even though it
+   * never ran. `/fast` emits zero tracking requests because the code is not
+   * there to emit them.
+   */
+  behaviors?: React.ReactNode;
+}) {
   const anchors = anchorsOf(config.slides);
   const walkableIds = walkableIdsOf(config.slides);
   const ctx = { estimate: config.estimate, chrome: config.chrome };
@@ -33,6 +49,7 @@ export function Deck({ config }: { config: DeckConfig }) {
         </main>
         {config.chrome.showFooter && <Footer />}
         <DeckBehaviors />
+        {behaviors}
         <div className="keyboard-hint" aria-hidden="true">
           <RichText value={config.chrome.keyboardHint} />
         </div>

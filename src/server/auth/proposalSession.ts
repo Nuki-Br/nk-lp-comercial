@@ -60,6 +60,15 @@ export type ProposalSessionVerdict =
 export const proposalCookieName = (proposalId: string): string =>
   `nk_pa_${proposalId.replace(/-/g, "").slice(0, 8)}`;
 
+/** The tracking session id, alongside the access cookie.
+ *
+ * Lives here rather than next to the unlock action because a `"use server"`
+ * module may only export async functions — a plain helper there is a build
+ * error. Both cookie names in one file is the better home anyway: it is the
+ * only way to see, at a glance, that they cannot collide. */
+export const sessionCookieName = (proposalId: string): string =>
+  `nk_ps_${proposalId.replace(/-/g, "").slice(0, 8)}`;
+
 const b64url = (input: string | Buffer): string => Buffer.from(input).toString("base64url");
 
 const signature = (body: string, secret: string): Buffer =>
