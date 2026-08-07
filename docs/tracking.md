@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/components/deck/DeckTracking.tsx, src/app/api/p/[slug]/track/route.ts, src/server/tracking/{readout,reset}.ts
-size: 163
+size: 171
 ---
 
 # Tracking
@@ -145,6 +145,14 @@ the first row rather than whichever slide comes first in the deck.
 
 **A table and CSS bars** — a column of divs with a percentage width, per Rule 3.
 The bar is `aria-hidden`, because the duration beside it is the same fact.
+
+**The portfolio roll-up takes the visible proposal list as an argument, and it
+is not optional.** "Excluir" in this schema is `status = 'archived'`
+(`deleteProposal` explains why the row survives), so the `on delete cascade` that
+would have taken the tracking rows with it never fires. `portfolioAttention`
+therefore counts only the ids the panel is showing — without that, the four tiles
+on `/admin` kept reporting openings, readers and reading time for proposals the
+salesperson had already deleted.
 
 **An anchor the config no longer contains is kept, labelled by its raw id.**
 That is the payoff of `anchor_id` being a text snapshot: the row proves the

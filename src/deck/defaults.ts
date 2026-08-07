@@ -1,6 +1,7 @@
 import {
   billingCycles,
   CUSTOM_ROOM_DEFAULTS,
+  DEFAULT_CONTRACTED_MONTHS,
   DEFAULT_ROOMS,
   differentiators,
   ESTIMATE_DEFAULTS,
@@ -47,6 +48,7 @@ function buildEstimateConfig(): EstimateConfig {
     plans,
     billingCycles,
     maxMonths: MAX_MONTHS,
+    defaultMonths: DEFAULT_CONTRACTED_MONTHS,
     imagePrices: {
       base: ESTIMATE_DEFAULTS.baseImagePrice,
       option: ESTIMATE_DEFAULTS.optionImagePrice,

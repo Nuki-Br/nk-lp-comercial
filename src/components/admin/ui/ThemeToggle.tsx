@@ -59,6 +59,15 @@ export function ThemeToggle() {
    * disparou. Empilhados no mesmo `grid`, um gira e encolhe enquanto o outro
    * cresce, e o gesto acompanha a troca de tema.
    *
+   * O GRID É DESTE `<span>`, e não do próprio botão. `buttonClass` já declara
+   * `inline-flex`, e `cn` não resolve conflito (é `clsx`, não `tailwind-merge`,
+   * por decisão de projeto) — as duas classes de `display` iam para a marcação
+   * juntas e o `inline-flex` do Tailwind, emitido depois do `grid`, ganhava. Sem
+   * grid, `col-start-1 row-start-1` não valem nada: os dois SVGs viravam dois
+   * itens flex lado a lado, com o `gap-2` do botão entre eles, e o ícone visível
+   * ficava 11px à esquerda do centro. Com a pilha isolada num filho de 1rem, o
+   * `justify-center` do botão volta a centralizar uma coisa só.
+   *
    * Nada disso muda o que um leitor de tela ouve: os dois são `aria-hidden`, e o
    * fato continua no `aria-label` e no `aria-pressed` do botão. */
   return (
@@ -67,42 +76,44 @@ export function ThemeToggle() {
       onClick={() => setDark(!getSnapshot())}
       aria-pressed={isDark}
       aria-label={isDark ? "Mudar para o tema claro" : "Mudar para o tema escuro"}
-      className={buttonClass("ghost", "icon", "grid place-items-center")}
+      className={buttonClass("ghost", "icon")}
     >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 16 16"
-        fill="none"
-        className={cn(
-          "col-start-1 row-start-1 size-4 transition-[rotate,scale,opacity] duration-300 ease-out-quart",
-          isDark ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0",
-        )}
-      >
-        <circle cx="8" cy="8" r="3.25" stroke="currentColor" strokeWidth="1.5" />
-        <path
-          d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.95 3.05l-1.06 1.06M4.11 11.89l-1.06 1.06M12.95 12.95l-1.06-1.06M4.11 4.11 3.05 3.05"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-      </svg>
+      <span aria-hidden="true" className="grid size-4 place-items-center">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          fill="none"
+          className={cn(
+            "col-start-1 row-start-1 size-4 transition-[rotate,scale,opacity] duration-300 ease-out-quart",
+            isDark ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0",
+          )}
+        >
+          <circle cx="8" cy="8" r="3.25" stroke="currentColor" strokeWidth="1.5" />
+          <path
+            d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.95 3.05l-1.06 1.06M4.11 11.89l-1.06 1.06M12.95 12.95l-1.06-1.06M4.11 4.11 3.05 3.05"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
 
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 16 16"
-        fill="none"
-        className={cn(
-          "col-start-1 row-start-1 size-4 transition-[rotate,scale,opacity] duration-300 ease-out-quart",
-          isDark ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100",
-        )}
-      >
-        <path
-          d="M13.5 9.7A5.75 5.75 0 0 1 6.3 2.5a5.75 5.75 0 1 0 7.2 7.2Z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-      </svg>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          fill="none"
+          className={cn(
+            "col-start-1 row-start-1 size-4 transition-[rotate,scale,opacity] duration-300 ease-out-quart",
+            isDark ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100",
+          )}
+        >
+          <path
+            d="M13.5 9.7A5.75 5.75 0 0 1 6.3 2.5a5.75 5.75 0 1 0 7.2 7.2Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
     </button>
   );
 }

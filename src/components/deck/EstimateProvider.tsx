@@ -3,6 +3,7 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import type { EstimateConfig } from "@/deck/types";
 import type { BillingCycle } from "@/lib/estimateTypes";
+import { clamp } from "@/lib/format";
 import { cycleForMonths, discountedMonthlyPrice } from "@/lib/pricing";
 
 /** Totais publicados pela Calculadora e consumidos por outras seções da
@@ -68,8 +69,26 @@ export function EstimateProvider({
   const { plans, billingCycles } = estimate;
   const [totals, setTotals] = useState<EstimateTotals>(defaultTotals);
 
-  /* Meses contratados por plano — começa em 0 (o user preenche no CTA). */
-  const [months, setMonths] = useState<number[]>(() => plans.map(() => 0));
+  /* Meses contratados por plano.
+   *
+   * Começa no que a proposta pré-selecionou, e só no PLANO EM DESTAQUE — o mesmo
+   * que `referencePlan` do `quote.ts` escolhe, e o card que o cliente lê
+   * primeiro. Semear os N planos multiplicaria o custo de plataforma por N: os
+   * meses somam entre os cards, é essa soma que deriva o ciclo, e a proposta de
+   * "12 meses" viraria 24 no fechamento.
+   *
+   * `?? 0` porque o campo é opcional de verdade: um `config_snapshot` congelado
+   * antes dele não o tem, e nesse caso o comportamento é o antigo — tudo em
+   * zero. O clamp é a segunda linha, contra um snapshot cujo teto encolheu
+   * depois de o preset ter sido escrito. */
+  const [months, setMonths] = useState<number[]>(() => {
+    const preset = clamp(Math.trunc(estimate.defaultMonths ?? 0), 0, estimate.maxMonths);
+    if (preset === 0) return plans.map(() => 0);
+
+    const featured = plans.findIndex((plan) => plan.featured);
+    const target = featured >= 0 ? featured : 0;
+    return plans.map((_, index) => (index === target ? preset : 0));
+  });
 
   const totalMonths = useMemo(() => months.reduce((a, b) => a + b, 0), [months]);
 

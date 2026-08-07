@@ -80,11 +80,17 @@ function uniquePlanName(rows: PlanRow[]): string {
 }
 
 /** O que atravessa para a action. A chave de React fica para trás. */
-function payloadOf(plans: PlanRow[], cycles: CycleDraft[], maxMonths: number): string {
+function payloadOf(
+  plans: PlanRow[],
+  cycles: CycleDraft[],
+  maxMonths: number,
+  defaultMonths: number,
+): string {
   return JSON.stringify({
     plans: plans.map(({ key: _key, ...plan }) => plan),
     billingCycles: cycles,
     maxMonths,
+    defaultMonths,
   });
 }
 
@@ -93,6 +99,7 @@ export function PricingEditor({
   initialPlans,
   initialCycles,
   initialMaxMonths,
+  initialDefaultMonths,
   snapshotStale,
   previewHref,
   children,
@@ -101,6 +108,7 @@ export function PricingEditor({
   initialPlans: PlanDraft[];
   initialCycles: CycleDraft[];
   initialMaxMonths: number;
+  initialDefaultMonths: number;
   snapshotStale: boolean;
   /** A prévia, ancorada no slide de planos. */
   previewHref: string;
@@ -112,6 +120,10 @@ export function PricingEditor({
   );
   const [cycles, setCycles] = useState(initialCycles);
   const [maxMonths, setMaxMonths] = useState(initialMaxMonths);
+  /* Os meses com que o simulador do CLIENTE abre. Mora aqui, e não dentro do
+     `ClientView`, porque deixou de ser um brinquedo de demonstração: é um campo
+     salvo, e a barra do painel da direita é o controle dele. */
+  const [defaultMonths, setDefaultMonths] = useState(initialDefaultMonths);
   const [state, action] = useActionState<PricingState, FormData>(savePricingAction, EMPTY);
 
   /* Contador de chaves, semeado depois das que já existem. Mesmo truque do
@@ -153,7 +165,13 @@ export function PricingEditor({
       prospect reads first. */
   const referencePrice = (plans.find((p) => p.featured) ?? plans[0])?.monthlyPrice ?? 0;
 
-  const payload = payloadOf(plans, cycles, maxMonths);
+  /* Derivado, não corrigido num efeito: baixar o teto para 6 com o preset em 12
+     tem de ler 6 no MESMO render — inclusive no payload que vai para a action,
+     que senão salvaria um preset acima do próprio teto. O piso zero é contra o
+     `-5` digitado à mão, que o `min` do campo não impede e que a action
+     devolveria como o genérico "confira os campos". */
+  const contractedMonths = Math.max(0, Math.min(defaultMonths, maxMonths));
+  const payload = payloadOf(plans, cycles, maxMonths, contractedMonths);
 
   return (
     /* `animate-fade` e não `animate-rise` — ver a nota igual na Visão geral: a
@@ -345,19 +363,39 @@ export function PricingEditor({
 
             <fieldset className="flex flex-col gap-3">
               <legend className="sr-only">Simulador</legend>
-              <GroupTitle hint="O maior número de meses que o cliente consegue arrastar no simulador.">
+              <GroupTitle hint="O teto é o maior número de meses que o cliente consegue arrastar. Os meses pré-selecionados são onde o simulador dele JÁ ABRE — no plano em destaque, porque é a soma dos meses de todos os cards que decide o ciclo.">
                 Simulador
               </GroupTitle>
-              <FieldLabel label="Teto do simulador (meses)" className="w-52">
-                <Input
-                  type="number"
-                  min={1}
-                  max={120}
-                  step={1}
-                  value={maxMonths}
-                  onChange={(e) => setMaxMonths(Math.trunc(Number(e.target.value) || 1))}
-                />
-              </FieldLabel>
+              <div className="flex flex-wrap gap-3">
+                <FieldLabel label="Teto do simulador (meses)" className="w-52">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={120}
+                    step={1}
+                    value={maxMonths}
+                    onChange={(e) => setMaxMonths(Math.trunc(Number(e.target.value) || 1))}
+                  />
+                </FieldLabel>
+                {/* O mesmo valor que a barra do painel da direita arrasta. Dois
+                    controles para um número porque as duas perguntas são
+                    diferentes: aqui digita-se "12", lá vê-se o que 12 faz com o
+                    ciclo e com o preço. */}
+                <FieldLabel
+                  label="Meses pré-selecionados"
+                  hint={contractedMonths === 0 ? "o cliente começa em zero" : undefined}
+                  className="w-52"
+                >
+                  <Input
+                    type="number"
+                    min={0}
+                    max={maxMonths}
+                    step={1}
+                    value={contractedMonths}
+                    onChange={(e) => setDefaultMonths(Math.trunc(Number(e.target.value) || 0))}
+                  />
+                </FieldLabel>
+              </div>
             </fieldset>
 
             <Feedback state={state} />
@@ -384,7 +422,14 @@ export function PricingEditor({
           formulário longo, a consequência do que se digita fica a uma rolagem
           de distância, que é a mesma distância de antes de ele existir. */}
       <aside className="order-first lg:order-none lg:sticky lg:top-[var(--admin-sticky)]">
-        <ClientView plans={plans} cycles={cycles} maxMonths={maxMonths} previewHref={previewHref} />
+        <ClientView
+          plans={plans}
+          cycles={cycles}
+          maxMonths={maxMonths}
+          months={contractedMonths}
+          onMonthsChange={setDefaultMonths}
+          previewHref={previewHref}
+        />
       </aside>
     </div>
   );
@@ -457,11 +502,17 @@ function GroupTitle({ children, hint }: { children: string; hint?: string }) {
   );
 }
 
-/** O simulador do cliente, ao vivo.
+/** O simulador do cliente, ao vivo — e o controle do preset.
  *
  * Existe porque a regra que este formulário configura — "o cliente não escolhe
  * o ciclo, ele escolhe meses e o desconto vem junto" — é invisível num campo de
  * porcentagem. Aqui ela é uma barra que se arrasta.
+ *
+ * A BARRA DEIXOU DE SER LOCAL. Era estado próprio deste card, começava em 12 e
+ * não ia a lugar nenhum: quem a arrastava estava configurando um brinquedo, e a
+ * queixa que isso gerou — "ajusto os meses aqui e o cliente não vê" — era
+ * literalmente verdade. Agora ela escreve `estimate.defaultMonths`, que é onde o
+ * stepper do cliente abre.
  *
  * Roda `cycleForMonths` e `discountedMonthlyPrice`, as MESMAS funções do deck.
  * Uma segunda implementação da regra aqui seria uma segunda regra, e a que o
@@ -470,17 +521,19 @@ function ClientView({
   plans,
   cycles,
   maxMonths,
+  months,
+  onMonthsChange,
   previewHref,
 }: {
   plans: PlanRow[];
   cycles: CycleDraft[];
   maxMonths: number;
+  /** Já limitado pelo teto por quem é dono do estado. */
+  months: number;
+  onMonthsChange: (months: number) => void;
   previewHref: string;
 }) {
-  const [months, setMonths] = useState(12);
-  /* Derivado em vez de corrigido num efeito: baixar o teto para 6 com a barra em
-     12 tem de ler 6 no mesmo render, não no seguinte. */
-  const contracted = Math.min(Math.max(months, 1), Math.max(maxMonths, 1));
+  const ceiling = Math.max(maxMonths, 1);
 
   /* Ordenado como a action ordena. `cycleForMonths` semeia o reduce em
      `cycles[0]` e só sobe de piso, então a ORDEM do array é lógica de preço —
@@ -495,33 +548,36 @@ function ClientView({
       minMonths: cycle.minMonths,
     }));
 
-  const active = ordered.length > 0 ? cycleForMonths(ordered, contracted) : null;
+  const active = ordered.length > 0 ? cycleForMonths(ordered, months) : null;
 
   return (
     <Card>
       <CardHeader
         title="O que o cliente vê"
-        description="Arraste os meses. O ciclo não é escolhido — ele cai sozinho."
+        description="Onde o simulador dele abre. O ciclo não é escolhido — ele cai sozinho."
       />
       <CardContent className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between gap-2">
             <span className="text-sm font-medium">Meses contratados</span>
-            <span className="text-lg font-semibold tabular-nums">{contracted}</span>
+            <span className="text-lg font-semibold tabular-nums">{months}</span>
           </div>
+          {/* Começa em ZERO, e não em 1, porque zero é o que o stepper do cliente
+              aceita e é o valor "não pré-selecionado". Uma barra cujo mínimo é 1
+              não conseguiria escrever o default do deck. */}
           <input
             type="range"
-            min={1}
-            max={Math.max(maxMonths, 1)}
+            min={0}
+            max={ceiling}
             step={1}
-            value={contracted}
-            onChange={(e) => setMonths(Number(e.target.value))}
-            aria-label="Meses contratados no simulador"
+            value={months}
+            onChange={(e) => onMonthsChange(Number(e.target.value))}
+            aria-label="Meses pré-selecionados no simulador do cliente"
             className="w-full accent-primary outline-none focus-visible:ring-[3px] focus-visible:ring-ring/25"
           />
           <div className="flex items-center justify-between text-xs text-muted-foreground tabular-nums">
-            <span>1</span>
-            <span>{Math.max(maxMonths, 1)}</span>
+            <span>0</span>
+            <span>{ceiling}</span>
           </div>
         </div>
 

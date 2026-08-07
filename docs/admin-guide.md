@@ -2,7 +2,7 @@
 audience: human
 status: current
 verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,ProposalDetailForms,SlidesWorkspace,PricingEditor,EstimateEditor}.tsx, src/server/proposals/{config,admin}.ts, src/server/tracking/{readout,reset}.ts
-size: 251
+size: 260
 ---
 
 # Montando uma proposta no /admin
@@ -116,10 +116,11 @@ exatamente o que você quer.
 
 ### Planos e preços
 
-**O painel "O que o cliente vê", à direita, é o seu conferidor.** Arraste os
-meses e ele mostra em que ciclo aquilo cai e por quanto sai cada plano — a mesma
-conta que o cliente vai ver, atualizada enquanto você digita. Se o número ali
-não é o que você quer dizer na reunião, ainda dá tempo.
+**O painel "O que o cliente vê", à direita, é o seu conferidor — e é um campo.**
+Arraste os meses e ele mostra em que ciclo aquilo cai e por quanto sai cada plano
+— a mesma conta que o cliente vai ver, atualizada enquanto você digita. **O que
+você deixar na barra é onde o simulador do cliente vai abrir**, depois de salvar;
+é o mesmo número do campo "Meses pré-selecionados" abaixo.
 
 **Dá pra ter mais de um plano.** "+ Adicionar plano" cria uma faixa nova (até
 seis) e o `×` no canto dela tira. O último não sai: uma proposta sem plano nenhum
@@ -135,6 +136,14 @@ número que o cliente vai ler.
 ele escolhe quantos meses quer, e o desconto vem junto. Quem sobe o simulador até
 12 meses cai no Anual sozinho. Você não precisa colocar em ordem — o sistema
 ordena ao salvar.
+
+**"Meses pré-selecionados" é onde o simulador do cliente já abre.** Se o prazo já
+foi conversado, deixe-o preenchido e o cliente encontra o total pronto; em zero,
+ele começa do zero e sobe. Vale para o plano em destaque — é a soma dos meses de
+todos os cards que decide o ciclo, então preencher todos multiplicaria o custo de
+plataforma. A barra do painel "O que o cliente vê" é o mesmo campo: arraste ali e
+salve. Ele não muda a coluna "Total em 12 meses" da lista de propostas, que é uma
+régua igual para todas as linhas.
 
 **Tarifas de imagem: são duas, e são diferentes.** A **imagem base** é o render
 3D do ambiente, uma por unidade de ambiente, e é a cara. A **imagem de opção** é

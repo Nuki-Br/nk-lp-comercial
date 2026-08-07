@@ -42,9 +42,15 @@ export default async function AdminPage() {
   /* Rótulos do deck PADRÃO, de propósito. `anchor_id` é um retrato tirado no
      momento da visita, então duas propostas podem discordar sobre como `#cases`
      se chama; somar as duas sob o rótulo padrão é a resposta certa para "onde a
-     apresentação prende", que é a pergunta desta tela. Ver `portfolioAttention`. */
+     apresentação prende", que é a pergunta desta tela. Ver `portfolioAttention`.
+
+     A LISTA VAI JUNTO, e é ela que define o universo dos números: "excluir" é
+     `status = 'archived'`, a linha e as sessões dela continuam no banco, e sem
+     este argumento os quatro cards continuariam contando o que o vendedor
+     apagou. `listProposals` já tira as arquivadas. */
   const attention = await portfolioAttention(
     new Map(buildDefaultDeck().slides.map((node) => [node.id, node.label])),
+    proposals.map((proposal) => proposal.id),
   );
 
   return (

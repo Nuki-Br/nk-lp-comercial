@@ -344,6 +344,13 @@ export type EstimateConfig = {
   billingCycles: BillingCycle[];
   /** Era `MAX_MONTHS`, constante de módulo do `PricingSlide`. */
   maxMonths: number;
+  /** Com quantos meses o simulador do cliente JÁ ABRE, no plano em destaque.
+
+      Opcional porque não existia: um `config_snapshot` congelado antes deste
+      campo não o tem, e um snapshot publicado é lido como está (ADR 18). Ausente
+      = 0, que é exatamente o comportamento anterior — o cliente começa em zero e
+      sobe o stepper. Quem lê tem de tratar o `undefined`. */
+  defaultMonths?: number;
   imagePrices: { base: number; option: number };
   defaults: {
     dryOptions: number;

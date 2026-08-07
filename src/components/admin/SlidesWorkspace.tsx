@@ -94,12 +94,23 @@ export function SlidesWorkspace({
 
   /** Rola a prévia até o slide. Mesma origem, então é um `getElementById` no
       documento de dentro — não há protocolo de mensagem para manter em dia.
-      Um slide desligado não tem elemento: o realce acontece, o scroll não. */
+      Um slide desligado não tem elemento: o realce acontece, o scroll não.
+
+      NÃO é `scrollIntoView`. Ele rola TODOS os ancestrais roláveis do elemento,
+      e o documento do iframe é filho desta página: cada clique no rail arrastava
+      a página do compositor junto, para baixo, sempre que ela tivesse um pixel
+      de rolagem sobrando. Aqui a rolagem é escrita no scroller de dentro do
+      iframe e em nenhum outro — o `getBoundingClientRect` é relativo à viewport
+      DO IFRAME, então somar o `scrollTop` atual dá o destino absoluto. */
   const scrollPreviewTo = (slideId: string) => {
-    const target = frameRef.current?.contentDocument?.getElementById(slideId);
-    target?.scrollIntoView({
+    const doc = frameRef.current?.contentDocument;
+    const target = doc?.getElementById(slideId);
+    if (!doc || !target) return;
+
+    const scroller = doc.scrollingElement ?? doc.documentElement;
+    scroller.scrollTo({
+      top: scroller.scrollTop + target.getBoundingClientRect().top,
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "start",
     });
   };
 
@@ -129,8 +140,15 @@ export function SlidesWorkspace({
      * O RAIL FICA À ESQUERDA. Como em qualquer construtor de site: a lista das
      * peças de um lado, o que elas produzem do outro. As outras três abas já
      * eram assim — edita-se à esquerda e confere-se o resultado à direita — e a
-     * prévia é exatamente o painel de consequência delas, em tamanho grande. */
-    <div className="flex flex-col gap-4 animate-fade lg:grid lg:h-[var(--admin-workspace)] lg:min-h-[34rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
+     * prévia é exatamente o painel de consequência delas, em tamanho grande.
+     *
+     * SEM PISO DE ALTURA. Havia um `min-h-[34rem]`, e ele era a única coisa que
+     * fazia esta aba rolar: abaixo de uma janela de ~776px o piso ganhava do
+     * cálculo e a página passava a ter dezenas de pixels a mais que a tela —
+     * vazios, porque as duas colunas rolam por dentro. Um espaço de trabalho
+     * apertado numa janela baixa é o que a janela tem; uma página que rola é um
+     * defeito. */
+    <div className="flex flex-col gap-4 animate-fade lg:grid lg:h-[var(--admin-workspace)] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
       <form
         action={(formData) => {
           submittedPayload.current = String(formData.get("state") ?? "");

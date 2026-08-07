@@ -2,7 +2,7 @@
 audience: both
 status: current
 verified_against: src/lib/estimate.ts + src/lib/quote.ts + src/content/deck.ts, re-derived by running the code
-size: 179
+size: 190
 ---
 
 # The estimate
@@ -100,6 +100,17 @@ too; do not collapse them.
 | min/max for every field | `ESTIMATE_RANGES` in `src/lib/estimateTypes.ts` | no, code-only |
 | `plans`, `billingCycles` | `src/content/deck.ts` | yes |
 | `maxMonths` (36) | `EstimateConfig.maxMonths` | yes |
+| `defaultMonths` (0) | `EstimateConfig.defaultMonths` | yes |
+
+`defaultMonths` is where the client's month stepper OPENS, and it is seeded onto
+the featured plan only — the same one `referencePlan` picks. Seeding every plan
+would multiply the platform cost by the number of cards, because the months of
+all cards are summed and that sum is what derives the cycle. It is optional in
+the type on purpose: a `config_snapshot` frozen before the field existed does not
+carry it, and absent reads as 0 — the behaviour every proposal had before. It
+does **not** feed `proposalQuote`: the admin list compares proposals over the
+same `QUOTE_REFERENCE_MONTHS` ruler, and a per-proposal preset would make each
+row's total answer a different question.
 
 `ESTIMATE_RANGES` stays in code on purpose. It is the clamp that keeps an admin
 typo from producing an absurd quote, so it is not something an admin edits.

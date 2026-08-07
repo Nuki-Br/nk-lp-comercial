@@ -11,7 +11,7 @@ export default async function PricingPage({ params }: { params: Promise<{ id: st
 
   const { id } = await params;
   const { resolved, snapshotStale } = await loadProposalConfig(id);
-  const { plans, billingCycles, maxMonths, imagePrices } = resolved.estimate;
+  const { plans, billingCycles, maxMonths, defaultMonths, imagePrices } = resolved.estimate;
 
   /* O editor é dono da aba inteira — formulário à esquerda, simulador ao vivo à
      direita — porque o painel da direita lê o estado do formulário, e estado de
@@ -35,6 +35,9 @@ export default async function PricingPage({ params }: { params: Promise<{ id: st
         minMonths: cycle.minMonths,
       }))}
       initialMaxMonths={maxMonths}
+      /* Ausente num snapshot congelado antes do campo existir — e ausente é
+         zero, o comportamento que essa proposta já tem hoje. */
+      initialDefaultMonths={Math.min(defaultMonths ?? 0, maxMonths)}
       snapshotStale={snapshotStale}
       previewHref={`/preview/${id}#pricing`}
     >

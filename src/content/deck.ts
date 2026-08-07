@@ -436,6 +436,12 @@ export const ESTIMATE_DEFAULTS = {
     move pra `EstimateConfig.maxMonths`. */
 export const MAX_MONTHS = 36;
 
+/** Meses já preenchidos quando o simulador abre. ZERO no deck padrão: o `/fast`
+    é uma conversa aberta e um número no stepper antes de a conversa começar é
+    uma proposta que ninguém fez. Cada proposta do /admin sobrescreve isto na aba
+    "Planos e preços" — é lá que o prazo já foi negociado. */
+export const DEFAULT_CONTRACTED_MONTHS = 0;
+
 export type Plan = {
   n: string;
   items: string[];

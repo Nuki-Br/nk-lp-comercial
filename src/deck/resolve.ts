@@ -37,6 +37,7 @@ export function mergeEstimate(
     roomPresets: p.roomPresets ?? base.roomPresets,
     defaultRooms: p.defaultRooms ?? base.defaultRooms,
     maxMonths: p.maxMonths ?? base.maxMonths,
+    defaultMonths: p.defaultMonths ?? base.defaultMonths,
     // merge raso de um nível
     imagePrices: { ...base.imagePrices, ...defined(p.imagePrices) },
     customRoomDefaults: { ...base.customRoomDefaults, ...defined(p.customRoomDefaults) },

@@ -118,6 +118,31 @@ describe("validateDeckConfig", () => {
     }
   });
 
+  /* O preset é dinheiro: ele é o número de meses com que o simulador do cliente
+     abre, e o custo de plataforma do fechamento é `meses × mensalidade`. Acima
+     do teto ele cota um prazo que o stepper do cliente não alcança. */
+  it("rejects a defaultMonths outside 0..maxMonths", () => {
+    for (const defaultMonths of [-1, 2.5, 37]) {
+      const config = base();
+      config.estimate.maxMonths = 36;
+      config.estimate.defaultMonths = defaultMonths;
+      expect(codesOf(config), `defaultMonths ${defaultMonths} was accepted`).toContain(
+        "invalid-default-months",
+      );
+    }
+  });
+
+  it("accepts a defaultMonths at either end, and its absence", () => {
+    for (const defaultMonths of [0, 36, undefined]) {
+      const config = base();
+      config.estimate.maxMonths = 36;
+      config.estimate.defaultMonths = defaultMonths;
+      expect(codesOf(config), `defaultMonths ${defaultMonths} was rejected`).not.toContain(
+        "invalid-default-months",
+      );
+    }
+  });
+
   it("reports every problem at once, rather than the first", () => {
     const config = base();
     config.estimate.plans[0].monthlyPrice = -1;

@@ -188,16 +188,28 @@ const EMPTY_PORTFOLIO: PortfolioAttention = {
  * of every proposal rather than one proposal's, so the slide roll-up is bounded
  * by `SLIDE_ROLLUP_SESSIONS` and says so when the bound applies. The totals are
  * not bounded — they need one column from one table and no `in (…)` list.
+ *
+ * `proposalIds` IS REQUIRED, and it is the list the panel is showing — not a
+ * convenience filter. "Excluir" in this schema is `status = 'archived'`
+ * (`deleteProposal` says why the row survives), so the cascade that would have
+ * taken the tracking rows with it never fires. Without this argument the four
+ * tiles kept counting openings, readers and reading time for proposals the
+ * salesperson had already deleted, and only "Propostas mais lidas" looked right
+ * — it resolves names from the same list and dropped what it could not name.
  */
 export async function portfolioAttention(
   labels: Map<string, string>,
+  proposalIds: readonly string[],
   now: number = Date.now(),
 ): Promise<PortfolioAttention> {
+  if (proposalIds.length === 0) return EMPTY_PORTFOLIO;
+
   const { supabaseAdmin } = await import("@/server/supabase/adminClient");
 
   const { data: sessions, error } = await supabaseAdmin
     .from("proposal_view_sessions")
     .select("id, proposal_id, visitor_hash, started_at, last_seen_at, active_ms")
+    .in("proposal_id", [...proposalIds])
     .eq("is_internal", false)
     .order("started_at", { ascending: false });
 

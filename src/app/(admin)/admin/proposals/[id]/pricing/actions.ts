@@ -58,6 +58,9 @@ const pricingState = z.object({
     .min(1)
     .max(6),
   maxMonths: z.number().int().min(1).max(120),
+  /** Onde o simulador do cliente abre. O teto que vale é `maxMonths`, e ele é
+      aplicado abaixo — aqui só o intervalo absoluto. */
+  defaultMonths: z.number().int().min(0).max(120),
 });
 
 export async function savePricingAction(
@@ -98,14 +101,21 @@ export async function savePricingAction(
       minMonths: cycle.minMonths,
     }));
 
+  /* Clamped with the shared range rather than a second copy of the numbers.
+     docs/estimate.md: ESTIMATE_RANGES stays in code because it is what stops an
+     admin typo becoming an absurd quote. */
+  const maxMonths = clamp(parsed.data.maxMonths, 1, 120);
+
   const result = await saveProposalOverride(id.data, {
     estimate: {
       plans: parsed.data.plans,
       billingCycles,
-      /* Clamped with the shared range rather than a second copy of the numbers.
-         docs/estimate.md: ESTIMATE_RANGES stays in code because it is what stops
-         an admin typo becoming an absurd quote. */
-      maxMonths: clamp(parsed.data.maxMonths, 1, 120),
+      maxMonths,
+      /* Clamped against the ceiling THIS submit is writing, not the one already
+         stored: lowering the ceiling and the preset in one save must not leave a
+         preset the client's stepper cannot reach. The validator rejects the pair
+         too; clamping first means the salesperson does not have to care. */
+      defaultMonths: clamp(parsed.data.defaultMonths, 0, maxMonths),
     },
   });
 

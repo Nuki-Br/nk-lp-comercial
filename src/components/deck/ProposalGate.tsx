@@ -40,7 +40,8 @@ export function ProposalGate({ slug }: { slug: string }) {
         <span className="gate-tag">Acesso restrito</span>
         <h1 className="gate-title">Apresentação Nuki</h1>
         <p className="gate-lead">
-          Esta apresentação é exclusiva para o seu time. Informe a senha que enviamos junto com o link.
+          Esta apresentação é exclusiva para o seu time. Informe a senha que enviamos junto com o
+          link.
         </p>
 
         <label className="gate-label" htmlFor="proposal-gate-input">

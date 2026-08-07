@@ -22,6 +22,7 @@ export type ValidationIssue = {
     | "negative-price"
     | "discount-out-of-range"
     | "invalid-max-months"
+    | "invalid-default-months"
     | "empty-deck"
     | "no-billing-cycles"
     | "cycles-out-of-order"
@@ -196,6 +197,22 @@ export function validateDeckConfig(config: DeckConfig): ValidationResult {
       at: "maxMonths",
       message: "O prazo máximo precisa ser um número inteiro de meses maior que zero.",
     });
+  }
+
+  /* Acima do teto, o stepper do cliente abriria num número que ele não consegue
+     nem voltar a escolher depois de mexer — e o "Total estimado" da última tela
+     estaria somando meses que o simulador não deixa alcançar. `undefined` é
+     legítimo: um snapshot congelado antes do campo existir simplesmente não o
+     tem, e a leitura trata isso como zero. */
+  if (estimate.defaultMonths !== undefined) {
+    const preset = estimate.defaultMonths;
+    if (!Number.isInteger(preset) || preset < 0 || preset > estimate.maxMonths) {
+      issues.push({
+        code: "invalid-default-months",
+        at: "defaultMonths",
+        message: `Os meses pré-selecionados precisam ser um número inteiro entre 0 e o teto do simulador (${estimate.maxMonths}).`,
+      });
+    }
   }
 
   return issues.length === 0 ? { ok: true, warnings } : { ok: false, issues, warnings };

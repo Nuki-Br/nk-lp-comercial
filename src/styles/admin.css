@@ -101,8 +101,15 @@
      `top-[10.5rem]`, `scroll-mt-[12rem]` e `calc(100dvh-13.75rem)`. Encostar
      uma delas exigia lembrar das outras três, e ninguém lembra. Agora a barra e
      a régua do compositor são os dois números medidos; o resto é aritmética. */
-  --admin-bar: 3.5rem; /* a barra do painel — `h-14` */
-  --admin-ruler: 7rem; /* título da proposta + abas, no compositor */
+  /* AS DUAS MEDIDAS SÃO O ESPAÇO OCUPADO, borda inclusa — não a altura do
+     miolo. `--admin-workspace` subtrai as duas de `100dvh` para caber sem
+     rolagem, e um pixel a menos aqui é uma página que rola um pixel; um a mais
+     é uma faixa de vazio no fim da aba Slides. Medidas no navegador:
+     cabeçalho `h-14` + `border-b`; régua `pt-4` + a linha de 2rem do botão
+     "Ver a prévia" + `pb-3` + as abas (`py-2.5` + `border-b-2` + `-mb-px`) +
+     `border-b` = 102px. */
+  --admin-bar: calc(3.5rem + 1px); /* a barra do painel — `h-14` + a borda */
+  --admin-ruler: 6.375rem; /* título da proposta + abas, no compositor */
   --admin-sticky: calc(var(--admin-bar) + var(--admin-ruler));
   /* Onde uma âncora (`#senha`) tem de parar para não ficar sob a régua. */
   --admin-anchor: calc(var(--admin-sticky) + 1.5rem);
