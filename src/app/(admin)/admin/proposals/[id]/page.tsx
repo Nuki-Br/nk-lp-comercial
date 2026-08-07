@@ -5,6 +5,7 @@ import {
   DeleteProposalForm,
   DetailsForm,
   PasswordForm,
+  ResetAttentionForm,
 } from "@/components/admin/ProposalDetailForms";
 import { type ChecklistItem, PublishPanel, type SendState } from "@/components/admin/PublishPanel";
 import { Section } from "@/components/admin/ui/Section";
@@ -142,7 +143,18 @@ export default async function ProposalDetailPage({ params }: { params: Promise<{
       title="Atenção do cliente"
       description="Quanto tempo cada slide segurou a leitura, do mais lido para o menos. Suas próprias aberturas não entram na conta."
     >
-      <AttentionTable attention={attention} />
+      <div className="flex flex-col gap-6">
+        <AttentionTable attention={attention} />
+        {/* Só quando há o que zerar. Um botão desativado ao lado de "ninguém
+            abriu esta proposta ainda" seria a mesma frase duas vezes. */}
+        {attention.sessionCount > 0 && (
+          <ResetAttentionForm
+            id={proposal.id}
+            title={proposal.title}
+            sessionCount={attention.sessionCount}
+          />
+        )}
+      </div>
     </Section>
   );
 

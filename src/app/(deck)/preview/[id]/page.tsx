@@ -40,17 +40,17 @@ export const revalidate = 0;
     `<title>` é a parte da página que escapa mais fácil. `description` e
     `openGraph` são sobrescritos porque o metadata de página faz merge raso com
     o do root layout, que carrega a copy de marketing do deck. */
-const GENERIC = "Prévia interna de uma proposta Nuki.";
+const GENERIC = "Prévia interna de uma apresentação Nuki.";
 
 export const metadata: Metadata = {
-  title: "Prévia da proposta",
+  title: "Prévia da apresentação",
   description: GENERIC,
   robots: { index: false, follow: false },
   openGraph: {
     type: "website",
     siteName: "Nuki",
     locale: "pt_BR",
-    title: "Prévia da proposta",
+    title: "Prévia da apresentação",
     description: GENERIC,
     images: [],
   },

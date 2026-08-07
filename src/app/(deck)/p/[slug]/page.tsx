@@ -25,14 +25,14 @@ export const revalidate = 0;
 const GENERIC = "Proposta comercial Nuki.";
 
 export const metadata: Metadata = {
-  title: "Proposta Nuki",
+  title: "Apresentação Nuki",
   description: GENERIC,
   robots: { index: false, follow: false },
   openGraph: {
     type: "website",
     siteName: "Nuki",
     locale: "pt_BR",
-    title: "Proposta Nuki",
+    title: "Apresentação Nuki",
     description: GENERIC,
     /* No image. The default one is the deck's cover. */
     images: [],

@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/deck/types.ts, src/server/proposals/config.ts, supabase/migrations/*.sql, ADR 13
-size: 202
+size: 204
 ---
 
 # Data model
@@ -113,7 +113,9 @@ One visit. `proposal_id`, `visitor_hash`, `started_at`, `last_seen_at`,
 `flush_seq` is the replay guard: the ingest RPC accepts a flush only when the
 client's `seq` is strictly greater, so a retried or duplicated beacon adds
 nothing. `is_internal` marks a salesperson's own dry-run so it does not pollute
-the client's numbers.
+the client's numbers — set at unlock when the visitor also carries an admin
+session, and settable afterwards by the composer's "Zerar estatísticas", which
+is an UPDATE of this column and never a DELETE of the row (ADR 25).
 
 ### `proposal_slide_views`
 

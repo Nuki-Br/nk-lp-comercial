@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: src/components/deck/DeckTracking.tsx, src/app/api/p/[slug]/track/route.ts, src/server/tracking/readout.ts
-size: 151
+verified_against: src/components/deck/DeckTracking.tsx, src/app/api/p/[slug]/track/route.ts, src/server/tracking/{readout,reset}.ts
+size: 163
 ---
 
 # Tracking
@@ -121,6 +121,18 @@ rejecting real browsers with unusual strings.
 A tracking request that also carries a valid admin session sets `is_internal` on
 the session, so a salesperson opening the client's own link to check it does not
 pollute the client's numbers. The admin list counts only `is_internal = false`.
+
+**The flag is also settable after the fact**, by "Zerar estatísticas" on the
+proposal's detail page — the rehearsal a salesperson runs in an anonymous window
+has no admin cookie, so nothing at unlock time could have marked it.
+`markProposalAttentionInternal` in `src/server/tracking/reset.ts` flips
+`is_internal` on every one of that proposal's real sessions, which zeroes every
+number in this document's read-out and in the admin list at once, because they
+all already filter on the same column.
+
+**It is an UPDATE, never a DELETE.** The rows survive, marked as what they were.
+ADR 25 is the reasoning, and it is the same one the proposals migration states
+for its missing `DELETE` grant.
 
 ## The read-out
 

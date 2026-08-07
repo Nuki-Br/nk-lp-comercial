@@ -11,6 +11,7 @@ import {
   unpublishProposal,
   updateProposal,
 } from "@/server/proposals/admin";
+import { markProposalAttentionInternal } from "@/server/tracking/reset";
 
 /* Every action re-checks. Not the layout, not the page it was rendered from —
    Proxy matchers skip Server Functions, so an action is reachable even when the
@@ -142,6 +143,45 @@ export async function unpublishProposalAction(
     error: null,
     notice:
       "Proposta despublicada. O cliente vê um aviso de indisponível até você publicar de novo.",
+    warnings: [],
+  };
+}
+
+/**
+ * Zera a contagem depois de um teste — o passo entre "publiquei para conferir"
+ * e "mandei para o cliente".
+ *
+ * Não apaga: marca as sessões como internas, que é como uma abertura da equipe
+ * já era excluída de toda leitura. `src/server/tracking/reset.ts` explica por
+ * quê, e a ADR 25 é o registro.
+ */
+export async function resetAttentionAction(
+  _prev: DetailState,
+  formData: FormData,
+): Promise<DetailState> {
+  const admin = await getAdmin();
+  if (!admin) return { error: "Sessão expirada. Entre novamente.", notice: null, warnings: [] };
+
+  const parsed = uuid.safeParse(formData.get("id"));
+  if (!parsed.success) return { error: "Proposta inválida.", notice: null, warnings: [] };
+
+  const marked = await markProposalAttentionInternal(parsed.data);
+
+  revalidatePath(`/admin/proposals/${parsed.data}`);
+  /* A lista e o painel inicial contam aberturas pelo mesmo filtro, então os dois
+     mudam com este clique. */
+  revalidatePath("/admin");
+
+  if (marked === 0) {
+    return { error: null, notice: "Não havia aberturas para zerar.", warnings: [] };
+  }
+
+  return {
+    error: null,
+    notice:
+      marked === 1
+        ? "Estatísticas zeradas — 1 abertura anterior agora conta como teste interno."
+        : `Estatísticas zeradas — ${marked} aberturas anteriores agora contam como teste interno.`,
     warnings: [],
   };
 }

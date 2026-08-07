@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview, 23 unpublish and delete, 24 the panel's motion and layout tokens
-size: 682
+verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview, 23 unpublish and delete, 24 the panel's motion and layout tokens, 25 the stats reset
+size: 733
 ---
 
 # Decisions
@@ -680,3 +680,54 @@ shadow ramp was rebuilt at the same time, in two layers instead of one, with a
 separate and much more opaque set under `.dark` — a single-layer shadow at 1px
 and 8px is a displaced grey border, not depth, and at the light theme's opacity
 it is invisible over black.
+
+## 25. Resetting a proposal's stats marks the sessions internal; it does not delete them
+
+**Context.** The ask was a "reset stats" button, for a real sequence: publish,
+open the link in an anonymous window to check it as the client will see it, wipe
+that rehearsal, then send. The rehearsal has to be anonymous — that is the whole
+point of it — so `is_internal` cannot have been set at unlock time, and the
+salesperson's own dry-run lands in the client's numbers as a first opening with
+several minutes of dwell.
+
+The obvious implementation is `delete from proposal_view_sessions where
+proposal_id = $1`. This schema already argued against exactly that reasoning, in
+the comment that ends the proposals migration and again in ADR 23: there is no
+`DELETE` grant on `public.proposals` because the tracking rows hanging off a
+proposal are the record of a real client's real attention, and a misclick must
+not be able to erase them. A delete on the tracking tables themselves would
+reverse that decision from a convenience commit.
+
+**Decision.** `markProposalAttentionInternal` sets `is_internal = true` on every
+`is_internal = false` session of the proposal, and nothing else.
+`resetAttentionAction` calls it behind `getAdmin()`, revalidates the detail page
+and `/admin`, and reports the row count back.
+
+`is_internal` already means "one of ours, do not count it", and every read-out in
+the repo already filters on it — `proposalAttention`, `portfolioAttention` and
+`listProposals`'s `openCounts`. So one UPDATE zeroes every number a salesperson
+can see, with no new grant, no migration and nothing lost. The rows stay,
+correctly labelled as what they always were: a test.
+
+**Rationale.** The alternative reading is that a reset which leaves rows behind
+is dishonest — the button says "zerar" and the table still has the data. It does
+not survive the question "zero for whom": every surface that reads this data
+filters `is_internal = false`, so after the UPDATE there is no reader, admin or
+otherwise, for which those sessions exist. What survives is an operator with the
+service key, which is the same audience that can already read a deleted
+proposal's history, and is the audience ADR 23 deliberately kept a recovery path
+for.
+
+The `.eq("is_internal", false)` filter on the UPDATE is load-bearing rather than
+an optimisation: without it a second click reports the same count again, which
+reads as "it did something" when it did not.
+
+**Consequence.** `is_internal` acquires a second writer, and `docs/tracking.md`
+and `docs/data-model.md` both say so — until now the column was set once, at
+unlock, and a reader could assume it never changed afterwards. Nothing about the
+ingest path changed: a browser still holding a session cookie for a
+just-reclassified session keeps flushing into it, and that time keeps landing on
+the internal side, which is the correct outcome for a tab left open on the
+rehearsal. The admin guide tells a salesperson to close it anyway, and warns not
+to press the button after the link is sent — the first two readings are the ones
+worth having.

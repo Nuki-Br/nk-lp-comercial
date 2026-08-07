@@ -1,8 +1,8 @@
 ---
 audience: human
 status: current
-verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,ProposalDetailForms,SlidesWorkspace,PricingEditor,EstimateEditor}.tsx, src/server/proposals/{config,admin}.ts, src/server/tracking/readout.ts
-size: 232
+verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,ProposalDetailForms,SlidesWorkspace,PricingEditor,EstimateEditor}.tsx, src/server/proposals/{config,admin}.ts, src/server/tracking/{readout,reset}.ts
+size: 251
 ---
 
 # Montando uma proposta no /admin
@@ -26,6 +26,10 @@ usar nada aqui.
 6. **Publicar** — só depois disso o link abre. A pílula do painel "Envio" passa
    de "Rascunho" para "No ar".
 7. **Copiar link** e mandar pro cliente.
+
+Quer conferir o link como o cliente vai ver — numa janela anônima, sem sessão de
+admin? Faça isso entre 6 e 7 e depois **zere as estatísticas** (em "Atenção do
+cliente"), pra sua conferência não aparecer como se o cliente já tivesse lido.
 
 Rascunho não abre pra ninguém. Se você mandar o link antes de publicar, o cliente
 vê "não encontrado" — de propósito, pra ele não descobrir que existe uma proposta
@@ -182,6 +186,21 @@ Duas coisas que valem saber ao ler esses números:
 Se um slide aparece com um nome estranho, tipo `differentiators`, é um slide que
 o cliente viu e que você tirou da proposta depois. O registro do que ele leu não
 é reescrito quando você edita — de propósito.
+
+**Zerar estatísticas** aparece embaixo da tabela, assim que existe alguma
+abertura registrada. É o botão do ensaio: publique, abra o link numa janela
+anônima pra conferir como o cliente vai ver, zere, e só então mande. Depois de
+zerar, a proposta volta a ler como nunca aberta — aqui, na lista e no painel
+inicial.
+
+Nada é apagado: as aberturas passam a contar como **teste interno**, que é a
+mesma marca que uma abertura sua logada no `/admin` já recebia. Não há como
+desfazer por esta tela, então não use depois de mandar o link: as duas primeiras
+leituras do cliente são justamente as que dizem se ele leu a proposta inteira.
+
+Se a janela do ensaio continuar aberta enquanto você zera, o tempo dela segue
+somando na sessão que acabou de virar teste — feche a aba antes de mandar o
+link.
 
 ## Publicar
 
