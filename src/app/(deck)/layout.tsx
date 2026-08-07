@@ -4,6 +4,9 @@ import "@/styles/tokens.css";
 import "@/styles/gate.css";
 import "@/styles/deck.css";
 import "@/styles/slides.css";
+// Last on purpose — the print sheet has to outrank the two above by order.
+// See the header of print.css.
+import "@/styles/print.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://nukibr.com"),

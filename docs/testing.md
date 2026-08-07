@@ -164,6 +164,26 @@ that touches the deck.
 - [ ] Network shows **zero** third-party requests on a full scroll-through
 - [ ] Zero tracking requests — `/fast` must never emit one
 
+### The PDF export
+
+Typecheck cannot see any of this, and the failure mode is silent: the export
+still produces a file, it is just wrong. Do it from a window **≥ 1280px wide** —
+the measuring pass is only faithful there (`deck-runtime.md`). "Baixar PDF",
+then Chrome's *Save as PDF* destination, defaults untouched:
+
+- [ ] The preview is **landscape 16:9**, not A4 or Letter
+- [ ] **One slide per page**, no slide split across two, no blank pages
+- [ ] Page count is **sections minus one** — the demo slide is never exported
+- [ ] No chrome on any page: no progress nav, no keyboard hint, no "Baixar PDF"
+      pill, no back chevron, no footer
+- [ ] No browser header or footer — no title, URL or timestamp in the margins
+- [ ] Dark slides (cover, pricing) keep their background; the copy on them is
+      readable
+- [ ] Nothing is cropped on the tall slides — **pricing** and **calculator** are
+      the two that need scaling, so they are the two to look at
+- [ ] Print it **cold**, straight after a reload without scrolling: every slide
+      still has its content (this is the `.reveal` case)
+
 Canonical numbers live in `estimate.md`. If they changed, re-derive from code and
 update that file only.
 

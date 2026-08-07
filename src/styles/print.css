@@ -1,0 +1,175 @@
+/* PRINT (PDF export) — the whole print surface, in one sheet imported LAST.
+   ==========================================================================
+
+   Why its own file instead of a `@media print` block at the end of deck.css:
+   the block that lived there lost the cascade. `.deck .pdf-download` is defined
+   in slides.css and `.deck .slide.is-fullscreen` further down deck.css itself,
+   both at a specificity the print block could not beat from where it sat — so
+   the export shipped with the download pill, the back chevron and the demo
+   iframe printed onto every page. Being the last import makes equal-specificity
+   rules here win by order, which is the property the export actually needs.
+   Do not move this import above slides.css.
+
+   THE PAGE BOX. `@page` sets a 16:9 landscape sheet, not A4: this is a deck,
+   and A4 landscape (1.41:1) has to letterbox or crop every slide that was laid
+   out for a widescreen viewport. 1436 x 808 CSS px is that ratio at the deck's
+   natural desktop width — and, deliberately, wider than the 1280px breakpoint,
+   so the print layout resolves the same media queries a >= 1280px screen does.
+   That equality is what makes the measuring pass in DownloadPdfButton.tsx
+   accurate: it measures on screen, and the numbers only transfer if both sides
+   land in the same breakpoint bucket. Changing this width past a breakpoint
+   silently degrades the fit.
+
+   ONE SLIDE, ONE PAGE. Every `.slide` becomes exactly one page box: fixed
+   height, `overflow: hidden`, `break-before: page`. Content that would overrun
+   the box is scaled by `--print-scale`, an inline custom property that
+   DownloadPdfButton.tsx measures and writes per slide before printing. Absent
+   that script the property falls back to 1 and tall slides simply crop — the
+   layout still holds, it just loses the overflow.
+
+   The px numbers below are mirrored by constants in DownloadPdfButton.tsx.
+   Change one, change the other; the file names each other in comments. */
+
+@page {
+  size: 1436px 808px;
+  /* Zero margin is also what suppresses Chrome's page header/footer — the
+     title, URL and timestamp it draws in the margin box. There is no CSS to
+     turn those off; leaving them room is what turns them on. */
+  margin: 0;
+}
+
+@media print {
+  .deck {
+    /* Pin the padding scale. It is otherwise chosen by a viewport media query,
+       and the measuring pass runs against the screen's viewport, not the
+       page's — this is the one value that would differ enough to matter. */
+    --slide-pad: 56px;
+    /* Slide box, minus the bleed and padding below, is what the measuring pass
+       treats as available height. */
+    --print-page-height: 808px;
+    --print-bleed: 4px;
+    --print-slide-pad-y: 48px;
+
+    display: block;
+    min-height: 0;
+  }
+
+  /* ----- 1. Chrome and interactive-only surfaces come off ----- */
+
+  /* Three of these are over-qualified beyond what the element needs, so they
+     outrank the `display` each already carries and do it by specificity rather
+     than by source order — order is what the old print block lost on:
+       .deck button.pdf-download        > .deck .pdf-download          (slides.css)
+       .deck .cover a.back-link         > .deck .cover .back-link      (slides.css)
+       .deck .slide.is-fullscreen.module-demo-slide
+                                        > .deck .slide.is-fullscreen   (deck.css)
+                                        > the page-box rule below, same file
+     The demo slide is a live 5.7 MB iframe embed; there is nothing in it to
+     print, so the export is one page shorter than the deck is sections long. */
+  .deck .progress-nav,
+  .deck .keyboard-hint,
+  .deck button.pdf-download,
+  .deck .cover a.back-link,
+  .deck .slide.is-fullscreen.module-demo-slide,
+  .deck > footer {
+    display: none;
+  }
+
+  /* ----- 2. Paint the design, not the browser's idea of ink saving ----- */
+
+  /* Without this every dark-tone section (cover, differentiators, pricing)
+     prints white and the copy on it disappears. */
+  .deck,
+  .deck * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* `.reveal` starts at opacity: 0 and only flips to `.is-visible` once
+     DeckBehaviors' IntersectionObserver fires — which never happens for a
+     slide the visitor scrolled past quickly or never reached before printing. */
+  .deck .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: none;
+  }
+
+  /* ----- 3. One slide, one page ----- */
+
+  html,
+  body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+  html.deck-root {
+    /* Snap points are a scrolling concept; in paged media they only confuse
+       Chrome's pagination. */
+    scroll-snap-type: none;
+  }
+  .deck main {
+    display: block;
+  }
+
+  .deck .slide,
+  .deck .slide.is-fullscreen {
+    box-sizing: border-box;
+    width: 100%;
+    /* A hair under the page box. Exactly one page tall rounds up often enough
+       to spill a blank sheet after every slide. */
+    height: calc(var(--print-page-height) - var(--print-bleed));
+    min-height: 0;
+    padding: var(--print-slide-pad-y) 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    break-inside: avoid;
+  }
+  /* `break-before` rather than `break-after`: a hidden trailing slide (the demo
+     is one) would leave `break-after` asking for a page that has no content. */
+  .deck .slide:not(:first-of-type) {
+    break-before: page;
+  }
+
+  .deck .slide > .slide-inner {
+    /* Written by the measuring pass; 1 when the slide already fits. Scaling the
+       inner rather than the slide keeps the page-edge decorations (the module
+       numeral, the pearl) anchored to the sheet instead of shrinking with the
+       copy. `justify-content: center` centres the unscaled box, and scaling
+       about its centre keeps the result centred too. */
+    transform: scale(var(--print-scale, 1));
+    transform-origin: center center;
+  }
+}
+
+/* ----- 4. The measuring geometry, on screen ----- */
+
+/* DownloadPdfButton.tsx adds `.is-print-fitting` to <html> for the duration of
+   one synchronous measuring pass — long enough to force layout, never long
+   enough to paint. It reproduces the print box's width with the height left
+   free, so `.slide-inner`'s natural height is what gets measured. */
+@media screen {
+  html.is-print-fitting .deck {
+    --slide-pad: 56px;
+  }
+  html.is-print-fitting .deck .slide,
+  html.is-print-fitting .deck .slide.is-fullscreen {
+    box-sizing: border-box;
+    width: 1436px;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    display: block;
+    overflow: visible;
+  }
+  html.is-print-fitting .deck .slide > .slide-inner {
+    transform: none;
+  }
+  html.is-print-fitting .deck .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

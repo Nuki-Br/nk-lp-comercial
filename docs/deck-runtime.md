@@ -137,22 +137,72 @@ so this needed no dependency (Rule 3). It renders unconditionally from `Deck.tsx
 same as `.keyboard-hint`, so it is present on `/fast`, `/p/[slug]` and
 `/preview/[id]` alike.
 
-The `@media print` block at the end of `deck.css` is the other half of that
-contract:
+`src/styles/print.css` is the other half of that contract. It is **imported
+last** in `src/app/(deck)/layout.tsx`, after `slides.css`, and that is not
+cosmetic: the rules it needs to beat — `.deck .pdf-download` in `slides.css`,
+`.deck .slide.is-fullscreen` in `deck.css` — sit at the same specificity, so the
+print sheet only wins by source order. The block this replaced lived at the end
+of `deck.css` and lost exactly that fight, which is why the export shipped with
+the download pill, the back chevron and the demo iframe stamped on every page.
+Selectors that hide chrome are over-qualified on top of that (`.deck button.pdf-download`,
+`.deck .cover a.back-link`, `.deck .slide.is-fullscreen.module-demo-slide`) so
+they do not depend on order alone. Do not put a `@media print` block anywhere
+else.
 
-- Hides `.progress-nav`, `.keyboard-hint`, `.pdf-download` and, per product
-  requirement, `.module-demo-slide` — the inspector iframe is never in the PDF.
+What it does:
+
+- Sets `@page { size: 1436px 808px; margin: 0 }` — a 16:9 landscape sheet, not
+  A4. A deck laid out for a widescreen viewport has to letterbox or crop on
+  1.41:1 paper. The width is also deliberately above the 1280px breakpoint, so
+  the print layout resolves the same media queries a ≥1280px screen does; the
+  measuring pass below depends on that equality. Zero margin is also what
+  suppresses Chrome's page header/footer — there is no CSS to switch those off,
+  only a margin box to deny them.
+- Hides `.progress-nav`, `.keyboard-hint`, `.pdf-download`, the cover's
+  `.back-link`, the footer, and — per product requirement — `.module-demo-slide`.
+  The inspector iframe is never in the PDF, so the export is one page shorter
+  than the deck has sections.
 - Forces `.reveal` to `opacity: 1` — it starts at `0` and only flips on
   `IntersectionObserver`, which a slide the visitor never scrolled to (or that
   is printed cold, straight after load) never fires.
 - Forces `print-color-adjust: exact` so dark-tone sections keep their
   background instead of printing white.
-- Breaks each `.slide` onto its own page (`break-before: page` on all but the
-  first) so the PDF reads one slide per page, not one continuous scroll.
+- Makes each `.slide` **exactly one page box**: fixed height, `overflow: hidden`,
+  `break-before: page` on all but the first (`break-before`, not `break-after` —
+  a hidden trailing slide would otherwise ask for a page with nothing on it).
+
+### Fitting a slide to its page
+
+A page box alone would crop: the sections were laid out for a viewport they are
+free to overflow, and the calculator and pricing slides do. So
+`DownloadPdfButton.tsx` registers a `beforeprint` listener that measures each
+slide and writes a per-slide `--print-scale`, which the sheet applies to
+`.slide-inner`.
+
+The measuring pass adds `.is-print-fitting` to `<html>`, which reproduces the
+print box's width on screen with the height left free, reads
+`getBoundingClientRect()`, and removes the class — all in one synchronous task,
+so layout is forced but nothing is ever painted and the reader sees no flash.
+
+Two things follow from measuring on screen rather than in paged media:
+
+- It is only faithful at viewport widths **≥ 1280px**, where the screen and the
+  1436px page resolve the same media queries. Below that the numbers drift; a
+  `0.98` safety factor and `overflow: hidden` bound the damage.
+- Without JS the property falls back to `1` and tall slides crop. The page
+  geometry still holds — only the overflow is lost.
+
+`.slide-inner` is what scales, not `.slide`. That keeps each slide's background
+and its page-edge decorations (the module numeral, the pearl) filling the sheet
+while the copy shrinks inside it.
+
+The px constants in `DownloadPdfButton.tsx` mirror the `@page` box and slide
+padding in `print.css`. Nothing enforces the pairing at build time; the two files
+name each other in comments.
 
 ## Styling
 
-Four layers for the deck, and a hard scope rule.
+Five layers for the deck, and a hard scope rule.
 
 | File | Holds |
 |---|---|
@@ -160,6 +210,7 @@ Four layers for the deck, and a hard scope rule.
 | `src/styles/deck.css` | shell, `.reveal`, `.progress-nav`, the `.slide` foundation, the module-slide design system |
 | `src/styles/slides.css` | per-slide, sectioned with `/* ===== NAME ===== */` banners |
 | `src/styles/gate.css` | the `.gate*` block — renders *outside* `.deck`, so it is deliberately unscoped |
+| `src/styles/print.css` | the whole print surface — imported **last**, see "PDF export" above |
 
 A fifth sheet, `src/styles/admin.css`, belongs to the other root layout and never
 loads on a deck route — it is the panel's design system and is documented in
