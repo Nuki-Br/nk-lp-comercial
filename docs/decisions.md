@@ -165,7 +165,7 @@ worth a test at all.
 
 ## 8. Committed demo artifact
 
-`public/demos/inspetor/index.html` (5.7 MB) is committed rather than generated
+`public/demos/inspetor/index.html` (6.0 MB) is committed rather than generated
 during the build, because `scripts/prepare-inspetor-demo.mjs` is a manual step
 that patches a Claude Design export and would be fragile in CI. The cost is repo
 size; the benefit is that a stale patch regex cannot silently break a deploy.
@@ -365,7 +365,7 @@ entirely loses them silently. Revisit when Biome's Next domain matures.
 
 **Consequence.** Two landmines, both configured rather than remembered:
 `files.includes` must exclude `public/demos/**`, `src/HTML/**` and `.next/**`, or
-the formatter is pointed at a 5.7 MB single-line artifact; and CSS formatting is
+the formatter is pointed at a 6.0 MB single-line artifact; and CSS formatting is
 **off**, because reformatting 3,366 lines of stylesheet produces a diff nobody
 can review against a requirement of "visual identity preserved exactly". Both are
 recorded in `tech-debt.md` as separately shippable.

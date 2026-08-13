@@ -14,6 +14,8 @@ import {
   problemCards,
   ROOM_PRESETS,
   slideLabels,
+  valueEvidence,
+  valueQuote,
 } from "@/content/deck";
 import { modules } from "@/content/modules";
 import {
@@ -33,6 +35,7 @@ import {
   problemHead,
   totalHead,
   totalLabels,
+  valueHead,
   whatIsNukiHead,
 } from "@/content/slides";
 import { normalizeDeck } from "@/deck/resolve";
@@ -121,6 +124,19 @@ export function buildDefaultDeck(): DeckConfig {
       enabled: true,
       tone: "dark",
       ...coverCopy,
+    },
+    /* Antes do problema, de propósito: estabelece a tese comercial primeiro,
+       pra que o `problem` seguinte seja lido como "e é isso que hoje trava esse
+       ganho" em vez de abrir a apresentação no tom defensivo. */
+    {
+      kind: "value",
+      id: "value",
+      label: slideLabels.value,
+      enabled: true,
+      tone: "dark",
+      head: valueHead,
+      quote: valueQuote,
+      evidence: valueEvidence,
     },
     {
       kind: "problem",

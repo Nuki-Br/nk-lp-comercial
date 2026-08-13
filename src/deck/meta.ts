@@ -55,6 +55,10 @@ export const SLIDE_META: Record<SlideKind, SlideMeta> = {
     { key: "title", label: fieldCopy.title, kind: "richtext" },
     { key: "lead", label: fieldCopy.lead, kind: "textarea" },
   ]),
+  value: meta("value", [
+    ...HEAD_FIELDS,
+    { key: "evidence", label: fieldCopy.evidence, kind: "list" },
+  ]),
   problem: meta("problem", [
     ...HEAD_FIELDS,
     { key: "cards", label: fieldCopy.cards, kind: "list" },

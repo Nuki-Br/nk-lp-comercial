@@ -181,14 +181,14 @@ Components are `PascalCase.tsx`; everything else is `camelCase.ts`.
   the embedded document has `overscroll-behavior: none` and no internal
   scroller, so a live iframe swallows the wheel and the deck reads as frozen.
 - **`nuki-demo:esc` must not be renamed.** The postMessage type is baked into the
-  committed 5.7 MB `public/demos/inspetor/index.html`. Renaming the listener
+  committed 6.0 MB `public/demos/inspetor/index.html`. Renaming the listener
   without regenerating that file silently kills ESC-from-inside-the-iframe.
   `DeckBehaviors` re-emits it as the window event `nuki-demo:exit`.
 - **Asset basenames are verbatim**, typo included (`vizualizador-planner`).
 - **`public/demos/inspetor/index.html` is a committed build artifact.** The patch
   script does not run in the Vercel build. Regenerate with
   `node scripts/prepare-inspetor-demo.mjs`; never hand-edit it, and never `Read`
-  it — it is 5.7 MB on a handful of enormous lines.
+  it — it is 6.0 MB on a handful of enormous lines.
 
 ## Verify before claiming done
 

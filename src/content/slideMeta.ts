@@ -8,6 +8,10 @@ export type SlideMetaCopy = { label: string; description: string };
 
 export const slideMetaCopy: Record<string, SlideMetaCopy> = {
   cover: { label: "Capa", description: "Abertura com título, lead e os três módulos." },
+  value: {
+    label: "Por que personalizar",
+    description: "A tese comercial: citação do comprador e cinco números com fonte.",
+  },
   problem: { label: "O problema", description: "As três etapas manuais e a dor de cada uma." },
   "what-is-nuki": {
     label: "O que é a Nuki",
@@ -54,6 +58,7 @@ export const fieldCopy = {
   fitTitle: "Título do bloco 'quando faz sentido'",
   fitItems: "Itens do bloco 'quando faz sentido'",
   cards: "Cards",
+  evidence: "Números com fonte",
   flow: "Etapas do fluxo",
   items: "Itens",
 } as const;

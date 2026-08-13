@@ -11,4 +11,5 @@ export { ModuleDemoSlide } from "./ModuleDemoSlide";
 export { ModuleSlide } from "./ModuleSlide";
 export { PricingSlide } from "./PricingSlide";
 export { ProblemSlide } from "./ProblemSlide";
+export { ValueSlide } from "./ValueSlide";
 export { WhatIsNukiSlide } from "./WhatIsNukiSlide";

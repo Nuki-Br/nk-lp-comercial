@@ -17,6 +17,7 @@ import {
     Módulos não aparecem: o rótulo deles é o `title.strong` de `modules.ts`. */
 export const slideLabels: Record<string, string> = {
   cover: "Capa",
+  value: "Por que personalizar",
   problem: "O problema",
   "what-is-nuki": "O que é a Nuki",
   differentiators: "Diferenciais",
@@ -36,6 +37,7 @@ export const slideLabels: Record<string, string> = {
     que bater com a do DOM ou os pontinhos andam pra trás. */
 export const deckNav = [
   { id: "cover", label: slideLabels.cover },
+  { id: "value", label: slideLabels.value },
   { id: "problem", label: slideLabels.problem },
   { id: "what-is-nuki", label: slideLabels["what-is-nuki"] },
   { id: "planner", label: "Planner" },
@@ -47,6 +49,103 @@ export const deckNav = [
   { id: "pricing", label: slideLabels.pricing },
   { id: "calculator", label: slideLabels.calculator },
   { id: "total", label: slideLabels.total },
+];
+
+/* ============================================================
+   O valor da personalização — o "porquê" comercial. Abre a
+   apresentação logo depois da capa, antes de qualquer menção ao
+   problema: estabelece a tese (personalização é alavanca de
+   negócio) para que o frame seguinte, o problema, seja lido como
+   "e é exatamente isso que hoje trava" em vez de abrir no tom
+   defensivo.
+
+   Todo número daqui é dito em voz alta numa reunião e pode ser
+   contestado na hora, então cada item carrega a própria fonte.
+   Se atualizar um dado, atualize a fonte na mesma linha: número
+   sem procedência neste slide é pior do que número nenhum.
+   ============================================================ */
+
+/** Trecho de citação. `emphasis` vira <strong> — a fonte original destaca os
+    percentuais e o slide reproduz esse destaque. Segmentos em vez de HTML
+    porque `content/` não carrega JSX. */
+export type QuoteSegment = {
+  text: string;
+  emphasis?: boolean;
+};
+
+/** Dado âncora do slide: sai da boca do comprador, não da nossa. Vem primeiro
+    justamente porque é o único que fala de demanda — os demais falam do que a
+    incorporadora faz com ela. */
+export type ValueQuote = {
+  segments: QuoteSegment[];
+  author: string;
+  detail: string;
+};
+
+export const valueQuote: ValueQuote = {
+  segments: [
+    { text: "75% dos compradores", emphasis: true },
+    {
+      text: " preferem construtoras que oferecem opções de design personalizado, sendo que ",
+    },
+    { text: "67% estão dispostos a pagar mais", emphasis: true },
+    { text: " por essas customizações." },
+  ],
+  author: "Ashton Woods",
+  detail: "National Homebuyer Survey · 2018",
+};
+
+export type ValueEvidence = {
+  /** Número em destaque. String, não number: carrega sinal e unidade
+      ("+10–15%", "~60%") e nunca entra em conta. */
+  metric: string;
+  title: string;
+  /** Frase autocontida — não continua a leitura do `metric`, porque no mobile
+      os dois deixam de ficar na mesma linha. */
+  description: string;
+  /** Procedência citável: quem publicou e quando. */
+  source: string;
+};
+
+/* Ordem é argumentativa: dois números de upside, um de experiência de compra,
+   um de custo evitado e um de ESG. Fecha na pauta que hoje chega à
+   incorporadora pelo lado do investidor, não pelo do comprador. */
+export const valueEvidence: ValueEvidence[] = [
+  {
+    metric: "+10–15%",
+    title: "Receita",
+    description:
+      "É o ganho típico de quem trata personalização como estratégia — de 5% a 25%, conforme o setor e a execução.",
+    source: "McKinsey & Company · Next in Personalization, 2021",
+  },
+  {
+    metric: "+20%",
+    title: "Prêmio de preço",
+    description:
+      "Um em cada cinco compradores interessados paga até 20% a mais pelo produto customizado. Receita sobre a mesma unidade, sem mais terreno.",
+    source: "Deloitte · Made-to-order: The Rise of Mass Personalisation",
+  },
+  {
+    metric: "78%",
+    title: "Experiência de compra",
+    description:
+      "É quanto do público acha importante escolher todos os materiais e acabamentos em um só lugar. Planilha e e-mail queimam esse ponto.",
+    source: "Ashton Woods · National Homebuyer Survey, 2018",
+  },
+  {
+    metric: "5%",
+    title: "Retrabalho evitado",
+    description:
+      "É quanto o retrabalho direto consome do custo de uma obra — 21% com os indiretos. Decisão registrada antes da execução não se refaz.",
+    source: "Construction Industry Institute · Get It Right Initiative",
+  },
+  {
+    metric: "~60%",
+    title: "Pauta ESG",
+    description:
+      "É a fatia dos resíduos sólidos urbanos do Brasil vinda de construção e demolição. Personalizar na planta evita o quebra-quebra pós-entrega.",
+    source: "ABRELPE · Panorama dos Resíduos Sólidos no Brasil",
+  },
 ];
 
 export type ProblemCard = {

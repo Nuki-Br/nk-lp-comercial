@@ -10,6 +10,7 @@ import {
   ModuleSlide,
   PricingSlide,
   ProblemSlide,
+  ValueSlide,
   WhatIsNukiSlide,
 } from "@/components/slides";
 import type { DeckChrome, EstimateConfig, SlideNode } from "@/deck/types";
@@ -33,6 +34,8 @@ export function renderSlide(node: SlideNode, ctx: SlideContext): ReactElement | 
   switch (node.kind) {
     case "cover":
       return <CoverSlide key={node.id} node={node} />;
+    case "value":
+      return <ValueSlide key={node.id} node={node} />;
     case "problem":
       return <ProblemSlide key={node.id} node={node} />;
     case "what-is-nuki":

@@ -16,11 +16,13 @@
  *
  *   1. Strip <TweaksPanel>…</TweaksPanel> — the Claude Design dev rail
  *      ("comparison variant" / "accent color") the prospect should not see.
- *      The x-dc export has no such rail, so this is currently a no-op and the
- *      template round-trip is skipped entirely (see below).
- *   2. Rewrite the outer document's <title> and <html lang>. The exporter emits
+ *      The x-dc export has no such rail, so this is currently a no-op.
+ *   2. Bundle the two real photos of the Portobello floor item (see PHOTOS
+ *      below) as manifest entries and wire them into every surface that ships
+ *      a grey "PLACEHOLDER" box for that item.
+ *   3. Rewrite the outer document's <title> and <html lang>. The exporter emits
  *      a generic "Bundled Page" title and no lang.
- *   3. Inject the ESC bridge before </head>.
+ *   4. Inject the ESC bridge before </head>.
  *
  * Canonical patches 1/3 (initial screen / navigate intercept) are deliberately
  * not applied: we preserve the original flow starting at "login" so every step
@@ -43,6 +45,7 @@
  * re-injecting.
  *
  * Reads:  src/HTML/Nuki-Inspetor-Embed.html
+ *         src/HTML/assets/*.webp
  * Writes: public/demos/inspetor/index.html
  *
  * Usage:
@@ -56,8 +59,32 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const SRC = join(ROOT, "src", "HTML", "Nuki-Inspetor-Embed.html");
+const ASSETS = join(ROOT, "src", "HTML", "assets");
 const OUT_DIR = join(ROOT, "public", "demos", "inspetor");
 const OUT = join(OUT_DIR, "index.html");
+
+// ── Photos bundled into the demo ──
+// Path in the prototype: Reserva Atlântica › Torre A › Cobertura 1801 ›
+// Sala de estar › Piso. The item is keyed by its `esp` string because that is
+// what the component carries around; the same string also appears in
+// Component.COZINHA12, which is a different screen and never renders these.
+//
+// These are NOT in public/ on purpose: the demo is a single self-contained
+// document, so the bytes must ride inside the bundle manifest. A file under
+// public/ would be a second HTTP request the exported HTML cannot make when it
+// is opened outside the deck.
+//
+// The uuids are the bundler's own asset-reference mechanism: the loader does
+// `template.split(uuid).join(blobUrls[uuid])` over the whole template string,
+// so a bare uuid anywhere — markup attribute OR component source — becomes the
+// blob: URL of the decoded manifest entry.
+const ITEM_KEY = "Porcelanato Portobello Eternal 90×90";
+const PHOTOS = {
+  // "Especificado" — the reference the client approved.
+  esp: { uuid: "b7e1c3a2-5d94-4f18-9c60-2ae4f81d33a1", file: "portobello-aeterna-avorio.webp" },
+  // "Executado" — the photo taken on site.
+  exe: { uuid: "c9f2d4b3-6ea5-4028-8d71-3bf5a92e44b2", file: "portobello-aeterna-avorio-ambiente.webp" },
+};
 
 console.log("[inspetor-demo] reading", SRC);
 const html = readFileSync(SRC, "utf8");
@@ -74,7 +101,7 @@ if (typeof template !== "string") {
 }
 console.log(`[inspetor-demo] template length: ${template.length}`);
 
-const patches = { tweaks: 0, title: 0, lang: 0, escBridge: 0 };
+const patches = { tweaks: 0, photos: 0, title: 0, lang: 0, escBridge: 0 };
 
 let patched = template;
 
@@ -85,13 +112,146 @@ if (TWEAKS_RE.test(patched)) {
   patches.tweaks++;
 }
 
+// ── Patch 2: real photos for the Portobello floor item ───────────────────────
+//
+// Every edit below is an *append* to an existing style attribute plus a
+// `display:` swap on the grey placeholder label. Appending `background-image`
+// after the element's own `background:` shorthand wins the cascade without
+// touching the fallback colour, so items with no bundled photo keep the exact
+// placeholder they ship with today. Nothing structural changes — no new
+// elements, no new <sc-if>.
+//
+// Each entry must match EXACTLY ONCE. A silently-unmatched anchor is the
+// failure mode this whole script exists to prevent, so a miss is fatal.
+const PHOTO_FILL = "background-size:cover;background-position:center;background-repeat:no-repeat";
+const VIEWER_FILL = "background-size:contain;background-position:center;background-repeat:no-repeat";
+
+const TEMPLATE_PATCHES = [
+  // ── "Especificado" tab: reference photo box ──
+  {
+    what: "esp tab · photo box",
+    from: "position:relative;background:var(--color-gray-4);border:1px solid var(--color-gray-5);display:flex;align-items:center;justify-content:center",
+    to: `position:relative;background:var(--color-gray-4);background-image:{{ fotoEspImg }};${PHOTO_FILL};border:1px solid var(--color-gray-5);display:flex;align-items:center;justify-content:center`,
+  },
+  {
+    what: "esp tab · placeholder label",
+    from: "display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--color-gray-7);padding-bottom:24px",
+    to: "display:{{ fotoEspPh }};flex-direction:column;align-items:center;gap:4px;color:var(--color-gray-7);padding-bottom:24px",
+  },
+
+  // ── "Executado" tab: site photo box ──
+  {
+    what: "exe tab · photo box",
+    from: "position:relative;background:#e4e4e4;border:1px solid var(--color-gray-5);display:flex;align-items:center;justify-content:center",
+    to: `position:relative;background:#e4e4e4;background-image:{{ fotoExeImg }};${PHOTO_FILL};border:1px solid var(--color-gray-5);display:flex;align-items:center;justify-content:center`,
+  },
+  {
+    what: "exe tab · placeholder label",
+    from: "display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--color-gray-8);padding-bottom:24px",
+    to: "display:{{ fotoExePh }};flex-direction:column;align-items:center;gap:4px;color:var(--color-gray-8);padding-bottom:24px",
+  },
+
+  // ── "Comparar em detalhe": the curtain. Executado is the base layer and the
+  //    reference is clipped over it, so each layer takes its own photo. ──
+  {
+    what: "curtain · executado layer",
+    from: "position:relative;border:1px solid var(--color-gray-5);background:#e4e4e4",
+    to: `position:relative;border:1px solid var(--color-gray-5);background:#e4e4e4;background-image:{{ fotoExeImg }};${PHOTO_FILL}`,
+  },
+  {
+    what: "curtain · executado label",
+    from: "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--color-gray-8)",
+    to: "position:absolute;inset:0;display:{{ fotoExePh }};align-items:center;justify-content:center;color:var(--color-gray-8)",
+  },
+  {
+    what: "curtain · reference layer",
+    from: "position:absolute;inset:0;background:var(--color-gray-4);display:flex;align-items:center;justify-content:center;color:var(--color-gray-7);clip-path:inset(0 {{ cortinaResto }} 0 0)",
+    to: `position:absolute;inset:0;background:var(--color-gray-4);background-image:{{ fotoEspImg }};${PHOTO_FILL};display:flex;align-items:center;justify-content:center;color:var(--color-gray-7);clip-path:inset(0 {{ cortinaResto }} 0 0)`,
+  },
+  {
+    // The reference layer itself carries the clip-path, so only its inner label
+    // can be hidden — anchored on the icon that follows it, which is what makes
+    // this one unique among the curtain's two identical label wrappers.
+    what: "curtain · reference label",
+    from: '<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><span class="ms" style="font-size:38px">image<',
+    to: '<div style="display:{{ fotoEspPh }};flex-direction:column;align-items:center;gap:4px"><span class="ms" style="font-size:38px">image<',
+  },
+
+  // ── Fullscreen viewer ("Ampliar") — contain, not cover: this one is meant to
+  //    be inspected, so nothing may be cropped out of frame. ──
+  {
+    what: "viewer · executado pane",
+    from: '<div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:center;position:relative">',
+    to: `<div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:center;position:relative;background-image:{{ fotoExeImg }};${VIEWER_FILL}">`,
+  },
+  {
+    what: "viewer · executado label",
+    from: "display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.55)",
+    to: "display:{{ fotoExePh }};flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.55)",
+  },
+  {
+    what: "viewer · reference pane",
+    from: "justify-content:center;position:relative;background:#232323",
+    to: `justify-content:center;position:relative;background:#232323;background-image:{{ fotoEspImg }};${VIEWER_FILL}`,
+  },
+  {
+    what: "viewer · reference label",
+    from: "display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.5)",
+    to: "display:{{ fotoEspPh }};flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.5)",
+  },
+
+  // ── Component source: the uuid→blob table, the lookup, and the four props. ──
+  {
+    what: "component · photo table",
+    from: "  static COMODOS = [",
+    to:
+      "  static FOTOS = {\n" +
+      `    ${JSON.stringify(ITEM_KEY)}: { esp: "${PHOTOS.esp.uuid}", exe: "${PHOTOS.exe.uuid}" }\n` +
+      "  };\n\n" +
+      "  static COMODOS = [",
+  },
+  {
+    // `it` (the selected item) is resolved a few lines above; hang the lookup
+    // off the next statement so both stay in scope together.
+    what: "component · photo lookup",
+    from: "    const conf2 = this.state.confSel;",
+    to:
+      "    const itFoto = it ? Component.FOTOS[it.esp] || null : null;\n" +
+      "    const conf2 = this.state.confSel;",
+  },
+  {
+    what: "component · photo props",
+    from: '      itEsp: it ? it.esp : "",',
+    to:
+      '      itEsp: it ? it.esp : "",\n' +
+      '      fotoEspImg: itFoto ? "url(" + itFoto.esp + ")" : "none",\n' +
+      '      fotoEspPh: itFoto ? "none" : "flex",\n' +
+      '      fotoExeImg: itFoto ? "url(" + itFoto.exe + ")" : "none",\n' +
+      '      fotoExePh: itFoto ? "none" : "flex",',
+  },
+];
+
+for (const { what, from, to } of TEMPLATE_PATCHES) {
+  const hits = patched.split(from).length - 1;
+  if (hits !== 1) {
+    throw new Error(
+      `[inspetor-demo] anchor "${what}" matched ${hits} times, expected exactly 1 — ` +
+        "the export changed; re-derive the anchor before shipping",
+    );
+  }
+  patched = patched.split(from).join(to); // split/join, not replace — no `$` expansion
+  patches.photos++;
+}
+
 let newHtml = html;
 
 // Only re-inject the template when a patch actually changed it. Re-encoding an
 // unchanged template is an identity transform that buys nothing and risks the
 // `$`-expansion and `<\/`-escaping gotchas above for no reason.
-if (patches.tweaks > 0) {
+let templateDelta = 0;
+if (patches.tweaks > 0 || patches.photos > 0) {
   const encoded = JSON.stringify(patched).replace(/<\//g, "<\\/");
+  templateDelta = encoded.length - match[1].trim().length;
   // Replacer FUNCTION, not a string — see Gotcha 1.
   newHtml = newHtml.replace(
     TEMPLATE_RE,
@@ -101,7 +261,29 @@ if (patches.tweaks > 0) {
   console.log("[inspetor-demo] no template patches applied — template passed through verbatim");
 }
 
-// Patch 2: outer document metadata. The exporter emits "<title>Bundled Page"
+// ── Patch 2b: the photo bytes themselves, as manifest entries ────────────────
+// Spliced in as text right after the manifest's opening brace rather than
+// round-tripping a 5.5 MB JSON object: base64 cannot contain "<", so none of
+// the `</`-escaping concerns that apply to the template apply here.
+const MANIFEST_OPEN = '<script type="__bundler/manifest">';
+const manifestAt = newHtml.indexOf(MANIFEST_OPEN);
+if (manifestAt < 0) throw new Error("[inspetor-demo] manifest script tag not found");
+const braceAt = newHtml.indexOf("{", manifestAt + MANIFEST_OPEN.length);
+if (braceAt < 0) throw new Error("[inspetor-demo] manifest JSON object not found");
+
+const manifestInsert = Object.values(PHOTOS)
+  .map(({ uuid, file }) => {
+    const data = readFileSync(join(ASSETS, file)).toString("base64");
+    console.log(
+      `[inspetor-demo] bundling ${file} as ${uuid} (${(data.length / 1024).toFixed(0)} KB base64)`,
+    );
+    return `${JSON.stringify(uuid)}:{"mime":"image/webp","compressed":false,"data":"${data}"},`;
+  })
+  .join("");
+
+newHtml = newHtml.slice(0, braceAt + 1) + manifestInsert + newHtml.slice(braceAt + 1);
+
+// Patch 3: outer document metadata. The exporter emits "<title>Bundled Page"
 // and a bare <html>. Anchored to the doctype because the template carries a
 // second <html> occurrence of its own.
 const TITLE_RE = /<title>[^<]*<\/title>/;
@@ -116,7 +298,7 @@ if (ROOT_HTML_RE.test(newHtml)) {
   patches.lang++;
 }
 
-// Patch 3: ESC bridge. capture:true fires BEFORE any internal React handler.
+// Patch 4: ESC bridge. capture:true fires BEFORE any internal React handler.
 // When the HTML is embedded as an iframe (window.parent !== window), the parent
 // receives postMessage({type: 'nuki-demo:esc'}) and leaves the demo. The window
 // listener survives the body swap the loader performs.
@@ -148,12 +330,15 @@ if (patches.escBridge === 0) {
   throw new Error("[inspetor-demo] ESC bridge not injected — refusing to write a broken demo");
 }
 
-// Guard against the `$`-expansion regression: the output should only grow by
-// roughly the patches we made, never by the size of the template payload.
-const bloat = newHtml.length - html.length - ESC_BRIDGE.length;
-if (bloat > 4096) {
+// Guard against the `$`-expansion regression: the output should grow by exactly
+// what we injected, never by the size of the template payload. A fixed ceiling
+// stopped being meaningful once the photos landed — the accounting is now
+// explicit, so an unexpected 188 KB of spliced-in payload still trips it.
+const expectedGrowth = templateDelta + manifestInsert.length + ESC_BRIDGE.length;
+const bloat = newHtml.length - html.length - expectedGrowth;
+if (Math.abs(bloat) > 4096) {
   throw new Error(
-    `[inspetor-demo] output grew ${bloat} chars beyond the expected patches — ` +
+    `[inspetor-demo] output size is off by ${bloat} chars from the expected patches — ` +
       "likely a `$` expansion in a replacement string (see Gotcha 1)",
   );
 }
@@ -166,6 +351,22 @@ try {
   JSON.parse(outMatch[1].trim());
 } catch (err) {
   throw new Error(`[inspetor-demo] output template is not valid JSON: ${err.message}`);
+}
+
+// Same reasoning for the manifest: a bad splice leaves valid-looking HTML whose
+// every asset — fonts, icons, React itself — silently fails to decode.
+const outManifest = newHtml.match(/<script type="__bundler\/manifest">([\s\S]*?)<\/script>/);
+if (!outManifest) throw new Error("[inspetor-demo] manifest script tag missing from output");
+let parsedManifest;
+try {
+  parsedManifest = JSON.parse(outManifest[1].trim());
+} catch (err) {
+  throw new Error(`[inspetor-demo] output manifest is not valid JSON: ${err.message}`);
+}
+for (const { uuid, file } of Object.values(PHOTOS)) {
+  if (!parsedManifest[uuid]) {
+    throw new Error(`[inspetor-demo] ${file} missing from the output manifest (${uuid})`);
+  }
 }
 
 mkdirSync(OUT_DIR, { recursive: true });

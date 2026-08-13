@@ -19,6 +19,7 @@ Este doc explica como integrar o HTML de um módulo (Planner / Personaliza / Ins
 | Papel                 | Localização                                             |
 | --------------------- | ------------------------------------------------------- |
 | HTML original         | `src/HTML/Nuki-<NomeDoModulo>-Embed.html`               |
+| Imagens injetadas     | `src/HTML/assets/*.webp`                                |
 | Script de trim/unpack | `scripts/prepare-<slug>-demo.mjs`                       |
 | HTML pronto (público) | `public/demos/<slug>/index.html`                        |
 | Pattern React (data)  | `src/content/modules.ts` → `demoUrl`  |
@@ -152,6 +153,44 @@ algum patch mudou alguma coisa, aborta se a saída crescer muito além dos patch
 esperados, e faz `JSON.parse` do template que está prestes a escrever. Um
 template corrompido continua sendo HTML válido — esse re-parse é a única
 checagem que realmente pega o problema.
+
+## Colocar imagens reais no lugar dos placeholders
+
+O protótipo do Inspetor sai do Claude Design com caixas cinza
+`PLACEHOLDER · FOTO DE REFERÊNCIA` / `PLACEHOLDER · FOTO DA OBRA`. O script
+troca essas caixas por fotos reais **em um item só** — Reserva Atlântica ›
+Torre A › Cobertura 1801 › Sala de estar › Piso (`Porcelanato Portobello
+Eternal 90×90`). Os demais itens continuam com o placeholder original, que é o
+comportamento certo: uma foto de porcelanato embaixo de "Tinta paredes" seria
+pior do que o cinza.
+
+Onde os arquivos moram: `src/HTML/assets/*.webp`, **não** `public/`. A demo é um
+documento único e autocontido; um arquivo em `public/` seria uma segunda
+requisição HTTP que o HTML exportado não consegue fazer fora do deck.
+
+Como os bytes entram no bundle — usando o mecanismo do próprio bundler, não
+data-URI na marcação:
+
+1. O script insere uma entry por foto no `<script type="__bundler/manifest">`
+   (`{"mime":"image/webp","compressed":false,"data":"<base64>"}`), por splice de
+   texto logo depois da chave de abertura. Base64 não contém `<`, então nenhuma
+   das preocupações de escape que valem pro template valem aqui.
+2. O loader faz `template.split(uuid).join(blobUrls[uuid])` sobre a string
+   inteira do template. Ou seja: **um uuid cru em qualquer lugar** vira a blob
+   URL — atributo de markup ou código do componente, tanto faz. O script usa
+   isso pra montar `Component.FOTOS`, uma tabela `esp → {esp, exe}` dentro do
+   próprio componente.
+3. Quatro props derivadas (`fotoEspImg` / `fotoEspPh` / `fotoExeImg` /
+   `fotoExePh`) saem daí, e a marcação só **acrescenta** `background-image` ao
+   fim do `style` que já existia, mais uma troca de `display` na label cinza.
+   Nada de elemento novo, nada de `<sc-if>` novo — o `background-image` depois
+   do shorthand `background:` ganha a cascata sem apagar a cor de fallback.
+
+São 15 âncoras (5 superfícies: aba Especificado, aba Executado, as duas camadas
+da cortina "Comparar em detalhe", os dois painéis do visor de tela cheia, mais
+os 3 pontos no código do componente). **Cada âncora precisa casar exatamente uma
+vez** — o script aborta se casar 0 ou 2+. Essa é a única defesa contra um export
+novo mudar o markup e o patch virar no-op silencioso.
 
 ## Estrutura do trim script
 

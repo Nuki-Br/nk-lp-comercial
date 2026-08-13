@@ -111,11 +111,12 @@ describe("slides desabilitados", () => {
     }
   });
 
-  it("anchorsOf pula os desabilitados — 10 pontos, não 12", () => {
+  it("anchorsOf pula os desabilitados — 11 pontos, não 13", () => {
     const ids = anchorsOf(deck.slides).map((a) => a.id);
 
     expect(ids).toEqual([
       "cover",
+      "value",
       "problem",
       "what-is-nuki",
       "planner",
@@ -132,7 +133,7 @@ describe("slides desabilitados", () => {
     const ids = walkableIdsOf(deck.slides);
 
     expect(ids).toContain("inspetor-demo");
-    expect(ids).toHaveLength(11);
+    expect(ids).toHaveLength(12);
     // A demo vem logo depois do módulo pai — é a ordem que as setas percorrem.
     expect(ids.indexOf("inspetor-demo")).toBe(ids.indexOf("inspetor") + 1);
   });

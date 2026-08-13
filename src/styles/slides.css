@@ -122,6 +122,170 @@
   font-weight: 500;
 }
 
+/* ===== O VALOR DA PERSONALIZAÇÃO — citação âncora + evidências =====
+   Único frame escuro entre a capa e o fim do deck: é a virada do argumento
+   (o problema vira oportunidade) e o contraste marca essa quebra. Herda a
+   paleta de `.differentiators` de propósito — são os dois frames de tese. */
+.deck .value {
+  background: var(--color-nuki-green-03, #00363a);
+  color: var(--color-nuki-white, #fff);
+  /* 10vh em vez dos 12vh do `.slide`: é o que falta pra citação + as cinco
+     evidências fecharem dentro de 1080 sem cortar argumento da copy. */
+  padding: 10vh 0;
+}
+/* Este é o frame mais denso do deck (citação + 5 evidências), e ele precisa
+   caber numa tela só — o vendedor chega aqui de seta, não de scroll. O header
+   abre mão da altura em favor do corpo: 20ch (default) quebraria o h2 em 4
+   linhas e o slide estouraria a viewport de 1080. */
+.deck .value .section-head { margin-bottom: 3vh; }
+.deck .value .section-head h2 {
+  color: var(--color-nuki-white, #fff);
+  max-width: 40ch;
+}
+.deck .value .section-head .lead { color: rgba(255, 255, 255, 0.72); }
+.deck .value .section-head .tag { color: var(--color-nuki-green-soft, #e6fafa); }
+
+.deck .value-body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 40px;
+  align-items: stretch;
+}
+@media (max-width: 1024px) {
+  .deck .value-body {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+/* A citação é mais curta que a lista ao lado; em vez de deixar buraco embaixo,
+   o painel estica na altura da coluna e a assinatura desce pro rodapé (ver o
+   `margin-top: auto` do figcaption). */
+.deck .value-quote {
+  position: relative;
+  margin: 0;
+  /* padding-top abre espaço pra aspa decorativa do ::before. */
+  padding: 60px 32px 32px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid var(--color-nuki-orange, #e8713f);
+  display: flex;
+  flex-direction: column;
+}
+.deck .value-quote::before {
+  content: "\201C";
+  position: absolute;
+  top: 2px;
+  left: 26px;
+  font-size: 120px;
+  line-height: 1;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+.deck .value-quote blockquote {
+  position: relative;
+  margin: 0;
+  flex: 1;
+  font-size: clamp(19px, 1.5vw, 24px);
+  line-height: 1.4;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  text-wrap: pretty;
+}
+.deck .value-quote blockquote strong {
+  font-weight: 800;
+  color: var(--color-nuki-white, #fff);
+}
+.deck .value-quote figcaption {
+  /* 24px é o piso; o `flex: 1` do blockquote é quem empurra a assinatura pro
+     rodapé quando sobra altura. `margin-top: auto` sozinho colapsaria a 0. */
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.deck .value-quote-author {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--color-nuki-green-soft, #e6fafa);
+}
+.deck .value-quote-detail {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Lista de evidências — linhas divididas em vez de cards: cinco cards nesta
+   altura viram uma parede, e a régua vertical dos números é o que se lê de
+   longe numa projeção. */
+.deck .value-evidence {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.deck .value-evidence-item {
+  display: grid;
+  /* O piso de 150px é ditado pelo métrico mais largo ("+10–15%") com nowrap:
+     abaixo disso ele quebra no travessão e vira "+10–" / "15%". Cada <li> é um
+     grid próprio, então a régua vertical dos números só se mantém porque as
+     duas faixas resolvem igual em todas as linhas. */
+  grid-template-columns: minmax(150px, 0.26fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.deck .value-evidence-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.deck .value-evidence-item:last-child { padding-bottom: 0; }
+.deck .value-evidence-metric {
+  font-weight: 800;
+  font-size: clamp(24px, 1.8vw, 30px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--color-nuki-orange, #e8713f);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.deck .value-evidence-text h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-nuki-green-soft, #e6fafa);
+}
+.deck .value-evidence-text p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.7);
+  text-wrap: pretty;
+}
+.deck .value-evidence-source {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+}
+@media (max-width: 640px) {
+  .deck .value-evidence-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
 /* ===== PROBLEMA — 3 etapas ===== */
 .deck .problem {
   background: var(--color-nuki-gray-light, #f7f7f7);

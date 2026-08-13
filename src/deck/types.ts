@@ -7,6 +7,8 @@ import type {
   ProblemCard,
   ProjectSizePreset,
   RoomPreset,
+  ValueEvidence,
+  ValueQuote,
 } from "@/content/deck";
 import type { ModuleData } from "@/content/modules";
 import type { CaseLogo } from "@/content/slides";
@@ -61,6 +63,7 @@ export type SectionHead = {
 
 export type SlideKind =
   | "cover"
+  | "value"
   | "problem"
   | "what-is-nuki"
   | "module"
@@ -118,6 +121,13 @@ export type CoverNode = SlideNodeBase & {
   lead: RichText;
   meta: { items: string[]; separator: string };
   backLink: { href: string; ariaLabel: string };
+};
+
+export type ValueNode = SlideNodeBase & {
+  kind: "value";
+  head: SectionHead;
+  quote: ValueQuote;
+  evidence: ValueEvidence[];
 };
 
 export type ProblemNode = SlideNodeBase & {
@@ -324,6 +334,7 @@ export type CustomNode = SlideNodeBase & { kind: "custom" };
 export type SlideNode =
   | CoverNode
   | ProblemNode
+  | ValueNode
   | WhatIsNukiNode
   | ModuleNode
   | ModuleDemoNode

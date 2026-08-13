@@ -35,6 +35,12 @@ export const coverCopy = {
 
 /* -------------------------------------------------------------- cabeçalhos */
 
+export const valueHead: SectionHead = {
+  tag: "O valor da personalização",
+  title: ["Personalizar não é custo. É ", { em: "margem, velocidade de venda e pauta ESG." }],
+  lead: "O comprador já precifica a personalização na decisão de compra. Capturar esse valor — em vez de só absorver o custo — depende de processo.",
+};
+
 export const problemHead: SectionHead = {
   tag: "O problema",
   title: [
