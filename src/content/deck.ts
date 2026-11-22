@@ -1,10 +1,8 @@
 /* Conteúdo da apresentação comercial Nuki.
-   Rascunhos baseados em (a) PPT "Migração do Modelo de Precificação" (slides 1-13)
-   e (b) contexto-de-produto-v2.md (§§ 1-12). Copy pode ser refinado pelo user;
-   estrutura das seções serve como base. */
+   Rascunhos baseados em contexto-de-produto-v2.md (§§ 1-12). Copy pode ser
+   refinado pelo user; estrutura das seções serve como base. */
 
 import {
-  type BillingCycle,
   materializeRooms,
   type RoomAreaType,
   type RoomConfig,
@@ -23,7 +21,6 @@ export const slideLabels: Record<string, string> = {
   differentiators: "Diferenciais",
   audience: "Pra quem serve",
   cases: "Cases",
-  pricing: "Plano & contato",
   calculator: "Estime o setup",
   total: "Total estimado",
 };
@@ -46,7 +43,6 @@ export const deckNav = [
   { id: "differentiators", label: slideLabels.differentiators },
   { id: "audience", label: slideLabels.audience },
   { id: "cases", label: slideLabels.cases },
-  { id: "pricing", label: slideLabels.pricing },
   { id: "calculator", label: slideLabels.calculator },
   { id: "total", label: slideLabels.total },
 ];
@@ -529,49 +525,3 @@ export const ESTIMATE_DEFAULTS = {
     },
   ] as UnitTypeState[],
 };
-
-/** Teto de meses do simulador de plano. Era `MAX_MONTHS` dentro do
-    `PricingSlide`; vem pra cá porque é um default de estimativa, e a etapa 1 o
-    move pra `EstimateConfig.maxMonths`. */
-export const MAX_MONTHS = 36;
-
-/** Meses já preenchidos quando o simulador abre. ZERO no deck padrão: o `/fast`
-    é uma conversa aberta e um número no stepper antes de a conversa começar é
-    uma proposta que ninguém fez. Cada proposta do /admin sobrescreve isto na aba
-    "Planos e preços" — é lá que o prazo já foi negociado. */
-export const DEFAULT_CONTRACTED_MONTHS = 0;
-
-export type Plan = {
-  n: string;
-  items: string[];
-  /** Valor mensal cru. É a ÚNICA fonte do preço: o rótulo exibido é derivado
-      daqui via `formatCurrency` + `discountedMonthlyPrice`. O antigo
-      `priceLabel` duplicava este número numa string e ninguém renderizava —
-      um admin editando um campo e não o outro era bug garantido em pitch. */
-  monthlyPrice: number;
-  featured?: boolean;
-};
-
-/* `BillingCycle` mora em `src/lib/estimateTypes.ts` — `src/lib/pricing.ts` opera
-   sobre ele. Re-exportado aqui pra manter o import único pros consumidores. */
-export type { BillingCycle } from "@/lib/estimateTypes";
-
-/** Descontos progressivos por ciclo. Sem trimestral — só semestral (−5%)
-    e anual (−10%). Manter em ordem crescente de `minMonths`. */
-export const billingCycles: BillingCycle[] = [
-  { id: "mensal", label: "Mensal", discount: 0, minMonths: 1 },
-  { id: "semestral", label: "Semestral", discount: 0.05, minMonths: 6 },
-  { id: "anual", label: "Anual", discount: 0.1, minMonths: 12 },
-];
-
-/** Modelo de precificação: um plano só, com todos os módulos inclusos.
-    Array de um item porque o CTA e o simulador de meses operam sobre lista —
-    mantém a porta aberta pra voltar a ter tiers sem refactor. */
-export const plans: Plan[] = [
-  {
-    n: "Plano único",
-    items: ["Planner", "Personaliza", "Inspetor", "Infraestrutura", "Suporte"],
-    monthlyPrice: 1599,
-    featured: true,
-  },
-];

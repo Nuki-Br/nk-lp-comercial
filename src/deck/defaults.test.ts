@@ -111,7 +111,7 @@ describe("slides desabilitados", () => {
     }
   });
 
-  it("anchorsOf pula os desabilitados — 11 pontos, não 13", () => {
+  it("anchorsOf pula os desabilitados — 10 pontos, não 12", () => {
     const ids = anchorsOf(deck.slides).map((a) => a.id);
 
     expect(ids).toEqual([
@@ -123,7 +123,6 @@ describe("slides desabilitados", () => {
       "personaliza",
       "inspetor",
       "cases",
-      "pricing",
       "calculator",
       "total",
     ]);
@@ -133,7 +132,7 @@ describe("slides desabilitados", () => {
     const ids = walkableIdsOf(deck.slides);
 
     expect(ids).toContain("inspetor-demo");
-    expect(ids).toHaveLength(12);
+    expect(ids).toHaveLength(11);
     // A demo vem logo depois do módulo pai — é a ordem que as setas percorrem.
     expect(ids.indexOf("inspetor-demo")).toBe(ids.indexOf("inspetor") + 1);
   });
@@ -249,13 +248,12 @@ describe("ordenação e override", () => {
 describe("mergeEstimate — arrays substituem, não concatenam", () => {
   const base = buildDefaultDeck().estimate;
 
-  it("um override parcial de plans troca o plano em vez de acrescentar", () => {
-    const merged = mergeEstimate(base, {
-      plans: [{ n: "Plano cliente", items: ["Planner"], monthlyPrice: 999 }],
-    });
+  it("um override parcial de roomPresets troca a lista em vez de acrescentar", () => {
+    const [first] = base.roomPresets;
+    const merged = mergeEstimate(base, { roomPresets: [first] });
 
-    expect(merged.plans).toHaveLength(1);
-    expect(merged.plans[0].n).toBe("Plano cliente");
+    expect(base.roomPresets.length).toBeGreaterThan(1);
+    expect(merged.roomPresets).toEqual([first]);
   });
 
   it("imagePrices mescla um nível raso", () => {
@@ -279,7 +277,9 @@ describe("o delta como o Postgres devolve", () => {
 
      O literal abaixo é EXATAMENTE o que o PostgREST devolveu depois de um
      round-trip contra o banco real — repare que a ordem das chaves não é a que
-     foi enviada. `jsonb` é uma representação binária parseada, não o texto que
+     foi enviada. Ele foi gravado antes de o slide de plano sair (ADR 26), e por
+     isso ainda cita `pricing` e `maxMonths`: fica como está, porque é assim
+     que uma linha antiga chega, e o que o teste fixa é que ela resolve sem eles. `jsonb` é uma representação binária parseada, não o texto que
      você entregou: ele normaliza a ordem das chaves de objeto (por comprimento,
      depois por bytes). ARRAYS mantêm a ordem, que é do que `order` depende.
 
@@ -311,13 +311,15 @@ describe("o delta como o Postgres devolve", () => {
     expect(ids).toContain("differentiators");
     expect(ids.slice(0, 2)).toEqual(["cover", "problem"]);
     // Nós não citados na ordem vão pro fim, na ordem original.
-    expect(ids.indexOf("pricing")).toBeLessThan(ids.indexOf("calculator"));
     expect(ids.indexOf("calculator")).toBeLessThan(ids.indexOf("total"));
+    // Um id que o deck não tem mais é ignorado, como qualquer id desconhecido.
+    expect(ids).not.toContain("pricing");
   });
 
   it("aplica o patch de estimativa sem perder o que não foi citado", () => {
     expect(resolved.estimate.imagePrices).toEqual({ base: 99, option: 33 });
-    expect(resolved.estimate.maxMonths).toBe(24);
+    // O campo de plano do delta antigo não chega ao config que renderiza.
+    expect(resolved.estimate).not.toHaveProperty("maxMonths");
     expect(resolved.estimate.defaults.dryOptions).toBe(4);
     expect(resolved.estimate.defaults.wetOptions).toBe(5);
     // `defaults` mescla raso: unitTypes não foi citado e tem que sobreviver.

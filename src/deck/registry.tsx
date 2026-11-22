@@ -8,7 +8,6 @@ import {
   EstimatedTotalSlide,
   ModuleDemoSlide,
   ModuleSlide,
-  PricingSlide,
   ProblemSlide,
   ValueSlide,
   WhatIsNukiSlide,
@@ -50,8 +49,6 @@ export function renderSlide(node: SlideNode, ctx: SlideContext): ReactElement | 
       return <AudienceSlide key={node.id} node={node} />;
     case "cases":
       return <CasesSlide key={node.id} node={node} />;
-    case "pricing":
-      return <PricingSlide key={node.id} node={node} estimate={ctx.estimate} />;
     case "calculator":
       return (
         <CalculatorSlide

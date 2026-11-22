@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: next 16.2.9 local docs, supabase CLI 2.109.1, @supabase/ssr contract
-size: 340
+size: 357
 ---
 
 # Stage 2 — Proposals
@@ -78,8 +78,8 @@ cannot complete. If its tools appear in your tool list, ignore them. The CLI ove
 
 ## Out of scope — belongs to stage 3
 
-- **Every form that edits `config`.** Slide picker, ordering, plan editor, price
-  editor, estimator defaults. Stage 3 owns all of it.
+- **Every form that edits `config`.** Slide picker, ordering, price editor,
+  estimator defaults. Stage 3 owns all of it.
 - The tracking read-out UI beyond a raw open-count on the proposal list.
 - V2 copy overrides and bespoke slides.
 - Email, roles beyond owner/member, PDF export, any CSS work.
@@ -138,7 +138,7 @@ Design notes that must survive into the file:
 
 - **Money in integer cents, discounts in integer basis points.** PostgREST
   serializes `numeric` as a JSON **string**, so `numeric(12,2)` arrives as
-  `"1599.00"` and silently produces `NaN` in `discountedMonthlyPrice`.
+  `"84.00"` and silently produces `NaN` in the first arithmetic on it.
 - **`config_override` is a delta; `config_snapshot` is frozen at publish.** A
   draft renders `resolveDeckConfig(buildDefaultDeck(), config_override)`; a
   published proposal renders the snapshot. A sent proposal is a commercial
@@ -334,7 +334,7 @@ and `.env.example`. Mark stage 2 done in `docs/stages/README.md`.
 The first one is what actually proves the trust boundary, and it is a one-liner:
 
 ```bash
-curl -s http://localhost:3000/p/<slug> | grep -c "1.599"    # must be 0
+curl -s http://localhost:3000/p/<slug> | grep -c "Estime o setup" # must be 0
 curl -s http://localhost:3000/p/<slug> | grep -ci "planejamento"  # must be 0
 ```
 

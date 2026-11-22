@@ -30,7 +30,7 @@ export type ProposalSummary = {
   clientName: string;
   hasPassword: boolean;
   openCount: number;
-  /** Mensalidade, setup de imagens e total — o que a lista compara. */
+  /** O setup de imagens — a cifra que a lista compara. */
   quote: ProposalQuote;
   /** De onde saíram as cifras: o documento que o cliente tem, ou o rascunho. */
   quoteSource: "snapshot" | "draft";

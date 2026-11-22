@@ -1,16 +1,12 @@
 import {
-  billingCycles,
   CUSTOM_ROOM_DEFAULTS,
-  DEFAULT_CONTRACTED_MONTHS,
   DEFAULT_ROOMS,
   differentiators,
   ESTIMATE_DEFAULTS,
   fitList,
-  MAX_MONTHS,
   moduleFlow,
   PROJECT_SIZE_PRESETS,
   personas,
-  plans,
   problemCards,
   ROOM_PRESETS,
   slideLabels,
@@ -30,8 +26,6 @@ import {
   differentiatorsHead,
   moduleDemoLabels,
   moduleLabels,
-  pricingHead,
-  pricingLabels,
   problemHead,
   totalHead,
   totalLabels,
@@ -48,10 +42,6 @@ import type { DeckConfig, EstimateConfig, SlideNode } from "@/deck/types";
     algo que um admin edita. Ver docs/estimate.md. */
 function buildEstimateConfig(): EstimateConfig {
   return {
-    plans,
-    billingCycles,
-    maxMonths: MAX_MONTHS,
-    defaultMonths: DEFAULT_CONTRACTED_MONTHS,
     imagePrices: {
       base: ESTIMATE_DEFAULTS.baseImagePrice,
       option: ESTIMATE_DEFAULTS.optionImagePrice,
@@ -187,17 +177,8 @@ export function buildDefaultDeck(): DeckConfig {
       head: casesHead,
       logos: caseLogos,
     },
-    /* `pricing` ANTES de `calculator`, e `total` por último: o frame de
-       fechamento lê o que os dois publicam. */
-    {
-      kind: "pricing",
-      id: "pricing",
-      label: slideLabels.pricing,
-      enabled: true,
-      tone: "dark",
-      head: pricingHead,
-      labels: pricingLabels,
-    },
+    /* `calculator` ANTES de `total`: o frame de fechamento lê o que a
+       calculadora publica. */
     {
       kind: "calculator",
       id: "calculator",

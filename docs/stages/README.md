@@ -2,7 +2,7 @@
 audience: both
 status: current
 verified_against: the stage files in this directory, and git log 1ef10b6..06308b7
-size: 203
+size: 193
 ---
 
 # Build stages
@@ -59,15 +59,6 @@ writes a column stage 2 created. **V1 is complete at this point.**
 
 **What stage 3 found that these docs had wrong:**
 
-- **`maxMonths` is not a plan field.** The brief lists it under "Plans: name,
-  items, `monthlyPrice`, `featured`, `maxMonths`". `Plan` is
-  `{ n, items, monthlyPrice, featured? }`; `maxMonths` is deck-level on
-  `EstimateConfig`, and the name field is `n`, not `name`.
-- **Billing cycles have a third field and it is load-bearing.** The brief says
-  "Cycles: label and discount". `minMonths` decides which cycle a month count
-  falls into, and because `cycleForMonths` seeds its reduce on `cycles[0]` and
-  only moves to a higher floor, the ARRAY ORDER is pricing logic. Two new
-  rejections came out of reading it.
 - **`Ctrl+Alt+K` on `/p/[slug]` needed no human confirmation.** The brief lists
   it as a human step; `forVisitor` already forces `allowPriceOverride` false at
   publish and at render, and `dal.test.ts` already asserted it.

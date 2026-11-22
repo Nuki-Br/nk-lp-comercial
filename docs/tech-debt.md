@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/styles/*.css, src/components/deck/DeckBehaviors.tsx, src/components/slides/CalculatorSlide.tsx
-size: 219
+size: 233
 ---
 
 # Tech debt
@@ -193,6 +193,20 @@ in a mechanical rename's diff.
 
 Fixing it is two tokens (`ambient` → `room`, and the value is already
 `dry`/`wet`). Do it with eyes on the picker, as its own change.
+
+## 11. The validator's warning channel has no producer
+
+`validateDeckConfig` returns `warnings` on both arms, and every composer action
+and form carries that list to the screen. The only rules that ever wrote to it
+were about the plan slide, which ADR 26 removed. The channel was left in place
+rather than unthreaded from every caller in the same change.
+
+```bash
+grep -c "warnings.push" src/server/config/validate.ts   # 0 — nothing writes to it
+```
+
+Remove it — the type, the callers and the warning list in `ActionFeedback.tsx` —
+or give it a rule, whichever comes first.
 
 ## How to verify a CSS deletion
 

@@ -22,7 +22,7 @@ import { cn } from "@/lib/cn";
 const TABS: { key: string; label: string; segment: string }[] = [
   { key: "overview", label: "Visão geral", segment: "" },
   { key: "slides", label: "Slides", segment: "/slides" },
-  { key: "pricing", label: "Planos e preços", segment: "/pricing" },
+  { key: "pricing", label: "Tarifas de imagem", segment: "/pricing" },
   { key: "estimate", label: "Calculadora", segment: "/estimate" },
 ];
 

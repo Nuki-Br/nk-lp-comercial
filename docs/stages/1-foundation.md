@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/app/, src/components/, src/content/deck.ts, next.config.ts
-size: 300
+size: 328
 ---
 
 # Stage 1 — Foundation
@@ -182,9 +182,6 @@ export type DeckConfig = {
 };
 
 export type EstimateConfig = {
-  plans: Plan[];                     // drop `priceLabel` — see below
-  billingCycles: BillingCycle[];
-  maxMonths: number;                 // was MAX_MONTHS in PricingSlide.tsx
   imagePrices: { base: number; option: number };
   defaults: { dryOptions: number; wetOptions: number; unitTypes: UnitTypeState[] };
   projectSizePresets: ProjectSizePresetConfig[];
@@ -199,14 +196,11 @@ export type DeckOverride = {
 };
 ```
 
-**Delete `Plan.priceLabel`.** It duplicates `monthlyPrice`, nothing renders it
-(`PricingSlide` formats from `monthlyPrice`), and an admin editing one field but
-not the other is a guaranteed live-pitch bug. Derive it.
-
 `resolveDeckConfig(base, null)` must deep-equal `base` — that identity is what
 makes "a proposal with no customization looks exactly like the deck" a fact
 rather than a chore. In `mergeEstimate`, **arrays replace, they do not
-concatenate**: a partial `plans` override must not append to the default plan.
+concatenate**: a partial `projectSizePresets` override must not append to the
+defaults.
 
 `normalizeDeck` recomputes cross-node facts *after* ordering and hiding: assert id
 uniqueness (throw in dev, dedupe and warn in prod); renumber module ordinals; set

@@ -2,7 +2,6 @@ import type {
   CalculatorLabels,
   ModuleDemoLabels,
   ModuleLabels,
-  PricingLabels,
   RichText,
   SectionHead,
   TotalLabels,
@@ -75,14 +74,6 @@ export const casesHead: SectionHead = {
   tag: "Cases",
   title: ["Construtoras que já ", { em: "saíram da planilha." }],
   lead: "Construtoras que já organizaram o ciclo de personalização com a Nuki.",
-};
-
-export const pricingHead: SectionHead = {
-  /* O único título com texto DEPOIS do `<em>` — o ponto final fica fora. É por
-     isso que `RichText` é um array de segmentos e não um trio pre/em/post. */
-  tag: "Plano & contato",
-  title: ["Todos os módulos em ", { em: "um plano só" }, "."],
-  lead: "Fee mensal por empreendimento ativo, com Planner, Personaliza e Inspetor inclusos desde o primeiro mês. Simule por quantos meses o empreendimento fica na plataforma.",
 };
 
 export const calculatorHead: SectionHead = {
@@ -167,31 +158,13 @@ export const moduleDemoLabels: ModuleDemoLabels = {
   mobileCta: "Abrir em nova aba →",
 };
 
-/* ---------------------------------------------------------------- pricing */
-
-export const pricingLabels: PricingLabels = {
-  cycleTabsAria: "Ciclo de cobrança",
-  cycleHint:
-    "O desconto acompanha o compromisso: a partir de 6 meses o Semestral entra sozinho, e a partir de 12 meses, o Anual.",
-  priceSuffix: "/mês",
-  priceUnit: "por empreendimento",
-  monthsLabel: "Meses na plataforma",
-  monthsAriaTemplate: "Meses no {plan}",
-  emptySubtotal: "—",
-};
-
 /* ------------------------------------------------------------------ total */
 
 export const totalLabels: TotalLabels = {
   cardAria: "Total estimado do empreendimento",
   imageSetup: "Setup de imagens",
-  platform: "Plataforma",
   total: "Total",
   imagesHintTemplate: "{count} imagens estimadas",
-  noMonthsHint: "configure os meses em Plano & contato",
-  monthsHintTemplate: "{months} {unit} de operação Nuki",
-  monthOne: "mês",
-  monthOther: "meses",
 };
 
 /* ------------------------------------------------------------ calculadora */

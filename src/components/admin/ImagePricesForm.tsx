@@ -5,7 +5,7 @@ import {
   type PricingState,
   saveImagePricesAction,
 } from "@/app/(admin)/admin/proposals/[id]/pricing/actions";
-import { Feedback } from "@/components/admin/PricingEditor";
+import { Feedback } from "@/components/admin/ActionFeedback";
 import { FieldLabel, Input } from "@/components/admin/ui/Field";
 import { Section, SectionActions } from "@/components/admin/ui/Section";
 import { SubmitButton } from "@/components/admin/ui/SubmitButton";
@@ -31,8 +31,8 @@ export function ImagePricesForm({
 }) {
   const [state, action] = useActionState<PricingState, FormData>(saveImagePricesAction, EMPTY);
 
-  /* A seção é deste componente e não da página: na aba de preços ele é um slot
-     dentro do editor, que é quem monta as duas colunas. */
+  /* A seção é deste componente e não da página: a aba só monta a coluna e o
+     aviso de alterações não publicadas. */
   return (
     <Section
       title="Tarifas de imagem"

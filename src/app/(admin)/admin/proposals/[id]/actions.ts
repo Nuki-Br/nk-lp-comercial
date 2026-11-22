@@ -20,8 +20,7 @@ import { markProposalAttentionInternal } from "@/server/tracking/reset";
 /** `warnings` are the validator's non-blocking channel: the save (or the
     publish) went through, and there is still something the salesperson should
     look at before sending the link. Rendered separately from `notice`, because
-    "salvo" and "salvo, mas o total vai fechar sem mensalidade" are not the same
-    message. */
+    "salvo" and "salvo, mas ainda há algo a conferir" are not the same message. */
 export type DetailState = {
   error: string | null;
   notice: string | null;

@@ -2,7 +2,7 @@
 audience: both
 status: current
 verified_against: the context docs themselves
-size: 56
+size: 60
 ---
 
 # Contexto de produto e negócio
@@ -24,7 +24,7 @@ Leia **um** documento, não os cinco.
 | Quem são as personas? | `produto.md` | §6 |
 | Quando a Nuki faz mais sentido? | `produto.md` | §9 |
 | Quais os diferenciais estratégicos? | `produto.md` | §5 |
-| Por que três módulos? Por que recorrência? | `pivot-modelo-negocio.md` | §1, §2 |
+| Por que três módulos? O que a Nuki entrega e o que terceiriza? | `pivot-modelo-negocio.md` | §1, §2 |
 | O que é o hub de parceiros e o que falta nele? | `pivot-modelo-negocio.md` | §3 |
 | Como argumentar com cada interlocutor? | `modulo-planner-comercial.md` | §5 |
 | Como responder a uma objeção? | `modulo-planner-comercial.md` | §6 |
@@ -52,10 +52,9 @@ antes de repetir, alterar ou reforçar qualquer um, confirme com o time.
 ## Nota sobre o pivot
 
 O modelo de negócio mudou: de projeto fechado por empreendimento (com a Nuki
-operando configuração e geração de imagens 3D) para recorrência por
-empreendimento ativo, entregando só a plataforma. `pivot-modelo-negocio.md` §4 é
-um resumo pensado justamente para servir de contexto a IA.
+operando configuração e geração de imagens 3D) para a entrega só da plataforma,
+com a operação terceirizada a parceiros. `pivot-modelo-negocio.md` §4 é um
+resumo pensado justamente para servir de contexto a IA.
 
-Isso governa o slide de plano e toda a premissa da calculadora. Documentos mais
-antigos que descrevam o modelo de projeto fechado estão desatualizados nesse
-ponto.
+Isso governa toda a premissa da calculadora. Documentos mais antigos que
+descrevam o modelo de projeto fechado estão desatualizados nesse ponto.

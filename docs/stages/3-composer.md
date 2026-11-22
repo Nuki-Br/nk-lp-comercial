@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: docs/estimate.md, docs/deck-runtime.md, ADR 13 and ADR 18
-size: 250
+size: 218
 ---
 
 # Stage 3 — Composer
@@ -32,9 +32,8 @@ Read, in this order, and stop: `AGENTS.md`, `docs/README.md`,
 
 ## Goal
 
-A real composer: per-proposal slide selection and order, plan and billing-cycle
-editing, image prices, estimator defaults, publish-with-snapshot, and the
-per-slide dwell read-out.
+A real composer: per-proposal slide selection and order, image prices,
+estimator defaults, publish-with-snapshot, and the per-slide dwell read-out.
 
 ## Preconditions — run these, stop on any failure
 
@@ -102,8 +101,6 @@ discoveries in a client meeting:
   progress nav goes blank across that section. Better: model the demo as a
   **checkbox on the module**, so the orphan cannot be constructed in the UI at
   all, and leave validation as the backstop.
-- **Disabling `pricing` while `total` is enabled** produces a total with no
-  platform cost. Warn, do not block — it may be intentional.
 
 Nav derivation is free: stage 1 made it derive from `config.slides`.
 
@@ -111,15 +108,10 @@ Reordering is **move-up / move-down buttons**. Thirteen items, once per proposal
 that does not pay for a drag-and-drop dependency, and buttons are keyboard- and
 screen-reader-accessible without any work.
 
-### 3. Plan and billing-cycle editor
+### 3. Removed
 
-Plans: name, items, `monthlyPrice`, `featured`, `maxMonths`. Cycles: label and
-discount.
-
-**Surface the fraction trap.** `docs/content-guide.md` documents it: the config
-stores `0.1` meaning 10%. The UI must take a percentage and convert, or someone
-will type `10` and quote a 1000% discount. Show the resulting price next to the
-input so the error is visible before saving.
+This work item was the plan editor. It left with the plan slide — ADR 26. The
+number is kept so the items after it are not renumbered.
 
 ### 4. Image prices per proposal
 
@@ -193,8 +185,8 @@ does not cover.
 
 ## Acceptance checklist
 
-End to end, in a browser: disable three slides, reorder two, change the plan
-price and a cycle discount, set image prices, preload two unit types → then open
+End to end, in a browser: disable three slides, reorder two, set image prices,
+preload two unit types → then open
 `/p/[slug]` and confirm:
 
 - [ ] Every one of those changes is reflected

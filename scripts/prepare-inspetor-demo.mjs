@@ -83,7 +83,10 @@ const PHOTOS = {
   // "Especificado" — the reference the client approved.
   esp: { uuid: "b7e1c3a2-5d94-4f18-9c60-2ae4f81d33a1", file: "portobello-aeterna-avorio.webp" },
   // "Executado" — the photo taken on site.
-  exe: { uuid: "c9f2d4b3-6ea5-4028-8d71-3bf5a92e44b2", file: "portobello-aeterna-avorio-ambiente.webp" },
+  exe: {
+    uuid: "c9f2d4b3-6ea5-4028-8d71-3bf5a92e44b2",
+    file: "portobello-aeterna-avorio-ambiente.webp",
+  },
 };
 
 console.log("[inspetor-demo] reading", SRC);
@@ -124,7 +127,8 @@ if (TWEAKS_RE.test(patched)) {
 // Each entry must match EXACTLY ONCE. A silently-unmatched anchor is the
 // failure mode this whole script exists to prevent, so a miss is fatal.
 const PHOTO_FILL = "background-size:cover;background-position:center;background-repeat:no-repeat";
-const VIEWER_FILL = "background-size:contain;background-position:center;background-repeat:no-repeat";
+const VIEWER_FILL =
+  "background-size:contain;background-position:center;background-repeat:no-repeat";
 
 const TEMPLATE_PATCHES = [
   // ── "Especificado" tab: reference photo box ──

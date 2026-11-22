@@ -77,7 +77,7 @@
 
   /* ----- 2. Paint the design, not the browser's idea of ink saving ----- */
 
-  /* Without this every dark-tone section (cover, differentiators, pricing)
+  /* Without this every dark-tone section (cover, value, differentiators)
      prints white and the copy on it disappears. */
   .deck,
   .deck * {

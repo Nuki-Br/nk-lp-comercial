@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/app/, src/components/, next.config.ts
-size: 204
+size: 203
 ---
 
 # Architecture
@@ -137,11 +137,10 @@ server action and route handler — **not just in the layout**. It reads the
 
 `EstimateProvider` is the one piece of cross-slide state. `CalculatorSlide`
 computes and publishes `{imageCount, imageCost}` into it from an effect;
-`PricingSlide` reads and writes months + billing cycle; `EstimatedTotalSlide`
-only reads.
+`EstimatedTotalSlide` only reads.
 
 With a data-driven slide order the provider wraps the whole slide list rather
-than a hand-picked trio. Harmless and order-independent — do not try to detect
+than a hand-picked pair. Harmless and order-independent — do not try to detect
 which slides need it.
 
 The publish-from-`useEffect` is a deliberate sync of derived state between

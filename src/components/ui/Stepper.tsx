@@ -1,8 +1,7 @@
 "use client";
 
 /** Stepper compartilhado. Estilo default é claro (fundo branco, botão preto);
-    o CSS pai pode sobrescrever cores via descendant selectors — usado assim
-    no `.cta-plano-simulador` pra virar variant dark. */
+    o CSS pai pode sobrescrever cores via descendant selectors. */
 export function Stepper({
   value,
   min,

@@ -20,7 +20,7 @@ terceiros, de propósito.**
 | `/p/[slug]` | a proposta de um cliente | senha própria, validada no servidor |
 | `/fast` | o deck genérico, pra pitch rápido | senha compartilhada |
 
-O painel tem quatro abas por proposta — visão geral, slides, planos e preços, e
+O painel tem quatro abas por proposta — visão geral, slides, tarifas de imagem e
 calculadora. Quem vai **usar** o painel deve ler
 [`docs/admin-guide.md`](docs/admin-guide.md), que é escrito pra isso e não exige
 saber programar.
@@ -54,9 +54,8 @@ no painel. A âncora é o `id` da seção.
 | 8 | Diferenciais | `DifferentiatorsSlide` | `#differentiators` | ⚠ desligado |
 | 9 | Pra quem serve | `AudienceSlide` | `#audience` | ⚠ desligado |
 | 10 | Cases | `CasesSlide` | `#cases` | |
-| 11 | Plano & contato | `PricingSlide` | `#pricing` | |
-| 12 | Estime o setup | `CalculatorSlide` | `#calculator` | |
-| 13 | Total estimado | `EstimatedTotalSlide` | `#total` | |
+| 11 | Estime o setup | `CalculatorSlide` | `#calculator` | |
+| 12 | Total estimado | `EstimatedTotalSlide` | `#total` | |
 
 A ordem vem de `buildDefaultDeck()` em [`src/deck/defaults.ts`](src/deck/defaults.ts),
 e o componente de cada nó sai de [`src/deck/registry.tsx`](src/deck/registry.tsx).
@@ -71,8 +70,8 @@ na lateral direita.
 
 ## Editando o conteúdo
 
-Os **padrões** — copy, preço do plano, ciclos de desconto, defaults da
-calculadora — estão em `src/content/`, sem tocar em componente. Ver
+Os **padrões** — copy, tarifas de imagem, defaults da calculadora — estão em
+`src/content/`, sem tocar em componente. Ver
 [`docs/content-guide.md`](docs/content-guide.md).
 
 **Regra de ouro:** pode mudar o que está entre aspas; não mude o que vem antes

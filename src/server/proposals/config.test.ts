@@ -37,27 +37,27 @@ describe("mergeOverride — each form owns a key", () => {
     expect(merged.hidden).toBeUndefined();
   });
 
-  /* The bug this prevents is quiet and expensive: the salesperson sets the plan
-     price, then five minutes later sets the image tariffs, and the plan reverts
-     to R$ 1.599 with nothing on screen saying so. */
+  /* The bug this prevents is quiet and expensive: the salesperson sets the
+     calculator seed, then five minutes later sets the image tariffs, and the
+     seed reverts to the default with nothing on screen saying so. */
   it("estimate merges one level, so two forms do not overwrite each other", () => {
-    const withPlan = mergeOverride(
+    const withSeed = mergeOverride(
       {},
-      { estimate: { plans: [{ n: "Plano cliente", items: [], monthlyPrice: 999 }] } },
+      { estimate: { defaults: { dryOptions: 4, wetOptions: 5, unitTypes: [] } } },
     );
-    const withPrices = mergeOverride(withPlan, {
+    const withPrices = mergeOverride(withSeed, {
       estimate: { imagePrices: { base: 99, option: 33 } },
     });
 
-    expect(withPrices.estimate?.plans?.[0].monthlyPrice).toBe(999);
+    expect(withPrices.estimate?.defaults?.dryOptions).toBe(4);
     expect(withPrices.estimate?.imagePrices).toEqual({ base: 99, option: 33 });
   });
 
   it("a later write to the same estimate key still replaces it", () => {
-    const first = mergeOverride({}, { estimate: { maxMonths: 24 } });
-    const second = mergeOverride(first, { estimate: { maxMonths: 12 } });
+    const first = mergeOverride({}, { estimate: { imagePrices: { base: 99, option: 33 } } });
+    const second = mergeOverride(first, { estimate: { imagePrices: { base: 70, option: 20 } } });
 
-    expect(second.estimate?.maxMonths).toBe(12);
+    expect(second.estimate?.imagePrices).toEqual({ base: 70, option: 20 });
   });
 
   it("prunes empty keys, so an untouched proposal stores {}", () => {

@@ -1,5 +1,5 @@
+import { UnpublishedChangesBanner } from "@/components/admin/ComposerTabs";
 import { ImagePricesForm } from "@/components/admin/ImagePricesForm";
-import { PricingEditor } from "@/components/admin/PricingEditor";
 import { requireAdmin } from "@/server/auth/requireAdmin";
 import { loadProposalConfig } from "@/server/proposals/config";
 
@@ -11,37 +11,16 @@ export default async function PricingPage({ params }: { params: Promise<{ id: st
 
   const { id } = await params;
   const { resolved, snapshotStale } = await loadProposalConfig(id);
-  const { plans, billingCycles, maxMonths, defaultMonths, imagePrices } = resolved.estimate;
+  const { imagePrices } = resolved.estimate;
 
-  /* O editor é dono da aba inteira — formulário à esquerda, simulador ao vivo à
-     direita — porque o painel da direita lê o estado do formulário, e estado de
-     cliente não volta para um Server Component. As tarifas de imagem são outra
-     action e entram como slot na mesma coluna. */
+  /* Mesma coluna de ajustes da Visão geral: seções sem caixa, separadas por um
+     fio, e a primeira sem ele. `first-of-type` e não `first-child` porque o
+     aviso de alterações não publicadas entra antes dela. */
   return (
-    <PricingEditor
-      id={id}
-      initialPlans={plans.map((plan) => ({
-        n: plan.n,
-        items: [...plan.items],
-        monthlyPrice: plan.monthlyPrice,
-        featured: Boolean(plan.featured),
-      }))}
-      /* Fraction to percent happens here and back again in the action —
-         the stored unit never leaks into the form. */
-      initialCycles={billingCycles.map((cycle) => ({
-        id: cycle.id,
-        label: cycle.label,
-        discountPercent: Math.round(cycle.discount * 100),
-        minMonths: cycle.minMonths,
-      }))}
-      initialMaxMonths={maxMonths}
-      /* Ausente num snapshot congelado antes do campo existir — e ausente é
-         zero, o comportamento que essa proposta já tem hoje. */
-      initialDefaultMonths={Math.min(defaultMonths ?? 0, maxMonths)}
-      snapshotStale={snapshotStale}
-      previewHref={`/preview/${id}#pricing`}
-    >
+    <div className="flex min-w-0 flex-col gap-8 animate-fade [&>section:first-of-type]:border-t-0 [&>section:first-of-type]:pt-0">
+      {snapshotStale && <UnpublishedChangesBanner id={id} />}
+
       <ImagePricesForm id={id} base={imagePrices.base} option={imagePrices.option} />
-    </PricingEditor>
+    </div>
   );
 }

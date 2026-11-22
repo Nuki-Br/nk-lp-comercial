@@ -86,7 +86,6 @@ export const SLIDE_META: Record<SlideKind, SlideMeta> = {
     { key: "fit.items", label: fieldCopy.fitItems, kind: "list" },
   ]),
   cases: meta("cases", [...HEAD_FIELDS, { key: "logos", label: fieldCopy.logos, kind: "list" }]),
-  pricing: meta("pricing", HEAD_FIELDS),
   calculator: meta("calculator", HEAD_FIELDS),
   total: meta("total", [
     { key: "head.tag", label: fieldCopy.tag, kind: "text" },

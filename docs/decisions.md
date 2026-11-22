@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview, 23 unpublish and delete, 24 the panel's motion and layout tokens, 25 the stats reset
-size: 733
+verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview, 23 unpublish and delete, 24 the panel's motion and layout tokens, 25 the stats reset, 26 the plan slide's removal
+size: 755
 ---
 
 # Decisions
@@ -14,6 +14,10 @@ them from scratch.
 stays exactly as written and gains an `> **Amended by ADR N**` line. An ADR is a
 record of what was believed and why at a point in time; editing the body destroys
 the only thing it was for.
+
+**One exception, and it is recorded rather than hidden.** ADR 26 deleted ADR 19
+outright and removed the plan passages from ADRs 5 and 13, at the owner's
+request. The number 19 is not reused.
 
 | # | Decision | Status |
 |---|---|---|
@@ -29,18 +33,19 @@ the only thing it was for.
 | 10 | First-party tracking is not analytics | current |
 | 11 | A dependency allowlist replaces the fixed three | current |
 | 12 | Tests return, scoped to money, passwords and time | current |
-| 13 | Config is one JSONB delta plus a publish snapshot | current |
+| 13 | Config is one JSONB delta plus a publish snapshot | amended by 26 |
 | 14 | `node:crypto` over an auth library | current |
 | 15 | Proxy is optimistic; the DAL is authoritative | current |
 | 16 | Biome for format and lint, ESLint kept for Next rules | current |
 | 17 | Two root layouts | current |
 | 18 | V2 is typed in V1 and built later | current |
-| 19 | The billing cycle is derived, not selected | current |
 | 20 | The shared-password gate is scoped to `/fast` | current |
 | 21 | The panel gets its own token sheet, not a component library | current |
 | 22 | The composer previews the deck in an iframe, on its own route | current |
 | 23 | Unpublish is a fourth status; delete is the existing archive | current |
 | 24 | The panel's motion and its sticky ruler are tokens, not literals | current |
+| 25 | Resetting a proposal's stats marks the sessions internal | current |
+| 26 | The plan slide is gone; a stored document loses it on read | current |
 
 ## 1. Split out of nk-lp
 
@@ -105,7 +110,7 @@ denylist.
 
 **Decision.** `#capa` → `#cover`, `#problema` → `#problem`, `#o-que-e` →
 `#what-is-nuki`, `#diferenciais` → `#differentiators`, `#publico` → `#audience`,
-`#calculadora` → `#calculator`, `#cta` → `#pricing`.
+`#calculadora` → `#calculator`.
 
 `#planner`, `#personaliza`, `#inspetor`, `#inspetor-demo`, `#cases` and `#total`
 are unchanged — they are product names or already English.
@@ -172,9 +177,7 @@ size; the benefit is that a stale patch regex cannot silently break a deploy.
 
 ---
 
-The records below cover the move from a single static deck to a proposal app —
-with one exception, ADR 19, which is a deck-era decision that lost its number and
-was given the next free one rather than displacing a cited record.
+The records below cover the move from a single static deck to a proposal app.
 
 ## 9. The deck moves to `/fast` and stays code-driven
 
@@ -274,8 +277,10 @@ ADR needs revisiting.
 
 ## 13. Config is one JSONB delta plus a publish snapshot
 
+> **Amended by ADR 26** — a snapshot frozen with the plan slide loses it on read.
+
 **Context.** Per-proposal customization could be normalized tables (a row per
-slide, per plan, per billing cycle) or a JSON document.
+slide, per price) or a JSON document.
 
 **Decision.** `DeckConfig` is a single TypeScript type and the contract between
 all three build stages. `proposals.config_override` stores a **delta** over the
@@ -296,7 +301,7 @@ instead of the type, which breaks the staged build: stage 1 could no longer
 define the shape by proving it renders. They also bring transactional reorders
 with deferrable constraints — real surface for an agent to get subtly wrong.
 
-**Consequence, accepted.** Cross-proposal reporting on plan prices is a JSONB
+**Consequence, accepted.** Cross-proposal reporting on prices is a JSONB
 query rather than a `SELECT` over a column. At this volume that is fine. Deltas
 are keyed by node **id**, never by array index, so reordering cannot scramble
 patches; unknown ids are dropped rather than throwing, so a rollback does not 500
@@ -406,30 +411,6 @@ admin-facing field schema rather than just a label.
 config in V1 — including the ones the V1 admin never exposes. If `CasesSlide`'s
 logo list and `CalculatorSlide`'s inline labels are still module imports when V1
 ships, V2 has to re-open all ten slide files. One pass now, two passes later.
-
-## 19. The billing cycle is derived, not selected
-
-> **Renumbered, not new.** This ADR was written as number 8 and never appeared in
-> the table above; the number it was using had been given to "Committed demo
-> artifact", and a second ADR had ended up numbered 9. Of the two self-consistent
-> repairs, this is the one that breaks no citation: `.env.example` and
-> `src/app/(deck)/fast/layout.tsx` both cite ADR 9 meaning "the deck moves to
-> `/fast`", and nothing anywhere cites ADR 8. The body below is untouched.
-
-**Decision.** `EstimateProvider` has no `cycle` state. The cycle is computed from
-the contracted months (`cycleForMonths` in `src/lib/pricing.ts`, thresholds in
-`billingCycles[].minMonths`), and the toggle in `PricingSlide` renders that
-result. Clicking a cycle writes months, not cycle.
-
-**Rationale.** The discount is the counterpart of the commitment, so the two were
-never independent. As separate state they could disagree — 12 months contracted
-while the toggle said "Mensal", quoting full price for a commitment that earns
-−10% — and the prospect sees both numbers on the same frame. Deriving one from
-the other makes that state unrepresentable instead of merely unlikely.
-
-**Consequence.** `selectCycle` only writes `months[0]`. That is correct while
-`plans` has a single entry; if the tiers come back, the distribution across tiers
-has to be decided before the toggle means anything again.
 
 ## 20. The shared-password gate is scoped to `/fast`, not to the deck group
 
@@ -731,3 +712,44 @@ the internal side, which is the correct outcome for a tab left open on the
 rehearsal. The admin guide tells a salesperson to close it anyway, and warns not
 to press the button after the link is sent — the first two readings are the ones
 worth having.
+
+## 26. The plan slide is gone; a stored document loses it on read
+
+**Context.** The deck carried a plan slide — a price for the platform, cycles
+with discounts and a months simulator — and the closing frame added that
+platform cost to the image setup. The commercial model it presented was studied
+and dropped as unviable, and the owner asked for it to be removed from the
+product and from the docs, this file included.
+
+**Decision.** The `pricing` slide kind is deleted, together with the plan fields
+of `EstimateConfig`, the cycle math, the composer's plan editor and the two
+columns of the proposals list that depended on them. The closing frame states
+the image setup only. The composer tab keeps its `/pricing` segment and now
+holds the image tariffs alone.
+
+Stored documents are not rewritten. `stripRetired` (`src/deck/retired.ts`)
+drops the retired node and fields inside `parseStoredDeckConfig`, so the visitor
+path and the proposals list both read an old snapshot as if it had been frozen
+today. `parseDeckOverride` drops the same fields from a stored delta, so the
+next save does not write them back.
+
+**Rationale.** Dropping the node on read is not tidiness. The registry's
+`default` arm already returns `null` for a kind this build does not know
+(ADR 18), but the node would still be `enabled`: `anchorsOf` would emit a nav
+dot for an anchor that is not in the DOM, and every dot in the progress nav goes
+dark, silently.
+
+**Consequence, accepted.** This is the one place the app changes what a client
+sees on a link they already received — ADR 13's "a sent proposal must not
+change", amended on purpose rather than broken quietly. A proposal published
+before this ADR opens without its plan slide and with a total that is the image
+setup. The composer shows it as "alterações não publicadas" until someone
+republishes, which writes a snapshot that never had the retired keys.
+
+The validator's `warnings` channel has no rule left writing to it; both of them
+were about the plan slide. It stays wired through the composer —
+`docs/tech-debt.md` §11.
+
+ADR 19 ("The billing cycle is derived, not selected") was deleted and the plan
+passages of ADRs 5 and 13 were removed. That is the stated exception to
+"amending, not rewriting" at the top of this file.
