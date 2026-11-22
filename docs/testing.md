@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: package.json scripts, ADR 7 and ADR 12, src/server/**/*.test.ts
-size: 269
+size: 281
 ---
 
 # Testing
@@ -33,8 +33,9 @@ is what makes its decision table testable at all.
 | `src/deck/defaults.ts` | JSON round trip; `resolve(base, null) === base`; `normalizeDeck` idempotence; disabled slides skipped by `anchorsOf`; orphan-demo drop; ordinal renumbering; arrays replace in `mergeEstimate`; `parseDeckOverride` never throws |
 | `src/server/auth/password.ts` | hash/verify round trip; wrong password fails; comparison is timing-safe |
 | `src/server/auth/proposalSession.ts` | valid cookie accepted; expired-by-1s rejected; one-byte-tampered rejected; proposal A's cookie rejected for proposal B |
-| `src/server/proposals/dal.ts` | the decision table `(row, cookie, now) → ok \| locked \| expired \| not-found`, fetcher injected; drafts are not-found; a stale `access_epoch` locks out; `allowPriceOverride` is forced false; the `locked` result has exactly two keys |
-| `src/server/config/validate.ts` | rejects demo-without-module, total-without-calculator, negative price, discount ≥ 1, an empty or non-ascending cycle list — and accepts the shipped default deck, which is what stops a validator that rejects everything from passing every other case; warns without blocking on total-without-pricing |
+| `src/server/proposals/dal.ts` | the decision table `(row, cookie, now) → ok \| locked \| expired \| not-found`, fetcher injected; drafts are not-found; a stale `access_epoch` locks out; `allowPriceOverride` is forced false; the `locked` result has exactly two keys; a snapshot frozen with the plan slide renders without it |
+| `src/deck/retired.ts` | the identity on a config this build wrote; an old snapshot comes out equal to today's deck; the nav dot leaves with the slide; idempotent, and it does not mutate what it was given; a partial delta loses only the plan fields |
+| `src/server/config/validate.ts` | rejects demo-without-module, total-without-calculator, a negative or NaN image tariff, duplicate ids, an all-disabled deck — and accepts the shipped default deck, which is what stops a validator that rejects everything from passing every other case; the warnings list is carried on both arms |
 | `src/server/proposals/config.ts` | the delta merge (`estimate` merges one level so two forms cannot overwrite each other); `enabledDelta` against the shipped defaults; `isSnapshotStale` deep-compares and survives reordered keys |
 | `src/deck/v2Hooks.test.ts` | the ADR 18 hooks: the union stays open, `slideMetaOf` degrades, `copy` round-trips unread, `custom` is the only addable kind |
 
@@ -177,10 +178,10 @@ then Chrome's *Save as PDF* destination, defaults untouched:
 - [ ] No chrome on any page: no progress nav, no keyboard hint, no "Baixar PDF"
       pill, no back chevron, no footer
 - [ ] No browser header or footer — no title, URL or timestamp in the margins
-- [ ] Dark slides (cover, pricing) keep their background; the copy on them is
+- [ ] Dark slides (cover, value) keep their background; the copy on them is
       readable
-- [ ] Nothing is cropped on the tall slides — **pricing** and **calculator** are
-      the two that need scaling, so they are the two to look at
+- [ ] Nothing is cropped on the tall slides — the **calculator** is the one that
+      needs scaling, so it is the one to look at
 - [ ] Print it **cold**, straight after a reload without scrolling: every slide
       still has its content (this is the `.reveal` case)
 
@@ -193,7 +194,7 @@ The first item is the one that actually proves the trust boundary, and it is a
 one-liner:
 
 ```bash
-curl -s http://localhost:3000/p/<slug> | grep -c "1.599"          # must be 0
+curl -s http://localhost:3000/p/<slug> | grep -c "Estime o setup" # must be 0
 curl -s http://localhost:3000/p/<slug> | grep -ci "planejamento"  # must be 0
 ```
 
@@ -253,16 +254,6 @@ window, and confirm each change reached `/p/[slug]`:
       switched off scrolls nowhere, because it renders nothing
 - [ ] Unticking a module's demo removes the demo **and** its "▷ Explorar" button —
       a leftover button would scroll to nothing
-- [ ] A changed plan price and cycle discount show; a discount typed as `10`
-      reads as −10%, never −1000%
-- [ ] An added plan reaches the published deck as a card of its own; removing it
-      takes the card away. The floor holds at one plan and the ceiling at six —
-      and after removing the plan in the MIDDLE, the surviving cards still carry
-      their own price and items, which is what the row keys exist for
-- [ ] Planos e preços: dragging the months slider in "O que o cliente vê" crosses
-      each `minMonths` floor at the right month and quotes the same price the
-      published deck does at that month — the panel runs `cycleForMonths`, so a
-      disagreement means the ORDER of the stored cycles is wrong (ADR 19)
 - [ ] Calculadora: the live panel's image count matches what the client's
       calculator opens with, and the per-room "Imagens" column sums to the
       per-metragem subtotal
@@ -275,8 +266,9 @@ Validation and the freeze (ADR 13):
 
 - [ ] Total-before-calculator and an all-disabled deck are refused, each with a
       sentence a salesperson could act on
-- [ ] Disabling `pricing` while `total` survives **warns and still saves**
-- [ ] Editing a published proposal banners Planos and Calculadora at the top,
+- [ ] A proposal published before ADR 26 opens without the plan slide, with no
+      dead dot in the progress nav, and its total equals the image setup
+- [ ] Editing a published proposal banners Tarifas de imagem and Calculadora at the top,
       Slides inside the rail under its title, and Visão geral inside the publish
       block next to the button that fixes it — and leaves the client's link on
       the old version; republishing clears them

@@ -20,15 +20,7 @@ export type ValidationIssue = {
     | "orphan-child"
     | "total-before-calculator"
     | "negative-price"
-    | "discount-out-of-range"
-    | "invalid-max-months"
-    | "invalid-default-months"
-    | "empty-deck"
-    | "no-billing-cycles"
-    | "cycles-out-of-order"
-    /* Warnings. Same shape, different array — see ValidationResult. */
-    | "total-without-pricing"
-    | "no-plans";
+    | "empty-deck";
   /** pt-BR, because stage 3 shows this to a salesperson. */
   message: string;
   /** The node or field at fault, when there is one. */
@@ -36,12 +28,13 @@ export type ValidationIssue = {
 };
 
 /**
- * Two channels, because two of stage 3's rules are genuinely different rules.
- *
- * `issues` block the write. `warnings` do not: disabling `pricing` while `total`
- * is enabled produces a total with no platform cost, which is odd and is
- * sometimes exactly what a salesperson wants. Refusing to save it would be this
+ * Two channels. `issues` block the write. `warnings` do not: they are for a
+ * config that is odd but defensible, where refusing to save would be this
  * validator deciding a commercial question.
+ *
+ * NO RULE WRITES A WARNING TODAY. The two that did belonged to the plan slide
+ * and left with it (ADR 26). The channel stays because every composer action
+ * and form already carries it to the screen — docs/tech-debt.md has the entry.
  *
  * `warnings` is present on BOTH arms on purpose — a caller that narrows on
  * `ok === false` must still be able to surface them, and a union that only
@@ -105,39 +98,7 @@ export function validateDeckConfig(config: DeckConfig): ValidationResult {
     });
   }
 
-  /* A WARNING, not a refusal. The closing frame adds image cost to platform
-     cost; with no pricing slide the client never contracts months, so the
-     platform half is zero and the total states only the image setup. That is a
-     defensible proposal — images-only, plan discussed elsewhere — so this
-     reports and gets out of the way. */
-  if (total !== -1 && order.indexOf("pricing") === -1) {
-    warnings.push({
-      code: "total-without-pricing",
-      at: "total",
-      message:
-        "O slide de planos está desativado, então o total fechará só com o setup de imagens, sem mensalidade.",
-    });
-  }
-
   /* ---- Money ---- */
-
-  if (estimate.plans.length === 0) {
-    warnings.push({
-      code: "no-plans",
-      at: "plans",
-      message: "A proposta não tem nenhum plano, então o slide de planos abre sem card de preço.",
-    });
-  }
-
-  for (const [index, plan] of estimate.plans.entries()) {
-    if (!(plan.monthlyPrice >= 0) || !Number.isFinite(plan.monthlyPrice)) {
-      issues.push({
-        code: "negative-price",
-        at: `plans[${index}].monthlyPrice`,
-        message: `O plano "${plan.n}" tem preço mensal inválido.`,
-      });
-    }
-  }
 
   for (const key of ["base", "option"] as const) {
     const price = estimate.imagePrices[key];
@@ -146,71 +107,6 @@ export function validateDeckConfig(config: DeckConfig): ValidationResult {
         code: "negative-price",
         at: `imagePrices.${key}`,
         message: `A tarifa de imagem "${key}" é inválida.`,
-      });
-    }
-  }
-
-  /* `cycleForMonths` reduces with `cycles[0]` as the seed, so an empty list
-     returns `undefined` and the very next read — `cycle.discount` in
-     EstimateProvider — throws. This is the one config mistake in this file that
-     does not degrade into a wrong number: it is a blank page. */
-  if (estimate.billingCycles.length === 0) {
-    issues.push({
-      code: "no-billing-cycles",
-      at: "billingCycles",
-      message: "A proposta precisa de pelo menos um ciclo de cobrança.",
-    });
-  }
-
-  /* Ascending order is a CORRECTNESS requirement, not a tidiness one, and ADR 19
-     is why: the cycle is derived from the contracted months, and the reduce that
-     derives it seeds on `cycles[0]` and only ever moves to a HIGHER floor. Put
-     the annual cycle first and one contracted month is quoted at −10%, on the
-     same frame the prospect is reading. Same reason the first floor must be 1 or
-     lower: below it, nothing matches and the seed wins by default. */
-  const floors = estimate.billingCycles.map((c) => c.minMonths);
-  const ascending = floors.every((m, i) => i === 0 || m > floors[i - 1]);
-  if (floors.length > 0 && (!ascending || floors[0] > 1)) {
-    issues.push({
-      code: "cycles-out-of-order",
-      at: "billingCycles",
-      message:
-        "Os ciclos precisam estar em ordem crescente de meses mínimos, começando em 1 mês ou menos — fora disso um contrato curto sai com o desconto do ciclo longo.",
-    });
-  }
-
-  /* A discount is a fraction. At 1 the price is zero; above it, the estimate
-     goes negative and the closing frame quotes the client a refund. */
-  for (const [index, cycle] of estimate.billingCycles.entries()) {
-    if (!Number.isFinite(cycle.discount) || cycle.discount < 0 || cycle.discount >= 1) {
-      issues.push({
-        code: "discount-out-of-range",
-        at: `billingCycles[${index}].discount`,
-        message: `O desconto de "${cycle.label}" precisa estar entre 0 e 1 (exclusivo).`,
-      });
-    }
-  }
-
-  if (!Number.isInteger(estimate.maxMonths) || estimate.maxMonths <= 0) {
-    issues.push({
-      code: "invalid-max-months",
-      at: "maxMonths",
-      message: "O prazo máximo precisa ser um número inteiro de meses maior que zero.",
-    });
-  }
-
-  /* Acima do teto, o stepper do cliente abriria num número que ele não consegue
-     nem voltar a escolher depois de mexer — e o "Total estimado" da última tela
-     estaria somando meses que o simulador não deixa alcançar. `undefined` é
-     legítimo: um snapshot congelado antes do campo existir simplesmente não o
-     tem, e a leitura trata isso como zero. */
-  if (estimate.defaultMonths !== undefined) {
-    const preset = estimate.defaultMonths;
-    if (!Number.isInteger(preset) || preset < 0 || preset > estimate.maxMonths) {
-      issues.push({
-        code: "invalid-default-months",
-        at: "defaultMonths",
-        message: `Os meses pré-selecionados precisam ser um número inteiro entre 0 e o teto do simulador (${estimate.maxMonths}).`,
       });
     }
   }

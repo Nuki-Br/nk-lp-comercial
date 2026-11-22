@@ -19,8 +19,8 @@ export default async function EstimatePage({ params }: { params: Promise<{ id: s
      put it back. The resolved list only decides which boxes start ticked. */
   const allPresets = buildDefaultDeck().estimate.projectSizePresets;
 
-  /* Como na aba de preços: o editor é dono das duas colunas, porque o painel ao
-     vivo à direita lê o estado do formulário. */
+  /* O editor é dono das duas colunas, porque o painel ao vivo à direita lê o
+     estado do formulário. */
   return (
     <EstimateEditor
       id={id}
@@ -31,8 +31,8 @@ export default async function EstimatePage({ params }: { params: Promise<{ id: s
       presets={[...allPresets]}
       roomPresets={[...roomPresets]}
       customRoomDefaults={customRoomDefaults}
-      /* Só leitura: quem edita as tarifas é a aba de planos e preços. Aqui elas
-         são o que transforma imagens em reais no painel ao vivo. */
+      /* Só leitura: quem edita as tarifas é a aba de tarifas de imagem. Aqui
+         elas são o que transforma imagens em reais no painel ao vivo. */
       imagePrices={imagePrices}
       snapshotStale={snapshotStale}
       previewHref={`/preview/${id}#calculator`}

@@ -189,12 +189,33 @@ describe("resolveVisitorView — a snapshot that fails today's validator", () =>
     expect(result.state).toBe("unlocked");
   });
 
-  it("still renders a discount the write path would have refused", async () => {
+  it("still renders an image tariff the write path would have refused", async () => {
     const result = await unlocked((config) => {
-      config.estimate.billingCycles[0].discount = 2;
+      config.estimate.imagePrices.base = -1;
     });
 
     expect(result.state).toBe("unlocked");
+  });
+
+  /* A snapshot frozen before the plan slide left the product (ADR 26). The
+     client keeps the link; what they get is the same document without that
+     slide — and without its nav dot, which would otherwise point at nothing. */
+  it("renders a snapshot frozen with the plan slide, without it", async () => {
+    const result = await unlocked((config) => {
+      const legacy = config as unknown as {
+        slides: Record<string, unknown>[];
+        estimate: Record<string, unknown>;
+      };
+      legacy.slides.push({ kind: "pricing", id: "pricing", label: "Plano", enabled: true });
+      legacy.estimate.plans = [{ n: "Plano único", items: [], monthlyPrice: 1 }];
+      legacy.estimate.maxMonths = 36;
+    });
+
+    expect(result.state).toBe("unlocked");
+    if (result.state !== "unlocked") return;
+    expect(result.config.slides.map((node) => node.id)).not.toContain("pricing");
+    expect(result.config.estimate).not.toHaveProperty("plans");
+    expect(result.config.estimate).not.toHaveProperty("maxMonths");
   });
 
   it("but refuses a deck with nothing enabled", async () => {

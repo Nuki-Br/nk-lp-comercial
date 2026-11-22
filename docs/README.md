@@ -18,7 +18,7 @@ wins and the other is a bug.
 |---|---|
 | run one of the three build stages | `stages/README.md`, then your stage file |
 | add or change a slide kind | `deck-runtime.md` |
-| touch pricing or image math | `estimate.md` |
+| touch image math or tariffs | `estimate.md` |
 | touch auth, cookies, passwords, expiry | `security.md` |
 | add a table or column | `data-model.md` |
 | add or change tracking | `tracking.md` |
@@ -93,7 +93,7 @@ data-model.md        why each table and column is shaped the way it is
 security.md          auth, cookies, passwords, expiry, RLS posture
 tracking.md          what is collected, the three anti-double-count guards
 deck-runtime.md      slide contract + the DeckBehaviors DOM contract + CSS layers
-estimate.md          the pricing math and THE canonical numbers
+estimate.md          the image math and THE canonical numbers
 testing.md           test policy + the three manual checklists
 deployment.md        Vercel + Supabase, env matrix, migrations
 content-guide.md     editing copy and default prices, for non-developers

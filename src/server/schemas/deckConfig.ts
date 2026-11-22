@@ -1,6 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
+import { stripRetired } from "@/deck/retired";
 import type { DeckConfig } from "@/deck/types";
 
 /* The only Zod in the read path (ADR 11: one validator, server-only).
@@ -28,11 +29,6 @@ const slideNode = z.looseObject({
 });
 
 const estimate = z.looseObject({
-  plans: z.array(z.looseObject({ n: z.string(), monthlyPrice: z.number().finite() })),
-  billingCycles: z.array(
-    z.looseObject({ id: z.string(), label: z.string(), discount: z.number().finite() }),
-  ),
-  maxMonths: z.number().int().positive(),
   imagePrices: z.looseObject({ base: z.number().finite(), option: z.number().finite() }),
 });
 
@@ -56,8 +52,12 @@ export const deckConfigSchema = z.looseObject({
  * proves the structure the renderer depends on, and the loose fields carry the
  * rest through. If it ever grows into a full mirror of `DeckConfig`, delete the
  * cast — and reconsider the mirror.
+ *
+ * `stripRetired` runs on the way out, so every reader of a stored document —
+ * the visitor path and the admin list alike — sees it without the plan slide a
+ * snapshot frozen before ADR 26 still carries. The stored row is not touched.
  */
 export function parseStoredDeckConfig(input: unknown): DeckConfig | null {
   const result = deckConfigSchema.safeParse(input);
-  return result.success ? (result.data as unknown as DeckConfig) : null;
+  return result.success ? stripRetired(result.data as unknown as DeckConfig) : null;
 }

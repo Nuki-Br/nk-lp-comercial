@@ -2,7 +2,7 @@
 audience: both
 status: partially-superseded
 verified_against: pasted strategy document, undated
-size: 205
+size: 214
 ---
 
 # Nuki — visão geral de produto
@@ -10,9 +10,8 @@ size: 205
 > **Documento colado, sem versão nem data.** Preserve a redação original: editá-lo
 > destrói a única coisa que ele tem, que é a proveniência.
 >
-> **A §7 (modelo de implantação por projeto) antecede o pivô** para SaaS
-> recorrente por empreendimento ativo. Onde ela conflitar com
-> `pivot-modelo-negocio.md`, o pivô vence.
+> **A §7 (modelo de implantação por projeto) antecede o pivô.** Onde ela
+> conflitar com `pivot-modelo-negocio.md`, o pivô vence.
 
 ## 1. Visão Geral
  

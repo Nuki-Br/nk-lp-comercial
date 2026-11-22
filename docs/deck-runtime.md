@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/components/deck/DeckBehaviors.tsx, src/components/slides/*.tsx, src/styles/*.css
-size: 199
+size: 254
 ---
 
 # Deck runtime
@@ -30,8 +30,8 @@ Every slide renders a section shaped like this:
 - `id` is the anchor **and** the nav id. It must be unique across the deck, and
   something in the nav must reference it, or a dot silently vanishes.
 - `data-tone="dark"` flips the progress nav to its light palette while the
-  section is centered. Omit it on light sections. Today: cover, differentiators,
-  pricing.
+  section is centered. Omit it on light sections. Today: cover, value,
+  differentiators.
 - `data-reveal-group=""` marks the container whose `.reveal` children stagger in.
 - `slide-inner` is the width-constrained wrapper — `--slide-max` / `--slide-pad`.
 
@@ -174,7 +174,7 @@ What it does:
 ### Fitting a slide to its page
 
 A page box alone would crop: the sections were laid out for a viewport they are
-free to overflow, and the calculator and pricing slides do. So
+free to overflow, and the calculator slide does. So
 `DownloadPdfButton.tsx` registers a `beforeprint` listener that measures each
 slide and writes a per-slide `--print-scale`, which the sheet applies to
 `.slide-inner`.

@@ -7,7 +7,6 @@ import { Card, PageHeader } from "@/components/admin/ui/Card";
 import { PageShell } from "@/components/admin/ui/Page";
 import { buildDefaultDeck } from "@/deck/defaults";
 import { formatCurrency } from "@/lib/format";
-import { QUOTE_REFERENCE_MONTHS } from "@/lib/quote";
 import { requireAdmin } from "@/server/auth/requireAdmin";
 import { listProposals } from "@/server/proposals/admin";
 import { portfolioAttention } from "@/server/tracking/readout";
@@ -27,9 +26,8 @@ const formatDate = (iso: string | null): string =>
   iso ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(iso)) : "—";
 
 const TH = "px-5 py-2.5 font-medium";
-/* As três colunas de dinheiro andam juntas: mesmo alinhamento, mesma tabular,
-   e um fio à esquerda do grupo para que a leitura horizontal saiba onde o
-   cadastro acaba e o valor começa. */
+/* A coluna de dinheiro: alinhada à direita, tabular, e com um fio à esquerda
+   para que a leitura horizontal saiba onde o cadastro acaba e o valor começa. */
 const TH_MONEY = `${TH} text-right`;
 const TD_MONEY = "px-5 py-3 text-right tabular-nums";
 
@@ -107,10 +105,10 @@ export default async function AdminPage() {
         ) : (
           <Card className="overflow-hidden animate-rise [animation-delay:120ms]">
             <div className="overflow-x-auto">
-              {/* 46rem → 68rem: as três colunas de dinheiro não cabiam sem
-                  espremer o nome da construtora, e uma tabela apertada rola —
-                  ela não deixa de ser legível. */}
-              <table className="w-full min-w-[68rem] border-collapse text-left text-sm">
+              {/* Largura mínima para a coluna de dinheiro não espremer o nome
+                  da construtora: uma tabela apertada rola — ela não deixa de
+                  ser legível. */}
+              <table className="w-full min-w-[52rem] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
                     <th scope="col" className={TH}>
@@ -132,13 +130,7 @@ export default async function AdminPage() {
                       Aberturas
                     </th>
                     <th scope="col" className={`${TH_MONEY} border-l border-border`}>
-                      Mensalidade
-                    </th>
-                    <th scope="col" className={TH_MONEY}>
                       Setup de imagens
-                    </th>
-                    <th scope="col" className={TH_MONEY}>
-                      Total em {QUOTE_REFERENCE_MONTHS} meses
                     </th>
                   </tr>
                 </thead>
@@ -209,43 +201,16 @@ export default async function AdminPage() {
                           {proposal.openCount}
                         </td>
 
-                        {/* As três cifras, na ordem em que a conta é feita:
-                            mensalidade → setup → total. Cada linha de apoio diz
-                            de onde o número de cima veio, que é a pergunta que
-                            uma tabela de dinheiro sempre provoca. */}
-                        <td className={`${TD_MONEY} border-l border-border`}>
-                          <span className="font-medium">
-                            {formatCurrency(quote.monthlyAfterDiscount)}
-                          </span>
-                          {quote.cycle && (
-                            <span className="block text-xs font-normal text-muted-foreground">
-                              {quote.cycle.label}
-                              {quote.cycle.discount > 0 &&
-                                ` −${Math.round(quote.cycle.discount * 100)}%`}
-                            </span>
-                          )}
-                        </td>
-                        <td className={TD_MONEY}>
+                        {/* A cifra e, embaixo, de onde ela veio — que é a
+                            pergunta que uma tabela de dinheiro sempre provoca. */}
+                        <td
+                          className={`${TD_MONEY} border-l border-border`}
+                          title={quoteSourceHint}
+                        >
                           <span className="font-medium">{formatCurrency(quote.imageCost)}</span>
                           <span className="block text-xs font-normal text-muted-foreground">
                             {quote.imageCount} imagens
                           </span>
-                        </td>
-                        <td className={TD_MONEY} title={quoteSourceHint}>
-                          {/* Um ponto maior que as outras duas: é a soma delas,
-                              e é a cifra que faz a lista ser lida de cima a
-                              baixo em vez de linha a linha. */}
-                          <span className="text-base font-semibold">
-                            {formatCurrency(quote.grandTotal)}
-                          </span>
-                          {/* Só quando o teto do simulador desta proposta não
-                              alcança os meses de referência — aí o cabeçalho da
-                              coluna estaria mentindo sobre esta linha. */}
-                          {quote.months !== QUOTE_REFERENCE_MONTHS && (
-                            <span className="block text-xs font-normal text-muted-foreground">
-                              em {quote.months} {quote.months === 1 ? "mês" : "meses"}
-                            </span>
-                          )}
                         </td>
                       </tr>
                     );
@@ -254,14 +219,13 @@ export default async function AdminPage() {
               </table>
             </div>
 
-            {/* O rodapé existe porque as três colunas escondem duas escolhas
-                que ninguém adivinha olhando as cifras: o prazo é arbitrado
-                aqui, e as imagens são as da ABERTURA da calculadora — o cliente
-                mexe nela durante a apresentação, e o número dele será outro. */}
+            {/* O rodapé existe porque a coluna esconde uma escolha que ninguém
+                adivinha olhando a cifra: as imagens são as da ABERTURA da
+                calculadora — o cliente mexe nela durante a apresentação, e o
+                número dele será outro. */}
             <p className="border-t border-border bg-muted/20 px-5 py-3 text-xs leading-relaxed text-muted-foreground">
-              Total = setup de imagens + {QUOTE_REFERENCE_MONTHS} meses do plano em destaque, já com
-              o desconto do ciclo. É uma referência para comparar propostas: o cliente ainda ajusta
-              a calculadora durante a apresentação, e os meses são dele.
+              O setup de imagens é o da abertura da calculadora de cada proposta. É uma referência
+              para comparar propostas: o cliente ainda ajusta a calculadora durante a apresentação.
             </p>
           </Card>
         )}

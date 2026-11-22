@@ -1,8 +1,8 @@
 ---
 audience: human
 status: current
-verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,ProposalDetailForms,SlidesWorkspace,PricingEditor,EstimateEditor}.tsx, src/server/proposals/{config,admin}.ts, src/server/tracking/{readout,reset}.ts
-size: 260
+verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,ProposalDetailForms,SlidesWorkspace,ImagePricesForm,EstimateEditor}.tsx, src/server/proposals/{config,admin}.ts, src/server/tracking/{readout,reset}.ts
+size: 216
 ---
 
 # Montando uma proposta no /admin
@@ -20,7 +20,7 @@ usar nada aqui.
 1. **Nova proposta** — nome da construtora e um título interno. Ela nasce
    idêntica ao deck padrão.
 2. **Slides** — tire o que não vai nesta conversa, reordene o que sobrou.
-3. **Planos e preços** — mensalidade, descontos por ciclo, tarifas de imagem.
+3. **Tarifas de imagem** — a base de custo da calculadora desta proposta.
 4. **Calculadora** — deixe o empreendimento do cliente já modelado.
 5. **Senha** — defina antes de mandar o link. Sem senha ninguém entra.
 6. **Publicar** — só depois disso o link abre. A pílula do painel "Envio" passa
@@ -35,29 +35,18 @@ Rascunho não abre pra ninguém. Se você mandar o link antes de publicar, o cli
 vê "não encontrado" — de propósito, pra ele não descobrir que existe uma proposta
 sendo preparada.
 
-## As três cifras da lista
+## A cifra da lista
 
-A lista de propostas mostra, à direita de cada linha, quanto aquela proposta
-vale:
+A lista de propostas mostra, à direita de cada linha, o **setup de imagens**
+daquela proposta: o pacote de imagens com que a calculadora **abre**, em reais,
+e embaixo quantas imagens são.
 
-| Coluna | O que é |
-|---|---|
-| **Mensalidade** | o plano em destaque, já com o desconto do ciclo — a linha de baixo diz qual ciclo e quanto ele tira |
-| **Setup de imagens** | o pacote de imagens com que a calculadora **abre**, em reais |
-| **Total em 12 meses** | setup + 12 mensalidades |
-
-**Os 12 meses são uma referência, não uma promessa.** Nenhuma proposta guarda um
-prazo: quem escolhe quantos meses contratar é o cliente, no simulador. Os 12
-estão ali para que duas propostas possam ser comparadas na mesma régua — se o
-teto do simulador daquela proposta for menor que 12, a célula diz sobre quantos
-meses a conta foi feita.
-
-**O setup também é um ponto de partida.** É o número da abertura da calculadora;
-o cliente mexe nela durante a apresentação e o valor dele será outro.
+**O setup é um ponto de partida.** É o número da abertura da calculadora; o
+cliente mexe nela durante a apresentação e o valor dele será outro.
 
 Uma proposta **publicada** é cotada pelo documento que o cliente recebeu, não
 pelas edições que você fez depois. Um **rascunho** é cotado pelo que publicar
-congelaria. Passe o mouse sobre o total para ver qual dos dois está na tela.
+congelaria. Passe o mouse sobre a cifra para ver qual dos dois está na tela.
 
 ## As quatro abas
 
@@ -110,40 +99,7 @@ casos que aparecem na prática:
   calculou; invertido, ele mostraria R$ 0 na frente do cliente.
 - **Nenhum slide ativo.** Não dá pra publicar uma apresentação vazia.
 
-E um caso que **avisa mas deixa salvar**: desativar o slide de planos e manter o
-de total. O total fecha só com o setup de imagens, sem mensalidade. Às vezes é
-exatamente o que você quer.
-
-### Planos e preços
-
-**O painel "O que o cliente vê", à direita, é o seu conferidor — e é um campo.**
-Arraste os meses e ele mostra em que ciclo aquilo cai e por quanto sai cada plano
-— a mesma conta que o cliente vai ver, atualizada enquanto você digita. **O que
-você deixar na barra é onde o simulador do cliente vai abrir**, depois de salvar;
-é o mesmo número do campo "Meses pré-selecionados" abaixo.
-
-**Dá pra ter mais de um plano.** "+ Adicionar plano" cria uma faixa nova (até
-seis) e o `×` no canto dela tira. O último não sai: uma proposta sem plano nenhum
-abre o slide de preços sem preço nenhum. **A estrela no canto esquerdo escolhe o
-plano em destaque** — o que o cliente lê primeiro e o que o painel da direita usa
-de base — se você acender mais de uma estrela, o painel usa a primeira.
-
-**O desconto se digita em porcentagem.** Escreva `10` para dez por cento. Ao lado
-do campo aparece quanto a mensalidade vira — confira ali antes de salvar, é o
-número que o cliente vai ler.
-
-**"Meses mínimos" é o piso que ativa cada ciclo.** O cliente não escolhe o ciclo:
-ele escolhe quantos meses quer, e o desconto vem junto. Quem sobe o simulador até
-12 meses cai no Anual sozinho. Você não precisa colocar em ordem — o sistema
-ordena ao salvar.
-
-**"Meses pré-selecionados" é onde o simulador do cliente já abre.** Se o prazo já
-foi conversado, deixe-o preenchido e o cliente encontra o total pronto; em zero,
-ele começa do zero e sobe. Vale para o plano em destaque — é a soma dos meses de
-todos os cards que decide o ciclo, então preencher todos multiplicaria o custo de
-plataforma. A barra do painel "O que o cliente vê" é o mesmo campo: arraste ali e
-salve. Ele não muda a coluna "Total em 12 meses" da lista de propostas, que é uma
-régua igual para todas as linhas.
+### Tarifas de imagem
 
 **Tarifas de imagem: são duas, e são diferentes.** A **imagem base** é o render
 3D do ambiente, uma por unidade de ambiente, e é a cara. A **imagem de opção** é
@@ -218,8 +174,8 @@ fotografia e nada mais: mudar o conteúdo padrão do deck, ou o preço padrão, 
 mexe num documento que já foi enviado.
 
 Isso vale também pras **suas** edições. Se você mexer numa proposta já publicada,
-aparece um aviso laranja: há alterações que o cliente ainda não vê. Em Planos e
-preços e na Calculadora ele fica no topo da página; em Slides, dentro da lista à
+aparece um aviso laranja: há alterações que o cliente ainda não vê. Em Tarifas
+de imagem e na Calculadora ele fica no topo da página; em Slides, dentro da lista à
 esquerda, logo abaixo do título; e na Visão geral, a pílula do painel "Envio"
 passa a dizer **Alterações pendentes** e o botão vira **Publicar alterações**. O
 cliente só recebe o que você editou depois que você clica nele.

@@ -1,15 +1,11 @@
 "use client";
 
-import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
-import type { EstimateConfig } from "@/deck/types";
-import type { BillingCycle } from "@/lib/estimateTypes";
-import { clamp } from "@/lib/format";
-import { cycleForMonths, discountedMonthlyPrice } from "@/lib/pricing";
+import { createContext, type ReactNode, useContext, useMemo, useState } from "react";
 
 /** Totais publicados pela Calculadora e consumidos por outras seções da
-    apresentação (hoje: TotalEstimado, pra compor o "Total consolidado" imagens +
-    plataforma). Vive em Context pra evitar prop drilling entre seções
-    irmãs em page.tsx sem forçar um refactor de "lift state up" completo. */
+    apresentação (hoje: o frame de fechamento). Vive em Context pra evitar prop
+    drilling entre seções irmãs sem forçar um refactor de "lift state up"
+    completo. */
 export type EstimateTotals = {
   imageCount: number;
   imageCost: number;
@@ -17,133 +13,24 @@ export type EstimateTotals = {
 
 const defaultTotals: EstimateTotals = { imageCount: 0, imageCost: 0 };
 
-/** Simulador de planos: meses por tier + ciclo de cobrança. Mora aqui (e não no
-    CTA) porque o CTA edita esses valores enquanto o TotalEstimado — que virou
-    seção separada, depois da Calculadora — só lê os derivados. */
-type PlanSimulator = {
-  /** Array paralelo a `planos`, meses contratados em cada plano. */
-  months: number[];
-  setMonths: (updater: (prev: number[]) => number[]) => void;
-  /** Derivado de `totalMonths` — não é estado próprio. Ver `selectCycle`. */
-  cycle: BillingCycle;
-  /** Atalho do toggle: preenche os meses com o piso do ciclo escolhido. */
-  selectCycle: (c: BillingCycle) => void;
-  /** Σ meses × preço mensal do tier já com o desconto do ciclo. */
-  platformCost: number;
-  /** Σ meses de todos os tiers — alimenta o hint "N meses de operação Nuki". */
-  totalMonths: number;
-  /** custoImagens (Calculadora) + custoPlataforma. */
-  grandTotal: number;
-};
-
-/* O valor default do Context precisa de um `BillingCycle` e não há mais um
-   `billingCycles[0]` de módulo pra pegar — os ciclos vêm por prop. Um ciclo
-   vazio serve: o `PricingSlide` compara por `id`, então `""` não casa com nada,
-   que é a degradação certa pra um render sem provider (que não acontece). */
-const NO_CYCLE: BillingCycle = { id: "", label: "", discount: 0, minMonths: 0 };
-
-const EstimateContext = createContext<
-  {
-    totals: EstimateTotals;
-    setTotals: (t: EstimateTotals) => void;
-  } & PlanSimulator
->({
+const EstimateContext = createContext<{
+  totals: EstimateTotals;
+  setTotals: (t: EstimateTotals) => void;
+}>({
   totals: defaultTotals,
   setTotals: () => {},
-  months: [],
-  setMonths: () => {},
-  cycle: NO_CYCLE,
-  selectCycle: () => {},
-  platformCost: 0,
-  totalMonths: 0,
-  grandTotal: 0,
 });
 
-export function EstimateProvider({
-  estimate,
-  children,
-}: {
-  estimate: EstimateConfig;
-  children: ReactNode;
-}) {
-  const { plans, billingCycles } = estimate;
+export function EstimateProvider({ children }: { children: ReactNode }) {
   const [totals, setTotals] = useState<EstimateTotals>(defaultTotals);
-
-  /* Meses contratados por plano.
-   *
-   * Começa no que a proposta pré-selecionou, e só no PLANO EM DESTAQUE — o mesmo
-   * que `referencePlan` do `quote.ts` escolhe, e o card que o cliente lê
-   * primeiro. Semear os N planos multiplicaria o custo de plataforma por N: os
-   * meses somam entre os cards, é essa soma que deriva o ciclo, e a proposta de
-   * "12 meses" viraria 24 no fechamento.
-   *
-   * `?? 0` porque o campo é opcional de verdade: um `config_snapshot` congelado
-   * antes dele não o tem, e nesse caso o comportamento é o antigo — tudo em
-   * zero. O clamp é a segunda linha, contra um snapshot cujo teto encolheu
-   * depois de o preset ter sido escrito. */
-  const [months, setMonths] = useState<number[]>(() => {
-    const preset = clamp(Math.trunc(estimate.defaultMonths ?? 0), 0, estimate.maxMonths);
-    if (preset === 0) return plans.map(() => 0);
-
-    const featured = plans.findIndex((plan) => plan.featured);
-    const target = featured >= 0 ? featured : 0;
-    return plans.map((_, index) => (index === target ? preset : 0));
-  });
-
-  const totalMonths = useMemo(() => months.reduce((a, b) => a + b, 0), [months]);
-
-  /* Ciclo de cobrança — derivado dos meses, não estado próprio: o desconto é a
-     contrapartida do compromisso, então chegar a 6 meses já é o semestral e a 12
-     é o anual. Mantê-lo como estado clicável em paralelo permitiria exibir
-     "Mensal" com 12 meses contratados, uma proposta que não existe. Em 0 meses
-     cai no ciclo base (Mensal, 0%). */
-  const cycle = useMemo(
-    () => cycleForMonths(billingCycles, totalMonths),
-    [billingCycles, totalMonths],
-  );
-
-  /* O toggle continua clicável, mas como atalho na direção inversa: escolher um
-     ciclo preenche os meses com o piso dele — o que devolve o mesmo ciclo pela
-     derivação acima. Só mexe no plano principal; hoje `plans` tem um item só, e
-     se os tiers voltarem essa distribuição precisa ser revisitada. */
-  const selectCycle = useCallback((c: BillingCycle) => {
-    setMonths((prev) => prev.map((m, i) => (i === 0 ? c.minMonths : m)));
-  }, []);
-
-  const platformCost = useMemo(
-    () =>
-      months.reduce(
-        (acc, m, i) =>
-          acc + m * discountedMonthlyPrice(plans[i]?.monthlyPrice ?? 0, cycle.discount),
-        0,
-      ),
-    [months, plans, cycle.discount],
-  );
-  const grandTotal = totals.imageCost + platformCost;
-
-  const value = useMemo(
-    () => ({
-      totals,
-      setTotals,
-      months,
-      setMonths,
-      cycle,
-      selectCycle,
-      platformCost,
-      totalMonths,
-      grandTotal,
-    }),
-    [totals, months, selectCycle, cycle, platformCost, totalMonths, grandTotal],
-  );
+  const value = useMemo(() => ({ totals, setTotals }), [totals]);
 
   return <EstimateContext.Provider value={value}>{children}</EstimateContext.Provider>;
 }
 
-/** Acesso único ao estado do orçamento. Antes eram dois hooks
-    (`useCalculadoraTotals` / `usePlanoSimulador`) lendo exatamente o mesmo
-    Context — o açúcar semântico prometia uma separação que não existia, já que
-    ambos re-renderizavam a cada mudança. Se a performance vier a importar, o
-    caminho é dividir em contexts de estado e dispatch, não em dois aliases. */
+/** Acesso único ao estado do orçamento: a Calculadora escreve, o frame de
+    fechamento lê. Se a performance vier a importar, o caminho é dividir em
+    contexts de estado e dispatch, não em dois aliases do mesmo Context. */
 export function useEstimate() {
   return useContext(EstimateContext);
 }

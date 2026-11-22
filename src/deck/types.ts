@@ -3,7 +3,6 @@ import type {
   Differentiator,
   ModuleFlowStep,
   Persona,
-  Plan,
   ProblemCard,
   ProjectSizePreset,
   RoomPreset,
@@ -12,7 +11,7 @@ import type {
 } from "@/content/deck";
 import type { ModuleData } from "@/content/modules";
 import type { CaseLogo } from "@/content/slides";
-import type { BillingCycle, RoomConfig, UnitTypeState } from "@/lib/estimateTypes";
+import type { RoomConfig, UnitTypeState } from "@/lib/estimateTypes";
 
 export type { ProjectSizePreset, RoomPreset } from "@/content/deck";
 /* Re-exportados pra que os componentes de slide tenham UM lugar de onde
@@ -71,7 +70,6 @@ export type SlideKind =
   | "differentiators"
   | "audience"
   | "cases"
-  | "pricing"
   | "calculator"
   | "total"
   /** V2: slides sob medida por cliente. TIPADO agora, construído depois — o
@@ -213,22 +211,6 @@ export type CasesNode = SlideNodeBase & {
   logos: CaseLogo[];
 };
 
-export type PricingLabels = {
-  cycleTabsAria: string;
-  cycleHint: string;
-  priceSuffix: string;
-  priceUnit: string;
-  monthsLabel: string;
-  monthsAriaTemplate: string;
-  emptySubtotal: string;
-};
-
-export type PricingNode = SlideNodeBase & {
-  kind: "pricing";
-  head: SectionHead;
-  labels: PricingLabels;
-};
-
 /** Rótulos da calculadora, agrupados por região da tela. Um saco plano de ~55
     chaves seria impossível de editar no /admin — e de revisar aqui. */
 export type CalculatorLabels = {
@@ -313,13 +295,8 @@ export type CalculatorNode = SlideNodeBase & {
 export type TotalLabels = {
   cardAria: string;
   imageSetup: string;
-  platform: string;
   total: string;
   imagesHintTemplate: string;
-  noMonthsHint: string;
-  monthsHintTemplate: string;
-  monthOne: string;
-  monthOther: string;
 };
 
 export type TotalNode = SlideNodeBase & {
@@ -341,7 +318,6 @@ export type SlideNode =
   | DifferentiatorsNode
   | AudienceNode
   | CasesNode
-  | PricingNode
   | CalculatorNode
   | TotalNode
   | CustomNode;
@@ -351,17 +327,6 @@ export type SlideNode =
    ------------------------------------------------------------------ */
 
 export type EstimateConfig = {
-  plans: Plan[];
-  billingCycles: BillingCycle[];
-  /** Era `MAX_MONTHS`, constante de módulo do `PricingSlide`. */
-  maxMonths: number;
-  /** Com quantos meses o simulador do cliente JÁ ABRE, no plano em destaque.
-
-      Opcional porque não existia: um `config_snapshot` congelado antes deste
-      campo não o tem, e um snapshot publicado é lido como está (ADR 18). Ausente
-      = 0, que é exatamente o comportamento anterior — o cliente começa em zero e
-      sobe o stepper. Quem lê tem de tratar o `undefined`. */
-  defaultMonths?: number;
   imagePrices: { base: number; option: number };
   defaults: {
     dryOptions: number;

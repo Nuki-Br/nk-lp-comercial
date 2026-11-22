@@ -13,9 +13,9 @@ import type { DeckConfig } from "@/deck/types";
  * Renderiza um `DeckConfig`. Um caminho de render só — o `/fast` e, na etapa 2,
  * o `/p/[slug]` passam por aqui; o que muda é o config, não o componente.
  *
- * O `EstimateProvider` envolve a lista INTEIRA em vez do trio Pricing +
- * Calculator + Total. Com ordem vinda de config não dá pra detectar o trio, e
- * envolver tudo é inofensivo e independente de ordem — ver docs/architecture.md.
+ * O `EstimateProvider` envolve a lista INTEIRA em vez do par Calculator +
+ * Total. Com ordem vinda de config não dá pra detectar o par, e envolver tudo é
+ * inofensivo e independente de ordem — ver docs/architecture.md.
  */
 export function Deck({
   config,
@@ -44,9 +44,7 @@ export function Deck({
       <div className="deck flex min-h-screen flex-col">
         <ProgressNav anchors={anchors} />
         <main className="flex flex-1 flex-col">
-          <EstimateProvider estimate={config.estimate}>
-            {config.slides.map((node) => renderSlide(node, ctx))}
-          </EstimateProvider>
+          <EstimateProvider>{config.slides.map((node) => renderSlide(node, ctx))}</EstimateProvider>
         </main>
         {config.chrome.showFooter && <Footer />}
         <DeckBehaviors />

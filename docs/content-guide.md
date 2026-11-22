@@ -2,7 +2,7 @@
 audience: human
 status: current
 verified_against: src/content/deck.ts, src/content/modules.ts
-size: 120
+size: 123
 ---
 
 # Editando o conteúdo do deck
@@ -48,10 +48,6 @@ Quase tudo vive em dois arquivos: `src/content/deck.ts` e `src/content/modules.t
 | Os diferenciais | `content/deck.ts` | `differentiators` |
 | As personas de "Pra quem serve" | `content/deck.ts` | `personas` |
 | A lista "quando faz sentido" | `content/deck.ts` | `fitList` |
-| **Preço do plano** | `content/deck.ts` | `plans` → `monthlyPrice` |
-| O que está incluso no plano | `content/deck.ts` | `plans` → `items` |
-| **Ciclos e descontos** | `content/deck.ts` | `billingCycles` → `discount` |
-| **Meses que ativam cada ciclo** | `content/deck.ts` | `billingCycles` → `minMonths` |
 | Defaults da calculadora | `content/deck.ts` | `ESTIMATE_DEFAULTS` |
 | Limites dos campos da calculadora | `lib/estimateTypes.ts` | `ESTIMATE_RANGES` |
 | **Preço da imagem base** | `content/deck.ts` | `ESTIMATE_DEFAULTS.baseImagePrice` |
@@ -78,17 +74,8 @@ pedaço — sem ele as duas partes se colam.
 
 ## Detalhes que confundem
 
-**`discount` é fração, não porcentagem.** `0.1` = 10% de desconto. `0` = sem
-desconto.
-
-**`monthlyPrice` é número puro, sem "R$" e sem ponto.** `1150`, não `"R$ 1.150"`.
-A formatação em reais é automática.
-
-**O ciclo não é escolhido, é consequência dos meses.** Quem sobe o simulador até
-6 meses cai no Semestral e até 12 cai no Anual sozinho — o toggle só reflete
-isso. `minMonths` é o piso de cada ciclo, e a lista precisa ficar em ordem
-crescente. Clicar num ciclo é o atalho na direção inversa: preenche o simulador
-com o piso dele.
+**As tarifas de imagem são números puros, sem "R$" e sem ponto.** `84`, não
+`"R$ 84"`. A formatação em reais é automática.
 
 **Títulos partidos em duas partes.** Alguns títulos têm `pre` e `strong` — o
 `strong` sai em negrito e é reaproveitado sozinho em botões e textos alternativos.

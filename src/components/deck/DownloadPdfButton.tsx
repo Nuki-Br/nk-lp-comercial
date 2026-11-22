@@ -9,7 +9,7 @@ import { useEffect } from "react";
  * `src/styles/print.css` turns every `.slide` into exactly one page box and
  * hides the chrome. What CSS alone cannot do is make a slide *fit* that box:
  * the sections were laid out for a viewport they could overflow, so the tall
- * ones (calculator, pricing) would crop. The pass below measures each slide at
+ * ones (calculator) would crop. The pass below measures each slide at
  * the print box's width and writes a per-slide `--print-scale` the stylesheet
  * applies to `.slide-inner`.
  */

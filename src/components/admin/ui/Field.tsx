@@ -88,7 +88,7 @@ export function Field({
 
 /** Versão de `Field` em que o `<label>` embrulha o controle — sem `id`, sem
     `htmlFor`, e sem o risco de os dois saírem de sincronia numa lista dinâmica
-    de ambientes ou de planos. */
+    de ambientes. */
 export function FieldLabel({
   label,
   hint,

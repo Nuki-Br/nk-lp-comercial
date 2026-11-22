@@ -34,10 +34,6 @@ export const slideMetaCopy: Record<string, SlideMetaCopy> = {
     description: "As três personas na construtora e quando a Nuki faz sentido.",
   },
   cases: { label: "Cases", description: "Logos das construtoras já atendidas." },
-  pricing: {
-    label: "Plano & contato",
-    description: "Plano, ciclo de cobrança e simulador de meses.",
-  },
   calculator: {
     label: "Estime o setup",
     description: "Calculadora de imagens por metragem, ambiente e variação.",

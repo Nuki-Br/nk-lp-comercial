@@ -2,12 +2,12 @@
 audience: both
 status: current
 verified_against: src/lib/estimate.ts + src/lib/quote.ts + src/content/deck.ts, re-derived by running the code
-size: 190
+size: 164
 ---
 
 # The estimate
 
-The image calculator and the plan simulator. This file is the **sole home of the
+The image calculator. This file is the **sole home of the
 canonical numbers** — they are not repeated in `AGENTS.md`, `README.md` or
 `deployment.md`, because that is exactly how they went stale before.
 
@@ -31,24 +31,13 @@ a bug — delete it and link here.
 
 ### The quote the /admin list shows
 
-`src/lib/quote.ts` composes the four functions above into the three figures per
-row in the proposals table — mensalidade, setup de imagens, total. At the shipped
-defaults (plan **R$ 1.599**/month, cycles 0 / −5% / −10%):
-
-| Figure | Value | Where it comes from |
-|---|---|---|
-| Mensalidade | **R$ 1.439** | featured plan × the cycle that 12 months falls into (anual, −10%) |
-| Setup de imagens | **R$ 1.428** | the "Defaults" row above — the calculator's SEED |
-| Total em 12 meses | **R$ 18.696** | 1.428 + 12 × 1.439 |
+`src/lib/quote.ts` composes the same functions into the one figure per row in
+the proposals table — the image setup. At the shipped defaults it is the
+"Defaults" row above, **45** images and **R$ 1.428**: the calculator's SEED, not
+what the client will close on.
 
 Asserted in `src/lib/quote.test.ts`, against `buildDefaultDeck()` rather than a
 hand-built config.
-
-**12 months is arbitrated in one place** — `QUOTE_REFERENCE_MONTHS`. No proposal
-stores a term: the client picks months in the simulator, so the list needs a
-common ruler to compare rows and this is it. A proposal whose `maxMonths` is
-below 12 is quoted over `maxMonths` instead, and the cell says so — a total the
-client cannot even drag to would be a deal that does not exist.
 
 **A published proposal is quoted from its snapshot, a draft from defaults + delta.**
 The salesperson's later edits are a renegotiation nobody received yet.
@@ -74,8 +63,6 @@ unit type:      mainVariant   = Σ over all room units          (Variação 01)
                 total         = mainVariant + perExtraVar × (variants − 1)
 
 cost:           base × baseImagePrice + option × optionImagePrice
-platform:       Σ months per plan × discountedMonthlyPrice(plan, cycle.discount)
-grand total     = image cost + platform cost
 ```
 
 The math lives in `src/lib/estimate.ts` — pure, React-free, no `process.env`.
@@ -98,19 +85,6 @@ too; do not collapse them.
 | initial unit types | `ESTIMATE_DEFAULTS.initialUnitTypes` | yes |
 | `PROJECT_SIZE_PRESETS` | `src/content/deck.ts` | yes — prunable per client |
 | min/max for every field | `ESTIMATE_RANGES` in `src/lib/estimateTypes.ts` | no, code-only |
-| `plans`, `billingCycles` | `src/content/deck.ts` | yes |
-| `maxMonths` (36) | `EstimateConfig.maxMonths` | yes |
-| `defaultMonths` (0) | `EstimateConfig.defaultMonths` | yes |
-
-`defaultMonths` is where the client's month stepper OPENS, and it is seeded onto
-the featured plan only — the same one `referencePlan` picks. Seeding every plan
-would multiply the platform cost by the number of cards, because the months of
-all cards are summed and that sum is what derives the cycle. It is optional in
-the type on purpose: a `config_snapshot` frozen before the field existed does not
-carry it, and absent reads as 0 — the behaviour every proposal had before. It
-does **not** feed `proposalQuote`: the admin list compares proposals over the
-same `QUOTE_REFERENCE_MONTHS` ruler, and a per-proposal preset would make each
-row's total answer a different question.
 
 `ESTIMATE_RANGES` stays in code on purpose. It is the clamp that keeps an admin
 typo from producing an absurd quote, so it is not something an admin edits.

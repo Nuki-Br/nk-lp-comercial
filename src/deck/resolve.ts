@@ -4,7 +4,7 @@ import type { DeckConfig, EstimateConfig, SlideNode } from "@/deck/types";
 const isDev = process.env.NODE_ENV !== "production";
 
 /** Só as chaves com valor definido. `JSON` nunca produz `undefined`, mas um
-    override montado à mão na etapa 3 pode — e `{ maxMonths: undefined }` não
+    override montado à mão na etapa 3 pode — e `{ roomPresets: undefined }` não
     pode apagar o default. */
 const defined = <T extends object>(patch: T | undefined): Partial<T> => {
   if (!patch) return {};
@@ -17,10 +17,14 @@ const defined = <T extends object>(patch: T | undefined): Partial<T> => {
  * Aplica um patch de estimativa.
  *
  * NÃO é um deep merge genérico. Arrays SUBSTITUEM, nunca concatenam: um
- * override parcial de `plans` tem que trocar o plano, não acrescentar um
- * segundo card ao lado do default. `imagePrices`, `defaults` e
+ * override parcial de `roomPresets` tem que trocar a lista, não acrescentar
+ * presets ao lado dos default. `imagePrices`, `defaults` e
  * `customRoomDefaults` mesclam um nível raso, pra que dar override só em
  * `imagePrices.base` não zere `option`.
+ *
+ * O objeto é montado chave a chave, e isso é o que descarta o que este build
+ * não conhece: os campos de plano de um delta gravado antes da ADR 26
+ * simplesmente não passam daqui.
  */
 export function mergeEstimate(
   base: EstimateConfig,
@@ -31,13 +35,9 @@ export function mergeEstimate(
 
   return {
     // substituição inteira
-    plans: p.plans ?? base.plans,
-    billingCycles: p.billingCycles ?? base.billingCycles,
     projectSizePresets: p.projectSizePresets ?? base.projectSizePresets,
     roomPresets: p.roomPresets ?? base.roomPresets,
     defaultRooms: p.defaultRooms ?? base.defaultRooms,
-    maxMonths: p.maxMonths ?? base.maxMonths,
-    defaultMonths: p.defaultMonths ?? base.defaultMonths,
     // merge raso de um nível
     imagePrices: { ...base.imagePrices, ...defined(p.imagePrices) },
     customRoomDefaults: { ...base.customRoomDefaults, ...defined(p.customRoomDefaults) },

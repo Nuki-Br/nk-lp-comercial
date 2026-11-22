@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/deck/types.ts, src/server/proposals/config.ts, supabase/migrations/*.sql, ADR 13
-size: 204
+size: 209
 ---
 
 # Data model
@@ -131,14 +131,13 @@ recorded at the moment of the visit cannot be re-pointed by a later edit.
 ## Money never becomes a column
 
 All prices in this system live inside the config document:
-`estimate.plans[].monthlyPrice` (an integer, in reais — `1599`),
-`estimate.imagePrices.base` / `.option`, and `estimate.billingCycles[].discount`
-(a fraction, `0.1`, not basis points). JSONB gives those back as JSON numbers, so
-the existing shape is safe and stage 2 does not touch it.
+`estimate.imagePrices.base` / `.option` (integers, in reais — `84`). JSONB gives
+those back as JSON numbers, so the existing shape is safe and stage 2 does not
+touch it.
 
 **The rule binds the first money column anyone adds: integer cents, and discounts
 in integer basis points — never `numeric`.** PostgREST serializes `numeric` as a
-JSON *string*, so a `numeric(12,2)` column arrives in JavaScript as `"1599.00"`,
+JSON *string*, so a `numeric(12,2)` column arrives in JavaScript as `"84.00"`,
 and the first arithmetic on it produces `NaN` rather than an error. The failure
 surfaces as a zero on the closing frame during a live pitch.
 
@@ -151,6 +150,12 @@ surfaces as a zero on the closing frame during a live pitch.
 - **`config_snapshot` is the resolved config, frozen at publish.** A sent
   proposal is a commercial document. It must not change because somebody edited a
   default price two months later.
+
+**One thing a stored document does lose, on read.** A snapshot frozen before
+ADR 26 still carries the plan slide and its `estimate` fields.
+`parseStoredDeckConfig` drops them through `stripRetired`
+(`src/deck/retired.ts`), and `parseDeckOverride` drops the same fields from a
+stored delta. Neither rewrites the row; republishing does.
 
 Two fields of `DeckConfig` are **not** in `DeckOverride` and cannot be: `key` and
 `chrome.allowPriceOverride`. They are set at the render site. `/p/[slug]` renders
@@ -167,9 +172,9 @@ Validating the resolved config rather than the delta is not a preference: "total
 after calculator" is meaningless until the order has been applied.
 
 Top-level keys of the delta replace, because each form owns one. `estimate` is
-the exception and merges one level, because three forms write disjoint parts of
-it — replacing it wholesale would make saving the image tariffs discard the plan
-price set minutes earlier, silently.
+the exception and merges one level, because two forms write disjoint parts of
+it — replacing it wholesale would make saving the image tariffs discard the
+calculator seed set minutes earlier, silently.
 
 Keys carrying no information are pruned, so an untouched proposal's
 `config_override` is literally `{}` — the identity `resolve(base, null) === base`

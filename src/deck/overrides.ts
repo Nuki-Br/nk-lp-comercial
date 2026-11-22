@@ -1,3 +1,4 @@
+import { stripRetiredEstimate } from "@/deck/retired";
 import type { DeckConfig, EstimateConfig } from "@/deck/types";
 
 /** O delta que uma proposta guarda por cima dos defaults.
@@ -51,7 +52,12 @@ export function parseDeckOverride(input: unknown): DeckOverride {
   if (shown) out.shown = shown;
 
   if (isPlainObject(input.slides)) out.slides = input.slides;
-  if (isPlainObject(input.estimate)) out.estimate = input.estimate as Partial<EstimateConfig>;
+  /* Sem os campos de plano que um delta gravado antes da ADR 26 ainda traz.
+     `mergeEstimate` já os ignoraria no render; tirar aqui é o que impede o
+     próximo salvamento de regravá-los na linha. */
+  if (isPlainObject(input.estimate)) {
+    out.estimate = stripRetiredEstimate(input.estimate) as Partial<EstimateConfig>;
+  }
   if (isPlainObject(input.document)) {
     out.document = input.document as Partial<DeckConfig["document"]>;
   }

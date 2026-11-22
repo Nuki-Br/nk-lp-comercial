@@ -118,13 +118,12 @@ function pruneOverride(override: DeckOverride): DeckOverride {
  * Merge one editor's patch into the stored delta.
  *
  * Top-level keys REPLACE, because each composer form owns a whole key: the
- * slide picker owns `order`/`hidden`/`shown`, the pricing form owns
- * `estimate.plans` and friends.
+ * slide picker owns `order`/`hidden`/`shown`.
  *
- * `estimate` is the exception and merges one level, because three different
- * forms write disjoint parts of it — plans and cycles, image tariffs, estimator
- * defaults. Replacing it wholesale would make saving the image tariffs silently
- * discard the plan the salesperson set five minutes earlier. One level is
+ * `estimate` is the exception and merges one level, because two different
+ * forms write disjoint parts of it — image tariffs and estimator defaults.
+ * Replacing it wholesale would make saving the image tariffs silently discard
+ * the calculator seed the salesperson set five minutes earlier. One level is
  * enough: `mergeEstimate` already treats each of those keys independently.
  */
 export function mergeOverride(previous: DeckOverride, patch: Partial<DeckOverride>): DeckOverride {

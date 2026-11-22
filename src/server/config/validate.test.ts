@@ -3,7 +3,7 @@ import { buildDefaultDeck } from "@/deck/defaults";
 import type { DeckConfig } from "@/deck/types";
 import { validateDeckConfig } from "@/server/config/validate";
 
-/* docs/testing.md names four rejections this file must make. They are here, plus
+/* docs/testing.md names the rejections this file must make. They are here, plus
    the ones the same reasoning implies. The baseline assertion matters as much as
    the rejections: a validator that rejects everything passes every negative
    test. */
@@ -13,16 +13,6 @@ const base = (): DeckConfig => structuredClone(buildDefaultDeck());
 const codesOf = (config: DeckConfig): string[] => {
   const result = validateDeckConfig(config);
   return result.ok ? [] : result.issues.map((i) => i.code);
-};
-
-const warningsOf = (config: DeckConfig): string[] =>
-  validateDeckConfig(config).warnings.map((i) => i.code);
-
-/** Disable by id the way the composer does, instead of splicing the node out —
-    the delta hides slides, it never deletes them. */
-const disable = (config: DeckConfig, ...ids: string[]): DeckConfig => {
-  for (const node of config.slides) if (ids.includes(node.id)) node.enabled = false;
-  return config;
 };
 
 describe("validateDeckConfig", () => {
@@ -56,43 +46,15 @@ describe("validateDeckConfig", () => {
     expect(codesOf(config)).toContain("total-before-calculator");
   });
 
-  it("rejects a negative plan price", () => {
-    const config = base();
-    config.estimate.plans[0].monthlyPrice = -1;
-    expect(codesOf(config)).toContain("negative-price");
-  });
-
   it("rejects a negative image tariff", () => {
     const config = base();
     config.estimate.imagePrices.base = -84;
     expect(codesOf(config)).toContain("negative-price");
   });
 
-  it("rejects a discount of 1 or more", () => {
-    for (const discount of [1, 1.5, 100]) {
-      const config = base();
-      config.estimate.billingCycles[0].discount = discount;
-      expect(codesOf(config), `discount ${discount} was accepted`).toContain(
-        "discount-out-of-range",
-      );
-    }
-  });
-
-  it("rejects a negative discount", () => {
-    const config = base();
-    config.estimate.billingCycles[0].discount = -0.1;
-    expect(codesOf(config)).toContain("discount-out-of-range");
-  });
-
-  it("accepts a discount just under 1", () => {
-    const config = base();
-    config.estimate.billingCycles[0].discount = 0.999;
-    expect(codesOf(config)).not.toContain("discount-out-of-range");
-  });
-
   it("rejects NaN where a number is required", () => {
     const config = base();
-    config.estimate.plans[0].monthlyPrice = Number.NaN;
+    config.estimate.imagePrices.option = Number.NaN;
     expect(codesOf(config)).toContain("negative-price");
   });
 
@@ -108,119 +70,26 @@ describe("validateDeckConfig", () => {
     expect(codesOf(config)).toContain("empty-deck");
   });
 
-  it("rejects a non-integer or zero maxMonths", () => {
-    for (const maxMonths of [0, -12, 12.5]) {
-      const config = base();
-      config.estimate.maxMonths = maxMonths;
-      expect(codesOf(config), `maxMonths ${maxMonths} was accepted`).toContain(
-        "invalid-max-months",
-      );
-    }
-  });
-
-  /* O preset é dinheiro: ele é o número de meses com que o simulador do cliente
-     abre, e o custo de plataforma do fechamento é `meses × mensalidade`. Acima
-     do teto ele cota um prazo que o stepper do cliente não alcança. */
-  it("rejects a defaultMonths outside 0..maxMonths", () => {
-    for (const defaultMonths of [-1, 2.5, 37]) {
-      const config = base();
-      config.estimate.maxMonths = 36;
-      config.estimate.defaultMonths = defaultMonths;
-      expect(codesOf(config), `defaultMonths ${defaultMonths} was accepted`).toContain(
-        "invalid-default-months",
-      );
-    }
-  });
-
-  it("accepts a defaultMonths at either end, and its absence", () => {
-    for (const defaultMonths of [0, 36, undefined]) {
-      const config = base();
-      config.estimate.maxMonths = 36;
-      config.estimate.defaultMonths = defaultMonths;
-      expect(codesOf(config), `defaultMonths ${defaultMonths} was rejected`).not.toContain(
-        "invalid-default-months",
-      );
-    }
-  });
-
   it("reports every problem at once, rather than the first", () => {
     const config = base();
-    config.estimate.plans[0].monthlyPrice = -1;
-    config.estimate.billingCycles[0].discount = 2;
-    config.estimate.maxMonths = 0;
+    config.estimate.imagePrices.base = -1;
+    config.slides.push(structuredClone(config.slides[0]));
 
-    const codes = codesOf(config);
-    expect(codes).toEqual(
-      expect.arrayContaining(["negative-price", "discount-out-of-range", "invalid-max-months"]),
-    );
+    expect(codesOf(config)).toEqual(expect.arrayContaining(["negative-price", "duplicate-id"]));
   });
 
-  /* `cycleForMonths` seeds its reduce on cycles[0] and only ever moves to a
-     HIGHER floor, so both of these mis-quote a real proposal in silence. */
-  describe("billing cycles", () => {
-    it("rejects an empty cycle list — that one is a crash, not a wrong number", () => {
-      const config = base();
-      config.estimate.billingCycles = [];
-      expect(codesOf(config)).toContain("no-billing-cycles");
-    });
+  /* The warning channel has no producer today — the two rules that wrote to it
+     belonged to the plan slide (ADR 26). Both arms still carry it, because the
+     composer reads it on either, and a caller that narrows on `ok === false`
+     must not lose it. */
+  it("carries the warnings list on both arms", () => {
+    expect(validateDeckConfig(base()).warnings).toEqual([]);
 
-    it("rejects cycles whose floors do not ascend", () => {
-      const config = base();
-      config.estimate.billingCycles = [
-        { id: "anual", label: "Anual", discount: 0.1, minMonths: 12 },
-        { id: "mensal", label: "Mensal", discount: 0, minMonths: 1 },
-      ];
-      expect(codesOf(config)).toContain("cycles-out-of-order");
-    });
+    const broken = base();
+    broken.estimate.imagePrices.base = -1;
+    const result = validateDeckConfig(broken);
 
-    it("rejects a first floor above one month", () => {
-      // Below the first floor nothing matches and the seed wins by default, so a
-      // one-month contract would be quoted at the semiannual discount.
-      const config = base();
-      config.estimate.billingCycles = [
-        { id: "semestral", label: "Semestral", discount: 0.05, minMonths: 6 },
-        { id: "anual", label: "Anual", discount: 0.1, minMonths: 12 },
-      ];
-      expect(codesOf(config)).toContain("cycles-out-of-order");
-    });
-
-    it("accepts the shipped cycles", () => {
-      expect(codesOf(base())).not.toContain("cycles-out-of-order");
-    });
-  });
-
-  /* The warning channel. These configs SAVE — refusing them would be the
-     validator deciding a commercial question. */
-  describe("warnings do not block", () => {
-    it("warns when total survives but pricing is disabled", () => {
-      const config = disable(base(), "pricing");
-
-      expect(validateDeckConfig(config).ok).toBe(true);
-      expect(warningsOf(config)).toContain("total-without-pricing");
-    });
-
-    it("says nothing when both are disabled together", () => {
-      const config = disable(base(), "pricing", "total");
-      expect(warningsOf(config)).not.toContain("total-without-pricing");
-    });
-
-    it("warns on an empty plan list without rejecting it", () => {
-      const config = base();
-      config.estimate.plans = [];
-
-      expect(validateDeckConfig(config).ok).toBe(true);
-      expect(warningsOf(config)).toContain("no-plans");
-    });
-
-    it("still reports warnings on a config that also has blocking issues", () => {
-      /* The arm a caller narrows on `ok === false` must still carry them, or the
-         admin loses them exactly when the form is already open in front of them. */
-      const config = disable(base(), "pricing");
-      config.estimate.maxMonths = 0;
-
-      const result = validateDeckConfig(config);
-      expect(result.ok).toBe(false);
-      expect(result.warnings.map((w) => w.code)).toContain("total-without-pricing");
-    });
+    expect(result.ok).toBe(false);
+    expect(result.warnings).toEqual([]);
   });
 });

@@ -7,20 +7,17 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { fill, formatCurrency } from "@/lib/format";
 
 /**
- * Frame de fechamento — consolida o que o prospect configurou nas duas seções
- * anteriores: o setup de imagens (`#calculator`) e os meses de plataforma
- * (`#pricing`). Só lê; nada é editável aqui.
+ * Frame de fechamento — consolida o que o prospect configurou na seção
+ * anterior: o setup de imagens (`#calculator`). Só lê; nada é editável aqui.
  *
  * Vive depois da Calculadora de propósito: é a última coisa antes do footer, e
  * o gradiente da seção costura o branco da Calculadora com o cinza do footer.
  */
 export function EstimatedTotalSlide({ node }: { node: TotalNode }) {
-  const { totals, platformCost, totalMonths, grandTotal } = useEstimate();
+  const { totals } = useEstimate();
   const { labels } = node;
 
   const imageCostDisplay = useCountUp(totals.imageCost);
-  const platformCostDisplay = useCountUp(platformCost);
-  const grandTotalDisplay = useCountUp(grandTotal);
 
   return (
     <section
@@ -43,23 +40,9 @@ export function EstimatedTotalSlide({ node }: { node: TotalNode }) {
                 })}
               </span>
             </div>
-            <div className="estimated-total-line">
-              <span className="estimated-total-line-label">{labels.platform}</span>
-              <span className="estimated-total-line-value">
-                {formatCurrency(platformCostDisplay)}
-              </span>
-              <span className="estimated-total-line-hint">
-                {totalMonths === 0
-                  ? labels.noMonthsHint
-                  : fill(labels.monthsHintTemplate, {
-                      months: totalMonths,
-                      unit: totalMonths === 1 ? labels.monthOne : labels.monthOther,
-                    })}
-              </span>
-            </div>
             <div className="estimated-total-sum">
               <span className="estimated-total-sum-label">{labels.total}</span>
-              <span className="estimated-total-sum-value">{formatCurrency(grandTotalDisplay)}</span>
+              <span className="estimated-total-sum-value">{formatCurrency(imageCostDisplay)}</span>
             </div>
           </div>
         </div>
