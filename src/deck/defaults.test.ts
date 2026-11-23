@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { anchorsOf, walkableIdsOf } from "@/deck/anchors";
 import { buildDefaultDeck } from "@/deck/defaults";
 import { parseDeckOverride } from "@/deck/overrides";
-import { mergeEstimate, normalizeDeck, resolveDeckConfig } from "@/deck/resolve";
+import { normalizeDeck, resolveDeckConfig } from "@/deck/resolve";
 import type { DeckConfig } from "@/deck/types";
 
 /* O contrato entre as três etapas. A etapa 2 projeta este tipo em JSONB e a
@@ -93,7 +93,7 @@ describe("a identidade resolve(base, null) === base", () => {
   it("resolver não muta o base que recebeu", () => {
     const base = buildDefaultDeck();
     const snapshot = JSON.parse(JSON.stringify(base));
-    resolveDeckConfig(base, { hidden: ["cases"], order: ["total", "cover"] });
+    resolveDeckConfig(base, { hidden: ["cases"], order: ["problem", "cover"] });
     expect(base).toEqual(snapshot);
   });
 });
@@ -111,7 +111,7 @@ describe("slides desabilitados", () => {
     }
   });
 
-  it("anchorsOf pula os desabilitados — 10 pontos, não 12", () => {
+  it("anchorsOf pula os desabilitados — 8 pontos, não 10", () => {
     const ids = anchorsOf(deck.slides).map((a) => a.id);
 
     expect(ids).toEqual([
@@ -123,8 +123,6 @@ describe("slides desabilitados", () => {
       "personaliza",
       "inspetor",
       "cases",
-      "calculator",
-      "total",
     ]);
   });
 
@@ -132,7 +130,7 @@ describe("slides desabilitados", () => {
     const ids = walkableIdsOf(deck.slides);
 
     expect(ids).toContain("inspetor-demo");
-    expect(ids).toHaveLength(11);
+    expect(ids).toHaveLength(9);
     // A demo vem logo depois do módulo pai — é a ordem que as setas percorrem.
     expect(ids.indexOf("inspetor-demo")).toBe(ids.indexOf("inspetor") + 1);
   });
@@ -245,31 +243,6 @@ describe("ordenação e override", () => {
   });
 });
 
-describe("mergeEstimate — arrays substituem, não concatenam", () => {
-  const base = buildDefaultDeck().estimate;
-
-  it("um override parcial de roomPresets troca a lista em vez de acrescentar", () => {
-    const [first] = base.roomPresets;
-    const merged = mergeEstimate(base, { roomPresets: [first] });
-
-    expect(base.roomPresets.length).toBeGreaterThan(1);
-    expect(merged.roomPresets).toEqual([first]);
-  });
-
-  it("imagePrices mescla um nível raso", () => {
-    const merged = mergeEstimate(base, { imagePrices: { base: 100 } as never });
-
-    expect(merged.imagePrices.base).toBe(100);
-    // Sobrescrever só `base` não pode zerar `option`.
-    expect(merged.imagePrices.option).toBe(base.imagePrices.option);
-  });
-
-  it("um patch vazio devolve o base intacto", () => {
-    expect(mergeEstimate(base, {})).toEqual(base);
-    expect(mergeEstimate(base, undefined)).toEqual(base);
-  });
-});
-
 describe("o delta como o Postgres devolve", () => {
   /* A precondição 4 da etapa 3, fixada como teste em vez de anotada numa
      mensagem de commit: um `config_override` gravado no jsonb e lido de volta
@@ -277,11 +250,14 @@ describe("o delta como o Postgres devolve", () => {
 
      O literal abaixo é EXATAMENTE o que o PostgREST devolveu depois de um
      round-trip contra o banco real — repare que a ordem das chaves não é a que
-     foi enviada. Ele foi gravado antes de o slide de plano sair (ADR 26), e por
-     isso ainda cita `pricing` e `maxMonths`: fica como está, porque é assim
-     que uma linha antiga chega, e o que o teste fixa é que ela resolve sem eles. `jsonb` é uma representação binária parseada, não o texto que
+     foi enviada. `jsonb` é uma representação binária parseada, não o texto que
      você entregou: ele normaliza a ordem das chaves de objeto (por comprimento,
      depois por bytes). ARRAYS mantêm a ordem, que é do que `order` depende.
+
+     Ele foi gravado antes das ADRs 26 e 27, e por isso ainda cita três slides
+     que o deck não tem mais e um bloco `estimate`. Fica como está, porque é
+     assim que uma linha antiga chega — e o que o teste fixa é que ela resolve
+     sem eles.
 
      Consequência que custa caro em outro lugar: comparar dois configs com
      `JSON.stringify` para descobrir se um snapshot ficou obsoleto marca TODA
@@ -311,21 +287,18 @@ describe("o delta como o Postgres devolve", () => {
     expect(ids).toContain("differentiators");
     expect(ids.slice(0, 2)).toEqual(["cover", "problem"]);
     // Nós não citados na ordem vão pro fim, na ordem original.
-    expect(ids.indexOf("calculator")).toBeLessThan(ids.indexOf("total"));
+    expect(ids.indexOf("value")).toBeLessThan(ids.indexOf("planner"));
     // Um id que o deck não tem mais é ignorado, como qualquer id desconhecido.
-    expect(ids).not.toContain("pricing");
+    for (const retired of ["pricing", "calculator", "total"]) {
+      expect(ids).not.toContain(retired);
+    }
   });
 
-  it("aplica o patch de estimativa sem perder o que não foi citado", () => {
-    expect(resolved.estimate.imagePrices).toEqual({ base: 99, option: 33 });
-    // O campo de plano do delta antigo não chega ao config que renderiza.
-    expect(resolved.estimate).not.toHaveProperty("maxMonths");
-    expect(resolved.estimate.defaults.dryOptions).toBe(4);
-    expect(resolved.estimate.defaults.wetOptions).toBe(5);
-    // `defaults` mescla raso: unitTypes não foi citado e tem que sobreviver.
-    expect(resolved.estimate.defaults.unitTypes).toEqual(
-      buildDefaultDeck().estimate.defaults.unitTypes,
-    );
+  it("deixa o bloco de estimativa do delta antigo para trás", () => {
+    // Nem no delta lido — senão o próximo salvamento o regravaria na linha —
+    // nem no config que renderiza.
+    expect(parseDeckOverride(stored)).not.toHaveProperty("estimate");
+    expect(resolved).not.toHaveProperty("estimate");
   });
 
   it("a ordem das chaves do objeto não muda o resultado", () => {
@@ -351,9 +324,9 @@ describe("parseDeckOverride — nunca lança", () => {
   });
 
   it("descarta entradas não-string dentro de order/hidden", () => {
-    const parsed = parseDeckOverride({ order: ["cover", 7, null, "total"], hidden: "nope" });
+    const parsed = parseDeckOverride({ order: ["cover", 7, null, "cases"], hidden: "nope" });
 
-    expect(parsed.order).toEqual(["cover", "total"]);
+    expect(parsed.order).toEqual(["cover", "cases"]);
     expect(parsed.hidden).toBeUndefined();
   });
 

@@ -1,14 +1,9 @@
 import {
-  CUSTOM_ROOM_DEFAULTS,
-  DEFAULT_ROOMS,
   differentiators,
-  ESTIMATE_DEFAULTS,
   fitList,
   moduleFlow,
-  PROJECT_SIZE_PRESETS,
   personas,
   problemCards,
-  ROOM_PRESETS,
   slideLabels,
   valueEvidence,
   valueQuote,
@@ -18,8 +13,6 @@ import {
   audienceFitTitle,
   audienceHead,
   audienceLabels,
-  calculatorHead,
-  calculatorLabels,
   caseLogos,
   casesHead,
   coverCopy,
@@ -27,36 +20,11 @@ import {
   moduleDemoLabels,
   moduleLabels,
   problemHead,
-  totalHead,
-  totalLabels,
   valueHead,
   whatIsNukiHead,
 } from "@/content/slides";
 import { normalizeDeck } from "@/deck/resolve";
-import type { DeckConfig, EstimateConfig, SlideNode } from "@/deck/types";
-
-/** A configuração de estimativa, montada a partir dos defaults de conteúdo.
-
-    `ESTIMATE_RANGES` NÃO entra: os clamps ficam em código porque são o que
-    impede um erro de digitação no /admin de virar um orçamento absurdo, e não
-    algo que um admin edita. Ver docs/estimate.md. */
-function buildEstimateConfig(): EstimateConfig {
-  return {
-    imagePrices: {
-      base: ESTIMATE_DEFAULTS.baseImagePrice,
-      option: ESTIMATE_DEFAULTS.optionImagePrice,
-    },
-    defaults: {
-      dryOptions: ESTIMATE_DEFAULTS.dryOptions,
-      wetOptions: ESTIMATE_DEFAULTS.wetOptions,
-      unitTypes: ESTIMATE_DEFAULTS.initialUnitTypes,
-    },
-    projectSizePresets: [...PROJECT_SIZE_PRESETS],
-    roomPresets: [...ROOM_PRESETS],
-    customRoomDefaults: CUSTOM_ROOM_DEFAULTS,
-    defaultRooms: [...DEFAULT_ROOMS],
-  };
-}
+import type { DeckConfig, SlideNode } from "@/deck/types";
 
 /** Um par de nós por módulo: o slide descritivo e, quando há `demoUrl`, o slide
     de demo logo depois — com `parentId` apontando pro módulo.
@@ -177,24 +145,6 @@ export function buildDefaultDeck(): DeckConfig {
       head: casesHead,
       logos: caseLogos,
     },
-    /* `calculator` ANTES de `total`: o frame de fechamento lê o que a
-       calculadora publica. */
-    {
-      kind: "calculator",
-      id: "calculator",
-      label: slideLabels.calculator,
-      enabled: true,
-      head: calculatorHead,
-      labels: calculatorLabels,
-    },
-    {
-      kind: "total",
-      id: "total",
-      label: slideLabels.total,
-      enabled: true,
-      head: totalHead,
-      labels: totalLabels,
-    },
   ];
 
   return normalizeDeck({
@@ -205,12 +155,9 @@ export function buildDefaultDeck(): DeckConfig {
         "Do planejamento do memorial à validação em obra — como a Nuki organiza, profissionaliza e centraliza o ciclo completo de personalização de acabamentos em uma plataforma só.",
     },
     slides,
-    estimate: buildEstimateConfig(),
     chrome: {
       showFooter: true,
       keyboardHint: ["Use ", { kbd: "←" }, " ", { kbd: "→" }, " para navegar"],
-      // `true` só aqui. O /p/[slug] resolve com `false` no ponto de render.
-      allowPriceOverride: true,
     },
   });
 }

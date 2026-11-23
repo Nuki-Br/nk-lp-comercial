@@ -1,49 +1,17 @@
 import type { DeckOverride } from "@/deck/overrides";
-import type { DeckConfig, EstimateConfig, SlideNode } from "@/deck/types";
+import type { DeckConfig, SlideNode } from "@/deck/types";
 
 const isDev = process.env.NODE_ENV !== "production";
 
 /** Só as chaves com valor definido. `JSON` nunca produz `undefined`, mas um
-    override montado à mão na etapa 3 pode — e `{ roomPresets: undefined }` não
-    pode apagar o default. */
+    override montado à mão na etapa 3 pode — e `{ title: undefined }` não pode
+    apagar o default. */
 const defined = <T extends object>(patch: T | undefined): Partial<T> => {
   if (!patch) return {};
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(patch)) if (v !== undefined) out[k] = v;
   return out as Partial<T>;
 };
-
-/**
- * Aplica um patch de estimativa.
- *
- * NÃO é um deep merge genérico. Arrays SUBSTITUEM, nunca concatenam: um
- * override parcial de `roomPresets` tem que trocar a lista, não acrescentar
- * presets ao lado dos default. `imagePrices`, `defaults` e
- * `customRoomDefaults` mesclam um nível raso, pra que dar override só em
- * `imagePrices.base` não zere `option`.
- *
- * O objeto é montado chave a chave, e isso é o que descarta o que este build
- * não conhece: os campos de plano de um delta gravado antes da ADR 26
- * simplesmente não passam daqui.
- */
-export function mergeEstimate(
-  base: EstimateConfig,
-  patch?: Partial<EstimateConfig>,
-): EstimateConfig {
-  if (!patch) return base;
-  const p = defined(patch);
-
-  return {
-    // substituição inteira
-    projectSizePresets: p.projectSizePresets ?? base.projectSizePresets,
-    roomPresets: p.roomPresets ?? base.roomPresets,
-    defaultRooms: p.defaultRooms ?? base.defaultRooms,
-    // merge raso de um nível
-    imagePrices: { ...base.imagePrices, ...defined(p.imagePrices) },
-    customRoomDefaults: { ...base.customRoomDefaults, ...defined(p.customRoomDefaults) },
-    defaults: { ...base.defaults, ...defined(p.defaults) },
-  };
-}
 
 /** Reordena por id. Ids desconhecidos são pulados (ADR 13: um rollback não pode
     derrubar um pitch); nós não citados vão pro fim na ordem original, então uma
@@ -154,18 +122,6 @@ export function normalizeDeck(config: DeckConfig): DeckConfig {
     return { ...n, ordinal: next };
   });
 
-  // 6. Checagem de ordem, só aviso. O validador que REJEITA é da etapa 2
-  //    (`src/server/config/validate.ts`, ver docs/testing.md); aqui o resultado
-  //    degradado é um R$ 0 no frame de fechamento, não uma página quebrada.
-  if (isDev) {
-    const ids = numbered.filter((n) => n.enabled).map((n) => n.id);
-    const calc = ids.indexOf("calculator");
-    const total = ids.indexOf("total");
-    if (calc !== -1 && total !== -1 && total < calc) {
-      console.warn('DeckConfig: "total" vem antes de "calculator" — o fechamento lerá zeros.');
-    }
-  }
-
   return { ...config, slides: numbered };
 }
 
@@ -183,7 +139,6 @@ export function resolveDeckConfig(base: DeckConfig, override: DeckOverride | nul
 
   if (override) {
     next.document = { ...next.document, ...defined(override.document) };
-    next.estimate = mergeEstimate(next.estimate, override.estimate);
     next.slides = applyEnabled(
       applyOrder(next.slides, override.order),
       override.hidden,

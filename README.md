@@ -20,8 +20,8 @@ terceiros, de propósito.**
 | `/p/[slug]` | a proposta de um cliente | senha própria, validada no servidor |
 | `/fast` | o deck genérico, pra pitch rápido | senha compartilhada |
 
-O painel tem quatro abas por proposta — visão geral, slides, tarifas de imagem e
-calculadora. Quem vai **usar** o painel deve ler
+O painel tem duas abas por proposta — visão geral e slides. Quem vai **usar** o
+painel deve ler
 [`docs/admin-guide.md`](docs/admin-guide.md), que é escrito pra isso e não exige
 saber programar.
 
@@ -54,8 +54,6 @@ no painel. A âncora é o `id` da seção.
 | 8 | Diferenciais | `DifferentiatorsSlide` | `#differentiators` | ⚠ desligado |
 | 9 | Pra quem serve | `AudienceSlide` | `#audience` | ⚠ desligado |
 | 10 | Cases | `CasesSlide` | `#cases` | |
-| 11 | Estime o setup | `CalculatorSlide` | `#calculator` | |
-| 12 | Total estimado | `EstimatedTotalSlide` | `#total` | |
 
 A ordem vem de `buildDefaultDeck()` em [`src/deck/defaults.ts`](src/deck/defaults.ts),
 e o componente de cada nó sai de [`src/deck/registry.tsx`](src/deck/registry.tsx).
@@ -70,8 +68,8 @@ na lateral direita.
 
 ## Editando o conteúdo
 
-Os **padrões** — copy, tarifas de imagem, defaults da calculadora — estão em
-`src/content/`, sem tocar em componente. Ver
+Os **padrões** — a copy de cada slide — estão em `src/content/`, sem tocar em
+componente. Ver
 [`docs/content-guide.md`](docs/content-guide.md).
 
 **Regra de ouro:** pode mudar o que está entre aspas; não mude o que vem antes
@@ -112,8 +110,7 @@ tarefa e manda ler *um* documento, não cinco.
 | [`docs/stages/`](docs/stages/README.md) | as três etapas da construção, em formato de prompt |
 | [`docs/architecture.md`](docs/architecture.md) | o que roda onde, e onde fica a fronteira de confiança |
 | [`docs/deck-runtime.md`](docs/deck-runtime.md) | contrato dos slides e do DOM |
-| [`docs/estimate.md`](docs/estimate.md) | a matemática da calculadora e os números canônicos |
-| [`docs/content-guide.md`](docs/content-guide.md) | editar copy e preços sem mexer em código |
+| [`docs/content-guide.md`](docs/content-guide.md) | editar a copy sem mexer em código |
 | [`docs/admin-guide.md`](docs/admin-guide.md) | montar, publicar e acompanhar uma proposta no painel |
 | [`docs/testing.md`](docs/testing.md) | o que é testado, o que não é, e os checklists manuais |
 | [`docs/deployment.md`](docs/deployment.md) | Vercel, Supabase, env, migrations |

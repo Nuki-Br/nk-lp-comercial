@@ -1,14 +1,19 @@
 ---
 audience: agent
-status: current
-verified_against: docs/estimate.md, docs/deck-runtime.md, ADR 13 and ADR 18
-size: 218
+status: partially-superseded
+verified_against: docs/deck-runtime.md, ADR 13 and ADR 18
+size: 193
 ---
 
 # Stage 3 — Composer
 
 > Paste this whole file into a fresh agent session. It is self-contained.
 > **Stages 1 and 2 must be merged and green.** Verify; do not assume.
+
+> **Done, and partly removed since.** The plan slide (ADR 26) and the image
+> calculator with its closing frame and `Ctrl+Alt+K` panel (ADR 27) left the
+> product after this stage; the passages that built them are gone from this
+> brief. What remains is the record of the rest.
 
 ## Read this first
 
@@ -28,12 +33,12 @@ not need to touch either in this stage.
 
 Read, in this order, and stop: `AGENTS.md`, `docs/README.md`,
 `docs/architecture.md`, `docs/data-model.md`, `docs/deck-runtime.md`,
-`docs/estimate.md`, `docs/stages/README.md`.
+`docs/stages/README.md`.
 
 ## Goal
 
-A real composer: per-proposal slide selection and order, image prices,
-estimator defaults, publish-with-snapshot, and the per-slide dwell read-out.
+A real composer: per-proposal slide selection and order, publish-with-snapshot,
+and the per-slide dwell read-out.
 
 ## Preconditions — run these, stop on any failure
 
@@ -65,7 +70,6 @@ nothing failing until a client meeting.
 - PDF export, email, orgs, roles beyond what stage 2 built, i18n.
 - Any tracking beyond dwell.
 - The dead-CSS cleanup — still queued in `docs/tech-debt.md`.
-- Any change to `src/lib/estimate.ts`. The math is settled.
 
 ## Reading budget
 
@@ -86,16 +90,11 @@ rollback — from 500-ing a live pitch.
 
 Zod, server-only. It is already in the allowlist (ADR 11); no new ADR needed.
 
-Validate *shape* here. **Clamping stays in the estimator seed** using the existing
-`clamp` and `ESTIMATE_RANGES` — do not express the ranges twice.
-
 ### 2. Slide picker and ordering
 
-Three invariants become **validation errors with readable messages**, not
+These invariants become **validation errors with readable messages**, not
 discoveries in a client meeting:
 
-- **`calculator` must come before `total`.** The closing frame reads what the
-  calculator publishes; reversed, it shows zero.
 - **`inspetor-demo` cannot be enabled while the `inspetor` module slide is
   disabled.** The demo borrows the module's nav dot via `data-nav-id`, so the
   progress nav goes blank across that section. Better: model the demo as a
@@ -113,30 +112,11 @@ screen-reader-accessible without any work.
 This work item was the plan editor. It left with the plan slide — ADR 26. The
 number is kept so the items after it are not renumbered.
 
-### 4. Image prices per proposal
+### 4 and 5. Removed
 
-`imagePrices.base` and `imagePrices.option` — the values behind `Ctrl+Alt+K`.
-
-**Confirm with the human before implementing:** the plan says `Ctrl+Alt+K` stays
-on `/fast` and is **absent from `/p/[slug]`**, because a hidden panel exposing
-cost basis on a link that stays with the client is a discoverable leak, and the
-salesperson now sets those numbers in `/admin`. Stage 1 built
-`chrome.allowPriceOverride` for exactly this. Verify it is `false` on the
-proposal path.
-
-### 5. Estimator defaults
-
-`dryOptions`, `wetOptions`, and pre-loaded `unitTypes` — so a proposal opens with
-the client's development already modelled.
-
-**This is where stage 1's no-functions-in-config decision pays off:** the admin
-writes plain `UnitTypeState[]`. No factories, no `buildUnitTypes`.
-
-`PROJECT_SIZE_PRESETS` become a **seeding affordance** in the admin ("começar do
-Padrão") and remain in the client-facing calculator only when
-`config.estimate.projectSizePresets` is non-empty — so a salesperson can prune
-them per client. **Confirm this reading with the human** before building it;
-it changes what the client sees.
+These work items were the image prices and the estimator defaults. They left
+with the image calculator — ADR 27. The numbers are kept so the items after them
+are not renumbered.
 
 ### 6. Publish writes the snapshot
 
@@ -144,7 +124,7 @@ Publishing resolves `buildDefaultDeck()` + `config_override` and writes the resu
 to `config_snapshot`. From then on `/p/[slug]` renders the snapshot.
 
 This is the ADR 13 guarantee: a sent proposal is a commercial document that does
-not change because someone edited a default price two months later. Make the
+not change because someone edited a default two months later. Make the
 admin say so — the publish button needs to read as "congelar e publicar", and
 editing a published proposal must visibly require re-publishing.
 
@@ -179,33 +159,28 @@ does not cover.
 
 ## Human steps
 
-1. Confirm the `Ctrl+Alt+K` removal from `/p/[slug]` (item 4).
-2. Confirm the preset-pruning behaviour (item 5).
-3. Run the SQL round-trip check in precondition 4 if you cannot.
+1. Run the SQL round-trip check in precondition 4 if you cannot.
 
 ## Acceptance checklist
 
-End to end, in a browser: disable three slides, reorder two, set image prices,
-preload two unit types → then open
+End to end, in a browser: disable three slides, reorder two → then open
 `/p/[slug]` and confirm:
 
 - [ ] Every one of those changes is reflected
 - [ ] The progress nav has exactly the enabled dots
 - [ ] Arrow keys walk exactly the enabled slides, in the configured order
-- [ ] `Ctrl+Alt+K` does nothing
 - [ ] Publishing freezes it: change a default in `src/content/deck.ts`, reload the
       published proposal, and confirm **nothing changed**
 
-Each of the three invalid configs is rejected with a message a salesperson could
-act on — not a stack trace, not "validation failed".
+Each invalid config is rejected with a message a salesperson could act on — not a stack trace, not "validation failed".
 
 ```bash
 npm run check && npm run build && npx vitest run     # green, including validation tests
 ```
 
 Plus checklists **A**, **B** and **C** in `docs/testing.md`. **Checklist A on
-`/fast` must still pass with the same four canonical numbers** — 45 / 284 / 507 /
-738. If `/fast` drifted, you changed something shared that you should not have.
+`/fast` must still pass.** If `/fast` drifted, you changed something shared that
+you should not have.
 
 Runtime dependencies unchanged from stage 2's allowlist.
 

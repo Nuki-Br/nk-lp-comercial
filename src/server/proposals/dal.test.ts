@@ -25,10 +25,26 @@ const NOW = 1_770_000_000_000;
 
 const snapshot = () => {
   const config = structuredClone(buildDefaultDeck());
-  /* A snapshot frozen from /fast would carry `true`. Storing it that way here is
-     the point: the DAL must force it false on the way out. */
-  config.chrome.allowPriceOverride = true;
   config.key = "fast";
+  return config;
+};
+
+/** What a snapshot frozen before ADRs 26 and 27 still carries, on top of today's
+    deck: three slide kinds that no longer render, the calculator's `estimate`
+    block and the price-panel flag in `chrome`. */
+const legacySnapshot = () => {
+  const config = snapshot() as unknown as {
+    slides: Record<string, unknown>[];
+    estimate?: unknown;
+    chrome: Record<string, unknown>;
+  };
+  config.slides.push(
+    { kind: "pricing", id: "pricing", label: "Plano", enabled: true },
+    { kind: "calculator", id: "calculator", label: "Estime o setup", enabled: true },
+    { kind: "total", id: "total", label: "Total estimado", enabled: true },
+  );
+  config.estimate = { imagePrices: { base: 84, option: 28 }, maxMonths: 36 };
+  config.chrome.allowPriceOverride = true;
   return config;
 };
 
@@ -133,14 +149,23 @@ describe("resolveVisitorView — the cookie gates", () => {
 });
 
 describe("resolveVisitorView — what it hands the renderer", () => {
-  it("forces allowPriceOverride false, even when the snapshot says true", async () => {
-    const result = await view(publishedRow(), goodToken());
+  /* The client keeps the link; what they get is the same document without the
+     retired slides — and without their nav dots, which would otherwise point at
+     nothing and blank the whole progress nav. */
+  it("hands back a legacy snapshot without what was retired", async () => {
+    const row = publishedRow({ config_snapshot: legacySnapshot() as unknown });
+    const result = await view(row, goodToken());
     expect(result.state).toBe("unlocked");
     if (result.state !== "unlocked") return;
 
-    /* The stored snapshot really does say true — otherwise this asserts nothing. */
-    expect(snapshot().chrome.allowPriceOverride).toBe(true);
-    expect(result.config.chrome.allowPriceOverride).toBe(false);
+    const ids = result.config.slides.map((node) => node.id);
+    for (const retired of ["pricing", "calculator", "total"]) {
+      expect(ids).not.toContain(retired);
+    }
+    expect(result.config).not.toHaveProperty("estimate");
+    expect(result.config.chrome).not.toHaveProperty("allowPriceOverride");
+    /* Everything else is the document as it was frozen. */
+    expect(result.config).toEqual({ ...buildDefaultDeck(), key: SLUG });
   });
 
   it("stamps the slug as the config key", async () => {
@@ -178,44 +203,14 @@ describe("resolveVisitorView — a snapshot that fails today's validator", () =>
     return view(publishedRow({ config_snapshot: config as unknown }), goodToken());
   };
 
-  it("still renders a total placed before the calculator", async () => {
+  it("still renders a demo whose module the write path would have refused to hide", async () => {
     const result = await unlocked((config) => {
-      const total = config.slides.findIndex((n) => n.id === "total");
-      const calculator = config.slides.findIndex((n) => n.id === "calculator");
-      const [node] = config.slides.splice(total, 1);
-      config.slides.splice(calculator, 0, node);
+      const demo = config.slides.find((n) => n.parentId);
+      const parent = config.slides.find((n) => n.id === demo?.parentId);
+      if (parent) parent.enabled = false;
     });
 
     expect(result.state).toBe("unlocked");
-  });
-
-  it("still renders an image tariff the write path would have refused", async () => {
-    const result = await unlocked((config) => {
-      config.estimate.imagePrices.base = -1;
-    });
-
-    expect(result.state).toBe("unlocked");
-  });
-
-  /* A snapshot frozen before the plan slide left the product (ADR 26). The
-     client keeps the link; what they get is the same document without that
-     slide — and without its nav dot, which would otherwise point at nothing. */
-  it("renders a snapshot frozen with the plan slide, without it", async () => {
-    const result = await unlocked((config) => {
-      const legacy = config as unknown as {
-        slides: Record<string, unknown>[];
-        estimate: Record<string, unknown>;
-      };
-      legacy.slides.push({ kind: "pricing", id: "pricing", label: "Plano", enabled: true });
-      legacy.estimate.plans = [{ n: "Plano único", items: [], monthlyPrice: 1 }];
-      legacy.estimate.maxMonths = 36;
-    });
-
-    expect(result.state).toBe("unlocked");
-    if (result.state !== "unlocked") return;
-    expect(result.config.slides.map((node) => node.id)).not.toContain("pricing");
-    expect(result.config.estimate).not.toHaveProperty("plans");
-    expect(result.config.estimate).not.toHaveProperty("maxMonths");
   });
 
   it("but refuses a deck with nothing enabled", async () => {

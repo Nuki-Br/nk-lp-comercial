@@ -46,6 +46,9 @@ const PATH_ALLOWLIST = new Map([
   ["public/demos/planner/", "removed when the Planner demo was retired"],
   // Deliberately absent — documented as such.
   ["vercel.json", "absent on purpose; config lives in next.config.ts"],
+  // Deleted with the image calculator; ADR 27 names it to record the removal,
+  // and an ADR body is never rewritten.
+  ["docs/estimate.md", "deleted by ADR 27; named there as history"],
 ]);
 
 /* Files a later build stage creates. docs/stages/README.md is the status board;
@@ -178,38 +181,6 @@ try {
   }
 } catch (err) {
   failures.push(`could not run the selector check: ${err.message}`);
-}
-
-/* ---- Check 3: the canonical estimate numbers are quoted consistently ----
-
-   docs/estimate.md is their only home, but two files legitimately need concrete
-   values or they are useless: the manual checklist, and stage 1's precondition
-   (which an agent must verify BEFORE it can trust any doc). Those copies are the
-   exact duplication that let 208 / 678 / 1.544 survive in three places while the
-   code produced something else. So: guard them mechanically. */
-
-const MIRRORS = ["docs/testing.md", "docs/stages/1-foundation.md"];
-const MONEY_RE = /R\$ [\d.]+/g;
-
-try {
-  const home = readFileSync(join(ROOT, "docs/estimate.md"), "utf8");
-  const canonical = new Set(home.match(MONEY_RE) ?? []);
-  if (canonical.size === 0) {
-    failures.push("docs/estimate.md quotes no R$ values — the canonical table is gone");
-  }
-  for (const mirror of MIRRORS) {
-    const text = readFileSync(join(ROOT, mirror), "utf8");
-    for (const money of new Set(text.match(MONEY_RE) ?? [])) {
-      if (!canonical.has(money)) {
-        failures.push(
-          `${mirror}: quotes ${money}, which docs/estimate.md does not. ` +
-            `Re-derive from code, fix estimate.md first, then this file.`,
-        );
-      }
-    }
-  }
-} catch (err) {
-  failures.push(`could not run the canonical-number check: ${err.message}`);
 }
 
 /* ---- Report ---- */

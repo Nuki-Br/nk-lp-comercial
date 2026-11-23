@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: src/styles/*.css, src/components/deck/DeckBehaviors.tsx, src/components/slides/CalculatorSlide.tsx
-size: 233
+verified_against: src/styles/*.css, src/components/deck/DeckBehaviors.tsx, src/server/config/validate.ts
+size: 187
 ---
 
 # Tech debt
@@ -36,9 +36,7 @@ In `deck.css`: `.hero`, `.scrolldot`, `@keyframes bob`; `.module` and its
 `.phone-inline`; `.outro`, `.wrap`; and the `--jr-pad` / `--jr-gutter` /
 `--jr-edge` custom properties, whose only consumers are the rules above.
 
-In `slides.css`: `.calc-toggle`, `.calc-toggle-thumb`, `.calc-money`,
-`.calc-money-prefix`, `.calc-hint`, `.calc-field-inline`, and `.arrow`
-(`.flow .arrow` — the flow renders no arrow element).
+In `slides.css`: `.arrow` (`.flow .arrow` — the flow renders no arrow element).
 
 **Care required.** `.tag`, `.kicker`, `.lead` and `.step` *are* rendered, and
 some are also styled **inside** the dead blocks (e.g. `.deck .head .tag`).
@@ -62,41 +60,26 @@ repo. It is atomic with entry 1 — the CSS and the JS that queries it go togeth
 > which deleted both `querySelectorAll(".slide, .module")` sites. The CSS rules
 > in entry 1 remain.
 
-## 3. Portuguese identifiers in `CalculatorSlide.tsx`
+## 3. Removed — Portuguese identifiers in the calculator
 
-Violates `AGENTS.md` Rule 1, in the largest file in the repo.
-
-```bash
-grep -coE "Opcoes|Metragens|Metragem|Ambiente" src/components/slides/CalculatorSlide.tsx  # 46
-```
-
-`setOpcoesSecas`, `setOpcoesMolhadas`, `setMetragens`, `setMetragemAtiva`,
-`addMetragem`, `removeMetragem`, `selectMetragem`, `addingAmbiente`,
-`setAddingAmbiente` and friends.
-
-**Deliberately deferred**, and it must not be fixed opportunistically inside
-another change: this file is 912 lines and a rename would drown any diff it rides
-along with. Stage 1 threaded config through it without touching a single
-identifier, for exactly that reason. When it happens, it happens alone — and it goes through the
-TypeScript AST touching only `Identifier` nodes, per ADR 4. A word-boundary regex
-here will corrupt the pt-BR copy, which contains the words `metragem`,
-`ambiente`, `opções`.
+The file that carried them left with the image calculator, ADR 27. The number is
+kept so the entries after it are not renumbered.
 
 ## 4. Portuguese comments across `src/`
 
 Comments and JSDoc are still pt-BR throughout. They are substantial and genuinely
-useful — the rationale in `EstimateProvider`, the hydration note in `AccessGate`,
+useful — the hydration note in `AccessGate`,
 the CSS section headers. **Translate rather than drop.** Lower priority than
 everything above: comments do not mislead a reader the way a stale doc does.
 
 ## 5. CSS formatting is excluded from Biome
 
-`biome.json` has the CSS formatter off. Running it over 3,366 lines of stylesheet
+`biome.json` has the CSS formatter off. Running it over 2,678 lines of stylesheet
 produces a diff nobody can review against a requirement of "visual identity
 preserved exactly".
 
 ```bash
-wc -l src/styles/*.css                        # 3386 total, four files
+wc -l src/styles/*.css                        # 2678 total, six files
 ```
 
 Separately shippable: enable it, review the diff once, commit alone. Do it after
@@ -110,8 +93,7 @@ means reordering rules, i.e. visual risk.
 
 > This entry previously claimed `967 + 26 + 2373 = 3366`. The real total was
 > already 3384 when that was written — the kind of drift this file exists to
-> catch. The count now covers four files, since stage 1 split `gate.css` out and
-> renamed the old tokens sheet to `tokens.css`.
+> catch. ADR 27 took the calculator's ~1,300 lines out of `slides.css`.
 
 ## 6. Two dead progress-nav dots — FIXED by stage 1
 
@@ -131,13 +113,13 @@ decision, and `shown: ["audience"]` can re-enable one per proposal.
 
 ## 7. Optional: split the stylesheets
 
-`slides.css` is **2300** lines and the calculator alone is roughly half of it
-(its banner starts at line 641). Both sheets are sectioned with
+`slides.css` is **962** lines since the calculator left (ADR 27), so this is
+less pressing than it was. Both sheets are sectioned with
 `/* ===== SECTION ===== */` headers that map cleanly to components, so a
 one-file-per-slide split under `src/styles/slides/` is close to mechanical.
 
-Worth doing for agent ergonomics: an agent changing a pill radius currently loads
-2,373 lines to find the rule.
+Worth doing for agent ergonomics: an agent changing a pill radius still loads
+the whole sheet to find the rule.
 
 ## 8. a11y findings, demoted to warnings
 
@@ -145,8 +127,8 @@ Worth doing for agent ergonomics: an agent changing a pill radius currently load
 npx @biomejs/biome lint --reporter=json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).diagnostics.filter(d=>d.severity==='warning').length))"
 ```
 
-Biome's `a11y` domain flags ~24 real issues: `noLabelWithoutControl` (the
-calculator's `<label>`s have no associated control), `noSvgWithoutTitle`,
+Biome's `a11y` domain flags real issues: `noLabelWithoutControl` (the
+admin's `Field` labels), `noSvgWithoutTitle`,
 `useFocusableInteractive`, `noAutofocus` on the gate input, and
 `useSemanticElements` on several `role=` divs.
 
@@ -154,45 +136,18 @@ They are set to `"warn"` in `biome.json`, **not off** — they stay visible in
 every `npm run lint`. They were not fixed in stage 1 because every fix changes
 the DOM (adding `htmlFor`/ids, `<title>` elements, `tabindex`), and that stage's
 entire proof was DOM identity. `noArrayIndexKey` is warned for a different
-reason: at `CalculatorSlide` the list is `Array.from({length: variants})`, purely
-positional, so the index *is* the right key.
+reason: in `RichText` the segments are purely positional, so the index *is* the
+right key.
 
 Whoever fixes these should do it as its own change, with a fresh DOM baseline.
 
-## 9. `RoomAreaType` values are pt-BR strings — FIXED before stage 2
+## 9. Removed — `RoomAreaType` values
 
-```bash
-grep -n 'RoomAreaType = ' src/lib/estimateTypes.ts     # "dry" | "wet"
-```
+The type left with the image calculator, ADR 27.
 
-It violated Rule 1 in the one place where it would have been expensive to fix
-later: stage 2 persists these values into JSONB, so renaming after a proposal
-published would have meant a data migration over live commercial documents. Done
-in its own commit, ahead of the migrations, exactly as this entry asked.
+## 10. Removed — a calculator class name that never matched its rule
 
-The pt-BR copy did **not** move: `dryTag`/`wetTag`/`dryPill`/`wetPill` in
-`src/content/slides.ts` still read "seca" / "molhada" / "Seca" / "Molhada". Only
-the type's values changed. One site had to change with them — `RoomRow`
-interpolated the raw value into an `aria-label`, so a screen reader would have
-started announcing "Classificação: dry"; it now interpolates the tag.
-
-## 10. A preset class name that has never matched its rule
-
-```bash
-grep -n 'calc-add-ambient-preset' src/components/slides/CalculatorSlide.tsx  # 1
-grep -rn 'calc-add-ambient-preset' src/styles/                               # 0
-grep -n 'calc-add-room-preset-wet' src/styles/slides.css                     # 1
-```
-
-`AddAmbienteControl` emits `calc-add-ambient-preset-<areaType>` while
-`slides.css` styles `.calc-add-room-preset-wet` — the two names never met, so
-the wet-area presets in the "+ Adicionar ambiente" picker have never received
-their green class tag. Found during the §9 rename and deliberately **not** fixed
-there: aligning the names turns a colour on, and a visual change does not belong
-in a mechanical rename's diff.
-
-Fixing it is two tokens (`ambient` → `room`, and the value is already
-`dry`/`wet`). Do it with eyes on the picker, as its own change.
+Left with the image calculator, ADR 27.
 
 ## 11. The validator's warning channel has no producer
 
@@ -205,8 +160,8 @@ rather than unthreaded from every caller in the same change.
 grep -c "warnings.push" src/server/config/validate.ts   # 0 — nothing writes to it
 ```
 
-Remove it — the type, the callers and the warning list in `ActionFeedback.tsx` —
-or give it a rule, whichever comes first.
+Remove it — the type, and the callers in the slides, details and publish paths
+of the composer — or give it a rule, whichever comes first.
 
 ## How to verify a CSS deletion
 
@@ -229,5 +184,4 @@ position, `#cover` background, `.module-slide-grid` display) rather than trustin
 that a class name exists somewhere.
 
 Finally check the states that do not render on load: the access gate (clear
-`localStorage.nuki-comercial-unlocked`), the calculator's add-room form and its
-`Ctrl+Alt+K` panel, and the demo slide.
+`localStorage.nuki-comercial-unlocked`) and the demo slide.

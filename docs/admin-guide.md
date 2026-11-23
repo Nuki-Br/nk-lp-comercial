@@ -1,8 +1,8 @@
 ---
 audience: human
 status: current
-verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,ProposalDetailForms,SlidesWorkspace,ImagePricesForm,EstimateEditor}.tsx, src/server/proposals/{config,admin}.ts, src/server/tracking/{readout,reset}.ts
-size: 216
+verified_against: src/app/(admin)/admin/**, src/components/admin/{PublishPanel,ProposalDetailForms,SlidesWorkspace}.tsx, src/server/proposals/{config,admin}.ts, src/server/tracking/{readout,reset}.ts
+size: 162
 ---
 
 # Montando uma proposta no /admin
@@ -20,33 +20,18 @@ usar nada aqui.
 1. **Nova proposta** — nome da construtora e um título interno. Ela nasce
    idêntica ao deck padrão.
 2. **Slides** — tire o que não vai nesta conversa, reordene o que sobrou.
-3. **Tarifas de imagem** — a base de custo da calculadora desta proposta.
-4. **Calculadora** — deixe o empreendimento do cliente já modelado.
-5. **Senha** — defina antes de mandar o link. Sem senha ninguém entra.
-6. **Publicar** — só depois disso o link abre. A pílula do painel "Envio" passa
+3. **Senha** — defina antes de mandar o link. Sem senha ninguém entra.
+4. **Publicar** — só depois disso o link abre. A pílula do painel "Envio" passa
    de "Rascunho" para "No ar".
-7. **Copiar link** e mandar pro cliente.
+5. **Copiar link** e mandar pro cliente.
 
 Quer conferir o link como o cliente vai ver — numa janela anônima, sem sessão de
-admin? Faça isso entre 6 e 7 e depois **zere as estatísticas** (em "Atenção do
+admin? Faça isso entre 4 e 5 e depois **zere as estatísticas** (em "Atenção do
 cliente"), pra sua conferência não aparecer como se o cliente já tivesse lido.
 
 Rascunho não abre pra ninguém. Se você mandar o link antes de publicar, o cliente
 vê "não encontrado" — de propósito, pra ele não descobrir que existe uma proposta
 sendo preparada.
-
-## A cifra da lista
-
-A lista de propostas mostra, à direita de cada linha, o **setup de imagens**
-daquela proposta: o pacote de imagens com que a calculadora **abre**, em reais,
-e embaixo quantas imagens são.
-
-**O setup é um ponto de partida.** É o número da abertura da calculadora; o
-cliente mexe nela durante a apresentação e o valor dele será outro.
-
-Uma proposta **publicada** é cotada pelo documento que o cliente recebeu, não
-pelas edições que você fez depois. Um **rascunho** é cotado pelo que publicar
-congelaria. Passe o mouse sobre a cifra para ver qual dos dois está na tela.
 
 ## As quatro abas
 
@@ -92,48 +77,10 @@ com ↑ e ↓ quando está selecionado.
 Ela não tem pontinho próprio — usa o do módulo — então ela só existe se o módulo
 existir. Por isso não dá pra separar os dois.
 
-Se você montar algo que não funciona, o sistema recusa e explica o quê. Os dois
-casos que aparecem na prática:
+Se você montar algo que não funciona, o sistema recusa e explica o quê. O caso
+que aparece na prática:
 
-- **O total antes da calculadora.** O slide de total lê o que a calculadora
-  calculou; invertido, ele mostraria R$ 0 na frente do cliente.
 - **Nenhum slide ativo.** Não dá pra publicar uma apresentação vazia.
-
-### Tarifas de imagem
-
-**Tarifas de imagem: são duas, e são diferentes.** A **imagem base** é o render
-3D do ambiente, uma por unidade de ambiente, e é a cara. A **imagem de opção** é
-o recorte de acabamento sobre essa base, bem mais barata. É a base de custo por
-trás da calculadora desta proposta.
-
-> No deck interno existe um painel escondido (`Ctrl+Alt+K`) que edita essas
-> tarifas ao vivo. **Ele não existe no link do cliente** — num link que fica com
-> ele, um painel que expõe custo é um vazamento esperando acontecer. Aqui é onde
-> você define esses números.
-
-### Calculadora
-
-O ponto de partida da calculadora do cliente. Ele ainda pode mexer em tudo
-durante a apresentação; a diferença é começar a conversa no número certo.
-
-**O painel da direita mostra o número enquanto você monta:** quantas imagens e
-quanto de setup aquilo dá, com as tarifas desta proposta. Cada metragem também
-traz o seu subtotal no cabeçalho, e cada ambiente o dele na coluna "Imagens" —
-é assim que se descobre qual planta está pesando sem somar nada de cabeça.
-
-**Comece de um porte** (Studio, Padrão, Alto padrão) e ajuste. É bem mais rápido
-que montar do zero — o botão substitui tudo pela composição do preset.
-
-Por ambiente: nome, se é área **seca** ou **molhada**, quantos existem, e quantos
-componentes personalizáveis tem. Área molhada costuma ter mais superfície
-personalizável, por isso o número de opções é separado.
-
-**"Varia"** marca os ambientes que mudam nas variações extras de planta. Se você
-subir "Variações" para 2 ou 3 e não marcar nenhum ambiente, as variações extras
-não somam imagem nenhuma.
-
-**Atalhos de porte visíveis ao cliente** decide quais chips aparecem na
-calculadora dele. Desmarque todos e o bloco inteiro some da apresentação.
 
 ### Atenção do cliente
 
@@ -170,13 +117,12 @@ link.
 ## Publicar
 
 Publicar tira uma **fotografia** da proposta. A partir daí o cliente vê aquela
-fotografia e nada mais: mudar o conteúdo padrão do deck, ou o preço padrão, não
-mexe num documento que já foi enviado.
+fotografia e nada mais: mudar o conteúdo padrão do deck não mexe num documento
+que já foi enviado.
 
 Isso vale também pras **suas** edições. Se você mexer numa proposta já publicada,
-aparece um aviso laranja: há alterações que o cliente ainda não vê. Em Tarifas
-de imagem e na Calculadora ele fica no topo da página; em Slides, dentro da lista à
-esquerda, logo abaixo do título; e na Visão geral, a pílula do painel "Envio"
+aparece um aviso laranja: há alterações que o cliente ainda não vê. Em Slides,
+ele fica dentro da lista à esquerda, logo abaixo do título; e na Visão geral, a pílula do painel "Envio"
 passa a dizer **Alterações pendentes** e o botão vira **Publicar alterações**. O
 cliente só recebe o que você editou depois que você clica nele.
 

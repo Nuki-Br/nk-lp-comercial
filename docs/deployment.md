@@ -92,9 +92,9 @@ Both are **307, not 308** — browsers cache permanent redirects aggressively an
 wrong one is painful to undo.
 
 The 307 preserves the `#hash`, so `/comercial#planner` still lands on the Planner
-slide. The seven anchors renamed to English do not survive (`#calculadora` →
-`#calculator`, and friends): the fragment arrives, matches nothing, and the page
-opens at the top rather than erroring. ADR 5.
+slide. The anchors renamed to English do not survive (`#problema` → `#problem`,
+and friends), nor do those of slides that no longer exist: the fragment arrives,
+matches nothing, and the page opens at the top rather than erroring. ADR 5.
 
 > **This does not rescue links people already shared.** Those point at
 > `nukibr.com/comercial`, still served by `nk-lp`. Until someone adds a redirect
@@ -109,7 +109,7 @@ layout's metadata, an `X-Robots-Tag` header matching `/(.*)` in `next.config.ts`
 and `public/robots.txt`.
 
 This matters most for `/fast`, whose gate is client-side: a crawler fetching the
-HTML receives the entire deck, pricing included, without ever seeing the password
+HTML receives the entire deck without ever seeing the password
 form. Do not remove any of the three.
 
 `/p/[slug]` does not have that weakness — its content never leaves the server

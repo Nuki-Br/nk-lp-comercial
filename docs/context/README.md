@@ -56,5 +56,5 @@ operando configuração e geração de imagens 3D) para a entrega só da platafo
 com a operação terceirizada a parceiros. `pivot-modelo-negocio.md` §4 é um
 resumo pensado justamente para servir de contexto a IA.
 
-Isso governa toda a premissa da calculadora. Documentos mais antigos que
-descrevam o modelo de projeto fechado estão desatualizados nesse ponto.
+Documentos mais antigos que descrevam o modelo de projeto fechado estão
+desatualizados nesse ponto.

@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: the docs/ tree itself
-size: 106
+size: 103
 ---
 
 # Docs router
@@ -18,12 +18,11 @@ wins and the other is a bug.
 |---|---|
 | run one of the three build stages | `stages/README.md`, then your stage file |
 | add or change a slide kind | `deck-runtime.md` |
-| touch image math or tariffs | `estimate.md` |
 | touch auth, cookies, passwords, expiry | `security.md` |
 | add a table or column | `data-model.md` |
 | add or change tracking | `tracking.md` |
 | change deploy, env vars, redirects | `deployment.md` |
-| change deck copy or default prices | `content-guide.md` |
+| change deck copy | `content-guide.md` |
 | build or publish a proposal in `/admin` | `admin-guide.md` |
 | embed a module demo | `demo-embedding.md` (211 lines — load on demand) |
 | understand what runs where | `architecture.md` |
@@ -41,11 +40,10 @@ Rules live in `../AGENTS.md`, not here. It holds no explanations by design.
 ## Where each fact lives
 
 One home per fact. Restating a fact elsewhere is how it goes stale — this repo
-has already lost the estimate numbers that way, in three places at once.
+has already lost a set of numbers that way, in three places at once.
 
 | Fact | Sole home | Kept honest by |
 |---|---|---|
-| canonical estimate numbers | `estimate.md` | `src/lib/estimate.test.ts` |
 | environment variables | `../.env.example` | `deployment.md` explains, never re-lists |
 | database schema | `../supabase/migrations/*.sql` | `data-model.md` says it is a projection |
 | the route table | `../AGENTS.md` Rule 4 | `architecture.md` links to it |
@@ -93,10 +91,9 @@ data-model.md        why each table and column is shaped the way it is
 security.md          auth, cookies, passwords, expiry, RLS posture
 tracking.md          what is collected, the three anti-double-count guards
 deck-runtime.md      slide contract + the DeckBehaviors DOM contract + CSS layers
-estimate.md          the image math and THE canonical numbers
 testing.md           test policy + the three manual checklists
 deployment.md        Vercel + Supabase, env matrix, migrations
-content-guide.md     editing copy and default prices, for non-developers
+content-guide.md     editing copy, for non-developers
 admin-guide.md       building, publishing and reading a proposal, for salespeople
 demo-embedding.md    turning a Claude Design export into an iframe demo
 tech-debt.md         known-dead code and deferred cleanups, each with its proof command

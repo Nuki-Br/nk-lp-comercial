@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 /* Uma seção de ajustes, sem caixa.
  *
  * `Card` continua sendo o certo para um bloco que se lê como uma unidade
- * fechada — o painel de envio, o simulador ao vivo de preços. Para uma tela de
+ * fechada — o painel de envio, a prévia do deck. Para uma tela de
  * ajustes ele era o errado: cinco cards empilhados dão cinco bordas, cinco
  * sombras e cinco rodapés cinza para dizer "título", "senha", "atenção", e a
  * moldura acaba pesando mais que o campo. Aqui a hierarquia sai do rótulo à

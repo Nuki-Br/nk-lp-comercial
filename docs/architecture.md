@@ -2,13 +2,13 @@
 audience: agent
 status: current
 verified_against: src/app/, src/components/, next.config.ts
-size: 203
+size: 196
 ---
 
 # Architecture
 
-The system map. Deck internals are in `deck-runtime.md`; the math is in
-`estimate.md`; the route table is in `../AGENTS.md` Rule 4. This file is about
+The system map. Deck internals are in `deck-runtime.md`; the route table is in
+`../AGENTS.md` Rule 4. This file is about
 what runs where and where the trust boundary sits.
 
 > Stage status: `stages/README.md`. As of stage 2 every surface below exists.
@@ -80,13 +80,14 @@ identity true by vacuity and hide `buildDefaultDeck()` drifting out of normal fo
 
 ```
 src/deck/
-  types.ts      the SlideNode union, DeckConfig, EstimateConfig, RichText   React-free
+  types.ts      the SlideNode union, DeckConfig, RichText                   React-free
   meta.ts       SLIDE_META — admin field schema; labels from src/content/   React-free
   defaults.ts   buildDefaultDeck() — returns an already-normalized config   React-free
   overrides.ts  DeckOverride + parseDeckOverride(), which never throws      React-free
-  resolve.ts    resolveDeckConfig / normalizeDeck / mergeEstimate           React-free
+  resolve.ts    resolveDeckConfig / normalizeDeck                           React-free
+  retired.ts    stripRetired() — what a stored document loses on read       React-free
   anchors.ts    anchorsOf / walkableIdsOf / visibleSlides                   React-free
-  registry.tsx  renderSlide(node, ctx) — the only switch on `kind`
+  registry.tsx  renderSlide(node) — the only switch on `kind`
 ```
 
 `src/deck/` is React-free above the registry, so the admin, the validator and the
@@ -135,18 +136,10 @@ server action and route handler — **not just in the layout**. It reads the
 
 ## Cross-slide state
 
-`EstimateProvider` is the one piece of cross-slide state. `CalculatorSlide`
-computes and publishes `{imageCount, imageCost}` into it from an effect;
-`EstimatedTotalSlide` only reads.
-
-With a data-driven slide order the provider wraps the whole slide list rather
-than a hand-picked pair. Harmless and order-independent — do not try to detect
-which slides need it.
-
-The publish-from-`useEffect` is a deliberate sync of derived state between
-siblings. The alternative was lifting the entire calculator state into the
-provider, which is a bigger refactor than it is worth. If you ever do it, delete
-the effect and derive in the provider.
+There is none. Each slide renders from its own node; the only thing the slides
+share is `DeckNavigationProvider`, which is navigation, not content. The
+calculator and the closing frame that read each other's numbers left with
+ADR 27.
 
 ## Data
 

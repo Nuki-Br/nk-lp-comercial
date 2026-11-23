@@ -68,7 +68,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ slug:
     );
   }
 
-  /* Zero content. No price, no slide copy, no client name — the gate knows the
+  /* Zero content. No slide copy, no client name — the gate knows the
      slug and nothing else, and the slug is already in the URL bar. */
   if (view.state === "locked") {
     return <ProposalGate slug={slug} />;

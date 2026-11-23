@@ -4,12 +4,9 @@ import { randomBytes } from "node:crypto";
 import { buildDefaultDeck } from "@/deck/defaults";
 import { parseDeckOverride } from "@/deck/overrides";
 import { resolveDeckConfig } from "@/deck/resolve";
-import type { DeckConfig } from "@/deck/types";
-import { type ProposalQuote, proposalQuote } from "@/lib/quote";
 import { hashPassword } from "@/server/auth/password";
 import { validateDeckConfig } from "@/server/config/validate";
 import { forVisitor, isProposalExpired } from "@/server/proposals/dal";
-import { parseStoredDeckConfig } from "@/server/schemas/deckConfig";
 import { supabaseAdmin } from "@/server/supabase/adminClient";
 import type { Json } from "@/server/supabase/database.types";
 
@@ -30,10 +27,6 @@ export type ProposalSummary = {
   clientName: string;
   hasPassword: boolean;
   openCount: number;
-  /** O setup de imagens — a cifra que a lista compara. */
-  quote: ProposalQuote;
-  /** De onde saíram as cifras: o documento que o cliente tem, ou o rascunho. */
-  quoteSource: "snapshot" | "draft";
 };
 
 /** `nome-do-cliente-<8 random>`.
@@ -58,35 +51,10 @@ export function buildProposalSlug(clientName: string): string {
   return base ? `${base}-${tail}` : `proposta-${tail}`;
 }
 
-/**
- * De qual config saem as cifras de uma linha da lista.
- *
- * Publicada → o SNAPSHOT, porque é o documento que o cliente tem na mão; o
- * rascunho por cima dele pode ser uma renegociação que ainda não foi enviada, e
- * uma lista que mostrasse esse número diria que a proposta vale algo que
- * ninguém recebeu. Rascunho → defaults + delta, que é o que publicar congelaria.
- *
- * O snapshot ilegível cai no rascunho em vez de sumir: aqui a cifra é uma
- * referência interna, e a assimetria com a DAL é deliberada — lá, renderizar os
- * defaults para um visitante seria mostrar ao cliente um documento diferente do
- * que ele recebeu (ADR 13), e por isso lá o mesmo caso vira "não encontrado".
- */
-function estimateForRow(
-  base: DeckConfig,
-  row: { status: string; config_override: unknown; config_snapshot: unknown },
-): { estimate: DeckConfig["estimate"]; source: "snapshot" | "draft" } {
-  if (row.status === "published") {
-    const snapshot = parseStoredDeckConfig(row.config_snapshot);
-    if (snapshot) return { estimate: snapshot.estimate, source: "snapshot" };
-  }
-  const resolved = resolveDeckConfig(base, parseDeckOverride(row.config_override));
-  return { estimate: resolved.estimate, source: "draft" };
-}
-
 export async function listProposals(): Promise<ProposalSummary[]> {
   const { data, error } = await supabaseAdmin
     .from("proposals")
-    .select("id, slug, title, status, expires_at, config_override, config_snapshot, clients(name)")
+    .select("id, slug, title, status, expires_at, clients(name)")
     /* Archived is this schema's delete — the row and its tracking history stay,
        but a deleted proposal has no business in the list a salesperson works
        from every day. */
@@ -98,26 +66,17 @@ export async function listProposals(): Promise<ProposalSummary[]> {
   const rows = data ?? [];
   const counts = await openCounts(rows.map((r) => r.id));
   const withPassword = await proposalsWithLiveCredential(rows.map((r) => r.id));
-  /* Uma vez para a lista inteira. `resolveDeckConfig` clona o que recebe, então
-     as N resoluções não se enxergam. */
-  const base = buildDefaultDeck();
 
-  return rows.map((row) => {
-    const { estimate, source } = estimateForRow(base, row);
-
-    return {
-      id: row.id,
-      slug: row.slug,
-      title: row.title,
-      status: row.status,
-      expiresAt: row.expires_at,
-      clientName: row.clients?.name ?? "—",
-      hasPassword: withPassword.has(row.id),
-      openCount: counts.get(row.id) ?? 0,
-      quote: proposalQuote(estimate),
-      quoteSource: source,
-    };
-  });
+  return rows.map((row) => ({
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    status: row.status,
+    expiresAt: row.expires_at,
+    clientName: row.clients?.name ?? "—",
+    hasPassword: withPassword.has(row.id),
+    openCount: counts.get(row.id) ?? 0,
+  }));
 }
 
 /** The raw open count, and nothing else — the read-out UI is stage 3. */
@@ -312,9 +271,8 @@ export async function setProposalPassword(
  * `src/content/` afterwards must not move a number on a document that has been
  * sent — that is ADR 13, and this function is where it becomes true.
  *
- * `forVisitor` is applied BEFORE the write, not just at render: it forces
- * `chrome.allowPriceOverride` to false, so even a snapshot read by some future
- * code path cannot ship the Ctrl+Alt+K cost panel to a client.
+ * `forVisitor` is applied BEFORE the write, not just at render, so the frozen
+ * document already carries the proposal's own key.
  */
 export async function publishProposal(
   id: string,
@@ -357,8 +315,8 @@ export async function publishProposal(
  * Unpublish: the link stops opening, the document is not gone.
  *
  * `config_snapshot` and `published_at` are left as they are. Neither is read
- * for a non-published proposal — `estimateForRow` and the DAL both branch on
- * `status` — and keeping them means a later `publishProposal` overwrites stale
+ * for a non-published proposal — the DAL branches on `status` — and keeping
+ * them means a later `publishProposal` overwrites stale
  * data rather than an unpublish having to guess what to null out.
  */
 export async function unpublishProposal(id: string): Promise<void> {

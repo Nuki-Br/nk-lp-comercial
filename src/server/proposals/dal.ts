@@ -177,19 +177,11 @@ function lockReasonFor(
 }
 
 /**
- * The two fields that are decided at the render site and never persisted.
- *
- * `allowPriceOverride` is the security-relevant one: it is absent from
- * `DeckOverride` precisely so `/fast`'s `true` cannot ride into a snapshot, and
- * forcing it false here is the second belt. A published link must never ship the
- * Ctrl+Alt+K cost panel to a client.
+ * The one field that is decided at the render site and never persisted: the
+ * document's `key`, which is the proposal's slug rather than `"fast"`.
  */
 export function forVisitor(config: DeckConfig, slug: string): DeckConfig {
-  return {
-    ...config,
-    key: slug,
-    chrome: { ...config.chrome, allowPriceOverride: false },
-  };
+  return { ...config, key: slug };
 }
 
 async function fetchProposalRow(slug: string): Promise<ProposalAccessRow | null> {

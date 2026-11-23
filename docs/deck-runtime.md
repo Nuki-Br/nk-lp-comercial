@@ -174,7 +174,7 @@ What it does:
 ### Fitting a slide to its page
 
 A page box alone would crop: the sections were laid out for a viewport they are
-free to overflow, and the calculator slide does. So
+free to overflow, and a tall one does. So
 `DownloadPdfButton.tsx` registers a `beforeprint` listener that measures each
 slide and writes a per-slide `--print-scale`, which the sheet applies to
 `.slide-inner`.

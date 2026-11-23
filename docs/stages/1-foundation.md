@@ -1,13 +1,18 @@
 ---
 audience: agent
-status: current
+status: partially-superseded
 verified_against: src/app/, src/components/, src/content/deck.ts, next.config.ts
-size: 328
+size: 288
 ---
 
 # Stage 1 — Foundation
 
 > Paste this whole file into a fresh agent session. It is self-contained.
+
+> **Done, and partly removed since.** The plan slide (ADR 26) and the image
+> calculator with its closing frame and `Ctrl+Alt+K` panel (ADR 27) left the
+> product after this stage; the passages that built them are gone from this
+> brief. What remains is the record of the rest.
 
 ## Read this first
 
@@ -27,8 +32,7 @@ Read, in this order, and stop there:
    revert it.
 2. `docs/README.md` — the doc router.
 3. `docs/deck-runtime.md` — the DOM contract you must not break.
-4. `docs/estimate.md` — the math and the canonical numbers.
-5. `docs/stages/README.md` — the rules that apply to every stage.
+4. `docs/stages/README.md` — the rules that apply to every stage.
 
 Four hard rules for this stage:
 
@@ -60,22 +64,6 @@ test -f node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/
 npm run check && npm run build
 ```
 
-**5. Re-derive the canonical numbers from code. Trust no markdown.** Write a
-throwaway script in your scratchpad that imports `computeEstimate` +
-`estimateCost` from `src/lib/estimate.ts` and `ESTIMATE_DEFAULTS` +
-`PROJECT_SIZE_PRESETS` from `src/content/deck.ts`, and run it with
-`npx tsx`. Expected:
-
-| Scenario | Images | Cost |
-|---|---|---|
-| Defaults | 45 (3 base · 42 option) | R$ 1.428 |
-| Studio | 284 (14 base · 270 option) | R$ 8.736 |
-| Padrão | 507 (30 base · 477 option) | R$ 15.876 |
-| Alto padrão | 738 (45 base · 693 option) | R$ 23.184 |
-
-If they differ, **stop and report** — the presets changed under you and every
-number in `docs/estimate.md` and in your tests needs re-deriving first.
-
 ## Out of scope — belongs to stage 2 or 3
 
 Do not build, do not scaffold, do not "prepare":
@@ -84,10 +72,7 @@ Do not build, do not scaffold, do not "prepare":
   `/p/[slug]`, any tracking
 - CSS reformatting, and the dead-CSS deletion in `docs/tech-debt.md` §1–2 —
   it stays queued
-- Any copy change, any change to the math in `src/lib/estimate.ts`
-- **Renaming the Portuguese identifiers in `CalculatorSlide.tsx`.** Rule 1 is
-  already violated there. It is queued in `docs/tech-debt.md` §3 because doing it
-  here would drown the pixel-identity diff, which is this stage's whole proof.
+- Any copy change
 
 ## Reading budget
 
@@ -152,7 +137,7 @@ import types without pulling slide components into their bundle.
 
 ```
 src/deck/
-  types.ts        SlideKind, SlideNode, DeckConfig, EstimateConfig   React-free
+  types.ts        SlideKind, SlideNode, DeckConfig                   React-free
   meta.ts         SLIDE_META — label, tone, admin-facing field schema
   defaults.ts     buildDefaultDeck(): DeckConfig                      React-free
   overrides.ts    DeckOverride + parseDeckOverride(unknown)           React-free
@@ -162,11 +147,7 @@ src/deck/
 ```
 
 **The hard requirement: `DeckConfig` must survive `JSON.parse(JSON.stringify(x))`
-deep-equal.** `ESTIMATE_DEFAULTS.initialUnitTypes` and
-`PROJECT_SIZE_PRESETS[].buildUnitTypes` are **factory functions** today —
-deliberately, because `UnitTypeState` is mutated in place. Convert them to plain
-data plus a `materializeUnitTypes()` helper that deep-clones on use, moving the
-cloning responsibility to the consumer.
+deep-equal.** No functions, no `Date`, no `Map` anywhere in it.
 
 Getting this wrong forces a rewrite in stage 2. There is a test for it (item 6).
 
@@ -177,30 +158,20 @@ export type DeckConfig = {
   key: string;                       // "fast" or a proposal slug
   document: { title: string; description: string };
   slides: SlideNode[];               // array order IS render order
-  estimate: EstimateConfig;
-  chrome: { showFooter: boolean; keyboardHint: string; allowPriceOverride: boolean };
-};
-
-export type EstimateConfig = {
-  imagePrices: { base: number; option: number };
-  defaults: { dryOptions: number; wetOptions: number; unitTypes: UnitTypeState[] };
-  projectSizePresets: ProjectSizePresetConfig[];
+  chrome: { showFooter: boolean; keyboardHint: string };
 };
 
 export type DeckOverride = {
   order?: string[];                  // node ids; unknown ids dropped, not thrown
   hidden?: string[];
   slides?: Record<string, unknown>;  // V2 copy overrides land here, no migration
-  estimate?: Partial<EstimateConfig>;
   document?: Partial<DeckConfig["document"]>;
 };
 ```
 
 `resolveDeckConfig(base, null)` must deep-equal `base` — that identity is what
 makes "a proposal with no customization looks exactly like the deck" a fact
-rather than a chore. In `mergeEstimate`, **arrays replace, they do not
-concatenate**: a partial `projectSizePresets` override must not append to the
-defaults.
+rather than a chore.
 
 `normalizeDeck` recomputes cross-node facts *after* ordering and hiding: assert id
 uniqueness (throw in dev, dedupe and warn in prod); renumber module ordinals; set
@@ -235,19 +206,15 @@ from `src/content/` any more** — config comes in.
 The inline section heads (tag / h2 / lead) exist in eight slides and the cover's
 h1 embeds `<em>`. Move them into config. Per ADR 18, move **every** human-visible
 string into config now, including ones the V1 admin will never expose
-(`CasesSlide`'s logo list, `AudienceSlide`'s `fitList`, `CalculatorSlide`'s
-labels) — otherwise V2 has to re-open all ten slide files.
+(`CasesSlide`'s logo list, `AudienceSlide`'s `fitList`) — otherwise V2 has to
+re-open every slide file.
 
-Two more:
+One more:
 
-- `EstimateProvider` currently wraps exactly three children. Wrap the whole slide
-  list instead — harmless and order-independent. Do not try to detect the trio.
 - **Publish the keyboard walk list from config**, through a small client context.
   `ModuleDemoSlide.navigate()` rebuilds the identical DOM query by hand today;
   make it consume the shared list. Keep the mount-once `useEffect(…, [])` and
   read ids through a ref so the listener identity never changes.
-- Gate the `Ctrl+Alt+K` price panel behind `chrome.allowPriceOverride` — `true`
-  for `/fast`.
 
 ### 5. Prove the DOM is unchanged
 
@@ -267,8 +234,7 @@ Method: in the browser, **before** your changes and **after**, capture
   The blanket format pass is **its own isolated commit**.
 - Strip `eslint.config.mjs` to `eslint-config-next/core-web-vitals` only, every
   stylistic and TS rule off so it never fights Biome. Script: `lint:next`.
-- Vitest. `src/lib/estimate.test.ts` asserting all four canonical scenarios,
-  **count and cost**, plus the `DeckConfig` JSON round-trip test.
+- Vitest, with the `DeckConfig` JSON round-trip test.
 - `npm run check` = `typecheck && biome ci && eslint && check:docs && vitest run`.
 - `.github/workflows/ci.yml`: `npm ci`, `npm run check`, `npm run build`.
 - `scripts/check-docs.mjs` **already exists** and passes. As you create the files
@@ -278,8 +244,8 @@ Method: in the browser, **before** your changes and **after**, capture
 
 ### 7. Docs — last, so they describe what you built
 
-Update `docs/architecture.md`, `docs/deck-runtime.md` and `docs/estimate.md` to
-match what now exists. Update `README.md` for the new routes and scripts. Add
+Update `docs/architecture.md` and `docs/deck-runtime.md` to match what now
+exists. Update `README.md` for the new routes and scripts. Add
 ADRs to `docs/decisions.md` only if you made a decision the existing ADRs 9–18 do
 not already cover.
 
@@ -304,13 +270,8 @@ curl -sI localhost:3000/ | grep -i location                 # → /fast
 curl -sI localhost:3000/comercial | grep -i location        # → /fast
 ```
 
-Plus checklist **A** in `docs/testing.md`, in a **visible** browser pane, with
-the four canonical values. And the before/after `.deck` outerHTML diff must be
-empty.
-
-> `useCountUp` uses `requestAnimationFrame`, which **does not fire in a hidden
-> tab**. In a headless or backgrounded pane every animated number freezes at its
-> initial value. That is not a bug — make the pane visible or read raw state.
+Plus checklist **A** in `docs/testing.md`, in a **visible** browser pane. And
+the before/after `.deck` outerHTML diff must be empty.
 
 The dependency check is the cheap, mechanical proof that this stage stayed in its
 lane. If it fails, you built stage 2's work.
@@ -323,6 +284,5 @@ the repo: `Refactor(Deck): ...`, `Chore: ...`, `Feat: ...`.
 
 **Do not push.**
 
-Report: the four canonical numbers you derived, whether the outerHTML diff was
-empty, the final `dependencies` list, and anything you found that contradicts
+Report: whether the outerHTML diff was empty, the final `dependencies` list, and anything you found that contradicts
 these docs — that last one is the most valuable thing you can hand the next agent.

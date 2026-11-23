@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
    *
    * Temporary (307) on purpose: browsers cache 308s aggressively and a wrong
    * permanent redirect is painful to undo. A 307 also preserves the `#hash`,
-   * so `/comercial#calculator` still lands on the right slide.
+   * so `/comercial#cases` still lands on the right slide.
    *
    * `/` now points at `/admin`, which is what AGENTS.md's route table has always
    * said. It pointed at `/fast` only while the admin was a stub; stage 2 gave it
@@ -31,8 +31,8 @@ const nextConfig: NextConfig = {
 
   /**
    * Private sales material. The password gate is client-side, so a crawler
-   * fetching the HTML would see the whole deck — pricing included. Keep the
-   * whole app out of search indexes.
+   * fetching the HTML would see the whole deck. Keep the whole app out of
+   * search indexes.
    */
   async headers() {
     return [
@@ -44,7 +44,7 @@ const nextConfig: NextConfig = {
        * A proposal is one named client's document. `force-dynamic` alone gets
        * `no-cache, must-revalidate`, which permits a shared cache to hold the
        * response as long as it revalidates — and the thing being held would be
-       * one client's priced proposal. `private` says "browser only", `no-store`
+       * one client's proposal. `private` says "browser only", `no-store`
        * says "not even there". testing.md checklist B asserts this exact string.
        *
        * The tracking route sets its own on the response; this covers the page.

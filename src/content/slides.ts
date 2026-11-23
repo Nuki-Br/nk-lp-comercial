@@ -1,19 +1,12 @@
-import type {
-  CalculatorLabels,
-  ModuleDemoLabels,
-  ModuleLabels,
-  RichText,
-  SectionHead,
-  TotalLabels,
-} from "@/deck/types";
+import type { ModuleDemoLabels, ModuleLabels, RichText, SectionHead } from "@/deck/types";
 
 /* Toda string que um humano lê nos slides.
 
    Por que TUDO está aqui, inclusive o que o /admin da V1 nunca vai expor: a V2
    é sobrescrita de copy por proposta. Se o rótulo do logo do CasesSlide e os
-   rótulos internos da Calculadora continuassem como literais dentro dos
-   componentes, a V2 teria que reabrir os dez arquivos de slide. Uma passada
-   agora, duas depois. Ver ADR 18.
+   rótulos internos da demo continuassem como literais dentro dos componentes,
+   a V2 teria que reabrir todos os arquivos de slide. Uma passada agora, duas
+   depois. Ver ADR 18.
 
    `RichText` como array de segmentos guarda a ênfase inline: `["texto ", { em:
    "destaque." }]` renderiza `texto <em>destaque.</em>`. Repare no ESPAÇO no fim
@@ -74,25 +67,6 @@ export const casesHead: SectionHead = {
   tag: "Cases",
   title: ["Construtoras que já ", { em: "saíram da planilha." }],
   lead: "Construtoras que já organizaram o ciclo de personalização com a Nuki.",
-};
-
-export const calculatorHead: SectionHead = {
-  tag: "Estime o setup",
-  title: ["Descubra quantas imagens seu empreendimento ", { em: "vai precisar." }],
-  /* `<em>` no MEIO do parágrafo, com prosa dos dois lados — o caso que obriga
-     `RichText` a ser uma lista de segmentos. */
-  lead: [
-    "Cada ambiente é modelado em 3D uma vez — dessa modelagem sai a ",
-    { em: "imagem base" },
-    ". As opções de acabamento são recortes de material sobre ela, e por isso custam bem menos. Escolha um ponto de partida e ajuste ambiente por ambiente.",
-  ],
-};
-
-/** Sem `lead`: o frame de fechamento não tem um, e emitir um `<p class="lead">`
-    vazio acrescentaria um elemento ao DOM. */
-export const totalHead: SectionHead = {
-  tag: "Total estimado",
-  title: ["O investimento completo do seu ", { em: "empreendimento." }],
 };
 
 /* ------------------------------------------------------------------ cases */
@@ -156,107 +130,4 @@ export const moduleDemoLabels: ModuleDemoLabels = {
   mobileBodyTemplate:
     "O {strong} foi feito pra tela larga. No celular, abra em uma nova aba pra explorar com espaço.",
   mobileCta: "Abrir em nova aba →",
-};
-
-/* ------------------------------------------------------------------ total */
-
-export const totalLabels: TotalLabels = {
-  cardAria: "Total estimado do empreendimento",
-  imageSetup: "Setup de imagens",
-  total: "Total",
-  imagesHintTemplate: "{count} imagens estimadas",
-};
-
-/* ------------------------------------------------------------ calculadora */
-
-export const calculatorLabels: CalculatorLabels = {
-  admin: {
-    dialogAria: "Configuração da apresentação",
-    title: "Config apresentação",
-    closeAria: "Fechar",
-    closeGlyph: "×",
-    basePriceLabel: "Valor da imagem base (R$)",
-    optionPriceLabel: "Valor da imagem de opção (R$)",
-    hint: "Ctrl+Alt+K abre/fecha · ESC fecha",
-  },
-  presets: { label: "Ponto de partida", groupAria: "Porte do empreendimento" },
-  options: {
-    dryLabel: "Opções por componente · secas",
-    dryAria: "Opções por componente em áreas secas",
-    wetLabel: "Opções por componente · molhadas",
-    wetAria: "Opções por componente em áreas molhadas",
-  },
-  unitTypes: {
-    tablistAria: "Metragens do empreendimento",
-    /** `{n}` chega com zero à esquerda ("01"); o `padStart` é formatação e
-        continua no componente. O aria-label vizinho NÃO é zero-padded. */
-    tabTemplate: "Metragem {n}",
-    removeTemplate: "Remover metragem {n}",
-    removeGlyph: "×",
-    addLabel: "+ Adicionar",
-    addAria: "Adicionar metragem",
-  },
-  rooms: {
-    heading: "Ambientes personalizáveis",
-    addButton: "+ Adicionar ambiente",
-    pickerAria: "Escolher ambiente",
-    pickerPrompt: "Escolha um ambiente:",
-    customOption: "+ Personalizado",
-    cancel: "Cancelar",
-    confirm: "Adicionar",
-    formAria: "Adicionar ambiente personalizado",
-    namePlaceholder: "Nome do ambiente (ex: Home Office)",
-    classAria: "Classificação",
-    classAriaTemplate: "Classificação: {areaType}",
-    /* "Seca"/"Molhada" nas pills do formulário e "seca"/"molhada" na linha do
-       ambiente e no chip do preset. Quatro entradas separadas de propósito:
-       derivar uma da outra com toLowerCase mudaria o texto renderizado. */
-    dryPill: "Seca",
-    wetPill: "Molhada",
-    dryTag: "seca",
-    wetTag: "molhada",
-    unitsLabel: "unidades",
-    componentsLabel: "componentes",
-    unitsAriaTemplate: "Unidades de {name}",
-    /** "por", não "de" — os dois aria-labels vizinhos usam preposições
-        diferentes, e uniformizar mudaria o DOM. */
-    componentsAriaTemplate: "Componentes por {name}",
-    removeTemplate: "Remover {name}",
-    removeGlyph: "×",
-  },
-  variants: {
-    label: "Variações desta metragem",
-    groupAria: "Variações",
-    impactedLabel: "Ambientes impactados nas variações",
-    impactedHint:
-      "Layout novo é modelagem nova: 1 unidade de cada ambiente marcado entra de novo na contagem por variação extra — com a imagem base dela e os componentes configurados acima.",
-  },
-  output: {
-    countLabel: "imagens necessárias",
-    mixTemplate: "{base} base · {option} de opção",
-    costLabel: "setup de imagens estimado",
-    disclaimerAria: "Aviso sobre a estimativa",
-    disclaimerTitle: "Este valor é uma aproximação",
-    disclaimerBody:
-      "A estimativa serve como referência inicial pra dimensionar o setup do empreendimento. O valor oficial só é fechado quando são consideradas as particularidades reais do empreendimento e do catálogo de acabamentos.",
-  },
-  note: {
-    unitTypeOne: "metragem",
-    unitTypeOther: "metragens",
-    scaleTemplate: "{count} {unit} · escala {dry}/{wet} opções por componente (secas/molhadas).",
-    activeTemplate: "Metragem {n}: {total} imgs ({base} base · {option} de opção)",
-    extraTemplate: ", sendo {extra} das variações",
-  },
-  cards: {
-    groupAriaTemplate: "Editar Metragem {n}",
-    indexTemplate: "Metragem {n}",
-    imagesTemplate: "{count} imagens",
-    variantTemplate: "Variação {n}",
-    extraTag: "apenas ambientes impactados",
-    extraPrefix: "+",
-    variantImagesSuffix: "imgs",
-    tileTitleTemplate: "{label}: {base} base + {option} de opção",
-    emptyMain: "Nenhum ambiente adicionado. Suba as unidades acima.",
-    emptyExtras: "Nenhum ambiente marcado como impactado.",
-  },
 };

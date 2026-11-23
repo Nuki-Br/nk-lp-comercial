@@ -1,14 +1,12 @@
-import { stripRetiredEstimate } from "@/deck/retired";
-import type { DeckConfig, EstimateConfig } from "@/deck/types";
+import type { DeckConfig } from "@/deck/types";
 
 /** O delta que uma proposta guarda por cima dos defaults.
 
     Chaveado por id de nó, NUNCA por índice de array — reordenar não pode
     embaralhar patches. Ver ADR 13.
 
-    Repare no que NÃO está aqui: `chrome`. `allowPriceOverride` é decidido no
-    ponto de render, porque se entrasse no delta o `true` do /fast congelaria no
-    `config_snapshot` e todo link publicado sairia com o painel de custo-base. */
+    Repare no que NÃO está aqui: `chrome`. Rodapé e dica de teclado são do
+    deck, não de uma proposta. */
 export type DeckOverride = {
   /** Ids de nó na ordem desejada. Ids desconhecidos são IGNORADOS, não lançam. */
   order?: string[];
@@ -19,7 +17,6 @@ export type DeckOverride = {
   shown?: string[];
   /** V2: sobrescritas de copy por nó. Tipado agora, sem migração depois. */
   slides?: Record<string, unknown>;
-  estimate?: Partial<EstimateConfig>;
   document?: Partial<DeckConfig["document"]>;
 };
 
@@ -52,12 +49,9 @@ export function parseDeckOverride(input: unknown): DeckOverride {
   if (shown) out.shown = shown;
 
   if (isPlainObject(input.slides)) out.slides = input.slides;
-  /* Sem os campos de plano que um delta gravado antes da ADR 26 ainda traz.
-     `mergeEstimate` já os ignoraria no render; tirar aqui é o que impede o
-     próximo salvamento de regravá-los na linha. */
-  if (isPlainObject(input.estimate)) {
-    out.estimate = stripRetiredEstimate(input.estimate) as Partial<EstimateConfig>;
-  }
+  /* `estimate` não é lido de propósito: um delta gravado antes da ADR 27 ainda
+     traz o bloco da calculadora, e deixá-lo de fora aqui é o que impede o
+     próximo salvamento de regravá-lo na linha. */
   if (isPlainObject(input.document)) {
     out.document = input.document as Partial<DeckConfig["document"]>;
   }

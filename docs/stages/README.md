@@ -2,13 +2,16 @@
 audience: both
 status: current
 verified_against: the stage files in this directory, and git log 1ef10b6..06308b7
-size: 193
+size: 186
 ---
 
 # Build stages
 
 Three sequential stages that turn the static deck into the proposal app. Each
 file is a **prompt**: paste it into a fresh agent session with no prior context.
+
+> The plan slide (ADR 26) and the image calculator (ADR 27) were removed after
+> all three stages landed. The passages about them are gone from these files.
 
 These are the only files under `docs/` that are instructions. Everything else is
 reference — do not treat a reference doc as a task list.
@@ -26,7 +29,7 @@ build's history.
 | 3 | [Composer](3-composer.md) — the editing UI and the tracking read-out | **done** | cdebbd4 |
 
 Stage 1 merged to `main` as nine commits, fast-forward, `006c510..1ef10b6`. The
-route move, the estimate-defaults conversion and the `DeckConfig` layer are each
+route move, the conversion of defaults to plain data and the `DeckConfig` layer are each
 their own commit, so `git show` on any one of them is reviewable on its own.
 
 Stage 2 landed as twelve commits, `1ef10b6..4731d4b`, one per work item. Five
@@ -59,9 +62,6 @@ writes a column stage 2 created. **V1 is complete at this point.**
 
 **What stage 3 found that these docs had wrong:**
 
-- **`Ctrl+Alt+K` on `/p/[slug]` needed no human confirmation.** The brief lists
-  it as a human step; `forVisitor` already forces `allowPriceOverride` false at
-  publish and at render, and `dal.test.ts` already asserted it.
 - **`childId` survived a disabled child.** Found while designing the "tem demo"
   checkbox: `ModuleSlide` renders its "▷ Explorar" CTA off `node.childId`, so
   disabling only the demo left a button pointing at an anchor that renders
@@ -70,8 +70,8 @@ writes a column stage 2 created. **V1 is complete at this point.**
 **What stage 3 did not do:**
 
 - **Nobody has walked the composer in a browser.** Every server path was
-  exercised against the real database — the delta write, the cross-form
-  `estimate` merge, a refused invalid config leaving the row untouched,
+  exercised against the real database — the delta write, a refused invalid
+  config leaving the row untouched,
   staleness in both directions, and the read-out over rows written through the
   real ingest RPC — and `/fast` was re-verified against checklist A. But
   `requireAdmin()` needs a Supabase session, and the agent that built this could
@@ -90,8 +90,6 @@ writes a column stage 2 created. **V1 is complete at this point.**
   `addable`, `description` and `label`; the `text`/`richtext`/`textarea`/`list`
   specs exist for V2's copy editor and nothing consumes them yet.
 - **The dead-CSS cleanup**, still queued in `tech-debt.md`.
-- **`CalculatorSlide.tsx`'s Portuguese identifiers**, still queued there too. This
-  stage touched that file in one place and deliberately did not rename around it.
 
 ## What stage 2 left for stage 3
 
@@ -103,8 +101,8 @@ writes a column stage 2 created. **V1 is complete at this point.**
 - **`SLIDE_META` has never been read by anything.** It was built in stage 1 as
   the composer's field schema (ADR 18) and stage 2 had no use for it. If it is
   wrong, stage 3 is where that surfaces.
-- **Publishing already freezes the snapshot** through `forVisitor()`, so
-  `allowPriceOverride` cannot reach a client. Do not add a second publish path.
+- **Publishing already freezes the snapshot** through `forVisitor()`. Do not
+  add a second publish path.
 - **The tracking read-out is stage 3's.** Stage 2 stores dwell per anchor and
   shows only a raw open count. `docs/tracking.md` describes the data; Rule 3
   still bans the chart library.
@@ -123,11 +121,6 @@ Read these before starting stage 2; they are contract decisions, not trivia.
 - **`/` redirects to `/fast`, not `/admin`.** The admin is a stub. Flip it in
   `next.config.ts` once there is something there. `AGENTS.md`'s route table
   already says `/admin`; that divergence is deliberate and temporary.
-- **`chrome.allowPriceOverride` is deliberately absent from `DeckOverride`.** It
-  is decided at the render site and never persisted, because `config_snapshot`
-  stores the *resolved* config — if it were in the delta, `/fast`'s `true` would
-  freeze into every published proposal and ship the `Ctrl+Alt+K` cost panel to
-  clients. `/p/[slug]` must resolve with `false`.
 - **`DeckOverride.shown` exists** alongside `hidden`, so a proposal can re-enable
   a slide that ships disabled (today: `differentiators`, `audience`).
 - **`normalizeDeck` is tolerant, not rejecting** — it warns and repairs. The
@@ -150,8 +143,8 @@ The alternative orderings were considered and rejected:
 
 **Layer-first** (infra → rendering → UI) ships nothing verifiable in stage 1, and
 designs the storage shape with no consumer to validate it. The concrete landmine:
-`initialUnitTypes` and `buildUnitTypes` are factory functions today, so a schema
-designed before anyone tried to serialize the config would be wrong on contact.
+some defaults were factory functions, so a schema designed before anyone tried to
+serialize the config would have been wrong on contact.
 It also pairs the highest-risk refactor with new infrastructure, so when the deck
 breaks the agent cannot tell which half broke it.
 
