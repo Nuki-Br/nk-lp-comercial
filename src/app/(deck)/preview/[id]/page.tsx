@@ -29,8 +29,7 @@ import { loadProposalConfig } from "@/server/proposals/config";
  *   chamada no topo da página, como em toda página do painel. ADR 15.
  *
  * `resolveForProposal` já passa o config pelo `forVisitor`, então a prévia
- * mostra `allowPriceOverride: false` — o painel de custo do `Ctrl+Alt+K` não
- * aparece aqui, igual não aparece no link do cliente.
+ * renderiza exatamente o documento que publicar congelaria.
  */
 
 export const dynamic = "force-dynamic";

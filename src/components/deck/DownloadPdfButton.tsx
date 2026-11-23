@@ -8,10 +8,10 @@ import { useEffect } from "react";
  *
  * `src/styles/print.css` turns every `.slide` into exactly one page box and
  * hides the chrome. What CSS alone cannot do is make a slide *fit* that box:
- * the sections were laid out for a viewport they could overflow, so the tall
- * ones (calculator) would crop. The pass below measures each slide at
- * the print box's width and writes a per-slide `--print-scale` the stylesheet
- * applies to `.slide-inner`.
+ * the sections were laid out for a viewport they could overflow, so a tall
+ * one would crop. The pass below measures each slide at the print box's width
+ * and writes a per-slide `--print-scale` the stylesheet applies to
+ * `.slide-inner`.
  */
 
 /* Mirrors of the `@page` box and `.slide` padding in print.css. Change these
@@ -27,8 +27,8 @@ const AVAILABLE_HEIGHT_PX = PAGE_HEIGHT_PX - PAGE_BLEED_PX - SLIDE_PAD_Y_PX * 2;
 const SAFETY = 0.98;
 
 /** Below this a slide is unreadable anyway; better to crop than to print a
-    page nobody can read. Only reachable if a slide grows far past its design,
-    which for the calculator means a lot of ambientes. */
+    page nobody can read. Only reachable if a slide grows far past its
+    design. */
 const MIN_SCALE = 0.45;
 
 /**

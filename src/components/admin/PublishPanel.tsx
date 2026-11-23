@@ -294,7 +294,7 @@ function PublishForm({ id, sendState }: { id: string; sendState: SendState }) {
 
       <p className="text-xs leading-relaxed text-muted-foreground">
         {sendState === "draft"
-          ? "Publicar tira uma fotografia do deck de hoje. A partir daí, editar preços ou textos padrão não muda o que o cliente recebeu."
+          ? "Publicar tira uma fotografia do deck de hoje. A partir daí, editar os textos padrão não muda o que o cliente recebeu."
           : "Publicar de novo substitui a fotografia que o cliente vê pelo estado de agora."}
       </p>
     </form>

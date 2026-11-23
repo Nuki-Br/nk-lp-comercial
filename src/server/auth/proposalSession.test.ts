@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-/* The cookie half of "money, passwords and time" (ADR 12).
+/* The cookie half of "passwords and time" (ADR 12, as amended by ADR 27).
 
    The module reads PROPOSAL_COOKIE_SECRET at import time and throws without it —
    deliberately, per docs/deployment.md. So the env is set here BEFORE a dynamic

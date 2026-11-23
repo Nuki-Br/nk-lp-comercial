@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description:
     "Do planejamento do memorial à validação em obra — como a Nuki organiza, profissionaliza e centraliza o ciclo completo de personalização de acabamentos em uma plataforma só.",
   // Material comercial privado. O portão de senha é client-side, então um
-  // crawler que busca o HTML veria o deck inteiro — preços inclusive.
+  // crawler que busca o HTML veria o deck inteiro.
   robots: { index: false, follow: false },
   openGraph: {
     type: "website",

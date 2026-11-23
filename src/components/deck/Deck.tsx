@@ -1,7 +1,6 @@
 import { DeckBehaviors } from "@/components/deck/DeckBehaviors";
 import { DeckNavigationProvider } from "@/components/deck/DeckNavigation";
 import { DownloadPdfButton } from "@/components/deck/DownloadPdfButton";
-import { EstimateProvider } from "@/components/deck/EstimateProvider";
 import { ProgressNav } from "@/components/deck/ProgressNav";
 import { Footer } from "@/components/layout/Footer";
 import { RichText } from "@/components/ui/RichText";
@@ -12,10 +11,6 @@ import type { DeckConfig } from "@/deck/types";
 /**
  * Renderiza um `DeckConfig`. Um caminho de render só — o `/fast` e, na etapa 2,
  * o `/p/[slug]` passam por aqui; o que muda é o config, não o componente.
- *
- * O `EstimateProvider` envolve a lista INTEIRA em vez do par Calculator +
- * Total. Com ordem vinda de config não dá pra detectar o par, e envolver tudo é
- * inofensivo e independente de ordem — ver docs/architecture.md.
  */
 export function Deck({
   config,
@@ -36,7 +31,6 @@ export function Deck({
 }) {
   const anchors = anchorsOf(config.slides);
   const walkableIds = walkableIdsOf(config.slides);
-  const ctx = { estimate: config.estimate, chrome: config.chrome };
 
   return (
     // Não emite nó de DOM — qualquer wrapper quebraria a identidade do `.deck`.
@@ -44,7 +38,7 @@ export function Deck({
       <div className="deck flex min-h-screen flex-col">
         <ProgressNav anchors={anchors} />
         <main className="flex flex-1 flex-col">
-          <EstimateProvider>{config.slides.map((node) => renderSlide(node, ctx))}</EstimateProvider>
+          {config.slides.map((node) => renderSlide(node))}
         </main>
         {config.chrome.showFooter && <Footer />}
         <DeckBehaviors />

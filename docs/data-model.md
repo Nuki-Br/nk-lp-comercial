@@ -2,7 +2,7 @@
 audience: agent
 status: current
 verified_against: src/deck/types.ts, src/server/proposals/config.ts, supabase/migrations/*.sql, ADR 13
-size: 209
+size: 201
 ---
 
 # Data model
@@ -30,7 +30,7 @@ database the contract instead, and stage 1 could no longer define the shape by
 proving it renders.
 
 Concretely, nothing in `src/deck/types.ts` becomes a column. `SlideNode`,
-`EstimateConfig`, `RichText` and the label bags all round-trip as JSON.
+`RichText` and the label bags all round-trip as JSON.
 
 ## The seven tables
 
@@ -130,16 +130,13 @@ recorded at the moment of the visit cannot be re-pointed by a later edit.
 
 ## Money never becomes a column
 
-All prices in this system live inside the config document:
-`estimate.imagePrices.base` / `.option` (integers, in reais — `84`). JSONB gives
-those back as JSON numbers, so the existing shape is safe and stage 2 does not
-touch it.
+There is no money in this system any more — the last prices left the deck with
+ADR 27.
 
 **The rule binds the first money column anyone adds: integer cents, and discounts
 in integer basis points — never `numeric`.** PostgREST serializes `numeric` as a
 JSON *string*, so a `numeric(12,2)` column arrives in JavaScript as `"84.00"`,
-and the first arithmetic on it produces `NaN` rather than an error. The failure
-surfaces as a zero on the closing frame during a live pitch.
+and the first arithmetic on it produces `NaN` rather than an error.
 
 ## Two config columns, and why both
 
@@ -149,32 +146,27 @@ surfaces as a zero on the closing frame during a live pitch.
   untouched proposal *is* the deck by the identity `resolve(base, null) === base`.
 - **`config_snapshot` is the resolved config, frozen at publish.** A sent
   proposal is a commercial document. It must not change because somebody edited a
-  default price two months later.
+  default two months later.
 
-**One thing a stored document does lose, on read.** A snapshot frozen before
-ADR 26 still carries the plan slide and its `estimate` fields.
-`parseStoredDeckConfig` drops them through `stripRetired`
-(`src/deck/retired.ts`), and `parseDeckOverride` drops the same fields from a
-stored delta. Neither rewrites the row; republishing does.
+**What a stored document does lose, on read.** A snapshot frozen before ADRs 26
+and 27 still carries the plan slide, the calculator, the closing frame, the
+`estimate` block and `chrome.allowPriceOverride`. `parseStoredDeckConfig` drops
+them through `stripRetired` (`src/deck/retired.ts`), and `parseDeckOverride`
+never reads `estimate` from a stored delta. Neither rewrites the row;
+republishing does.
 
-Two fields of `DeckConfig` are **not** in `DeckOverride` and cannot be: `key` and
-`chrome.allowPriceOverride`. They are set at the render site. `/p/[slug]` renders
-with `allowPriceOverride: false`, and the publish path must write the snapshot
-with `false` too — otherwise `/fast`'s `true` freezes into the document and every
-published link ships the `Ctrl+Alt+K` cost panel to a client.
+One field of `DeckConfig` is **not** in `DeckOverride` and cannot be: `key`. It is
+set at the render site, to the proposal's slug.
 
 ### Writing the delta
 
 `src/server/proposals/config.ts` is the **only** writer of `config_override`.
 Every composer form goes through `saveProposalOverride`, which resolves the
 merged delta, validates the RESOLVED config, and writes nothing if it fails.
-Validating the resolved config rather than the delta is not a preference: "total
-after calculator" is meaningless until the order has been applied.
+Validating the resolved config rather than the delta is not a preference: an
+orphaned demo only exists once its parent's `enabled` is known.
 
-Top-level keys of the delta replace, because each form owns one. `estimate` is
-the exception and merges one level, because two forms write disjoint parts of
-it — replacing it wholesale would make saving the image tariffs discard the
-calculator seed set minutes earlier, silently.
+Top-level keys of the delta replace, because each form owns one.
 
 Keys carrying no information are pruned, so an untouched proposal's
 `config_override` is literally `{}` — the identity `resolve(base, null) === base`

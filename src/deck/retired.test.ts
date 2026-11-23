@@ -1,38 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { anchorsOf } from "@/deck/anchors";
 import { buildDefaultDeck } from "@/deck/defaults";
-import { stripRetired, stripRetiredEstimate } from "@/deck/retired";
+import { stripRetired } from "@/deck/retired";
 import type { DeckConfig } from "@/deck/types";
 
-/* Um documento congelado antes da ADR 26 ainda traz o slide de plano. O que
-   este arquivo fixa é o que acontece com ele na leitura: o nó some ANTES de o
-   progress-nav ganhar um ponto sem âncora, e o resto do documento passa
-   intacto. */
+/* Um documento congelado antes das ADRs 26 e 27 ainda traz o slide de plano, a
+   calculadora e o frame de total. O que este arquivo fixa é o que acontece com
+   ele na leitura: os nós somem ANTES de o progress-nav ganhar pontos sem
+   âncora, e o resto do documento passa intacto. */
+
+const RETIRED_IDS = ["pricing", "calculator", "total"];
 
 /** O deck padrão com o que um snapshot antigo trazia a mais. Montado por cima
     do default, e não escrito à mão, para que o resto do documento seja real. */
 const legacySnapshot = (): DeckConfig => {
   const config = structuredClone(buildDefaultDeck()) as unknown as {
     slides: Record<string, unknown>[];
-    estimate: Record<string, unknown>;
+    estimate?: unknown;
+    chrome: Record<string, unknown>;
   };
 
-  const calculator = config.slides.findIndex((node) => node.id === "calculator");
-  config.slides.splice(calculator, 0, {
-    kind: "pricing",
-    id: "pricing",
-    label: "Plano & contato",
-    enabled: true,
-    tone: "dark",
-  });
-
-  const total = config.slides.find((node) => node.id === "total");
-  if (total) total.labels = { ...(total.labels as object), platform: "Plataforma" };
-
-  config.estimate.plans = [{ n: "Plano único", items: [], monthlyPrice: 1 }];
-  config.estimate.billingCycles = [{ id: "mensal", label: "Mensal", discount: 0, minMonths: 1 }];
-  config.estimate.maxMonths = 36;
-  config.estimate.defaultMonths = 12;
+  config.slides.push(
+    { kind: "pricing", id: "pricing", label: "Plano & contato", enabled: true, tone: "dark" },
+    { kind: "calculator", id: "calculator", label: "Estime o setup", enabled: true },
+    { kind: "total", id: "total", label: "Total estimado", enabled: true },
+  );
+  config.estimate = {
+    plans: [{ n: "Plano único", items: [], monthlyPrice: 1 }],
+    maxMonths: 36,
+    imagePrices: { base: 84, option: 28 },
+  };
+  config.chrome.allowPriceOverride = true;
 
   return config as unknown as DeckConfig;
 };
@@ -46,12 +44,14 @@ describe("stripRetired", () => {
     expect(stripRetired(legacySnapshot())).toEqual(buildDefaultDeck());
   });
 
-  it("tira o ponto de nav junto com o slide", () => {
+  it("tira os pontos de nav junto com os slides", () => {
     const before = anchorsOf(legacySnapshot().slides).map((anchor) => anchor.id);
     const after = anchorsOf(stripRetired(legacySnapshot()).slides).map((anchor) => anchor.id);
 
-    expect(before).toContain("pricing");
-    expect(after).not.toContain("pricing");
+    for (const id of RETIRED_IDS) {
+      expect(before).toContain(id);
+      expect(after).not.toContain(id);
+    }
   });
 
   it("é idempotente", () => {
@@ -63,15 +63,8 @@ describe("stripRetired", () => {
     const snapshot = legacySnapshot();
     stripRetired(snapshot);
 
-    expect(snapshot.slides.map((node) => node.id)).toContain("pricing");
-    expect(snapshot.estimate).toHaveProperty("plans");
-  });
-});
-
-describe("stripRetiredEstimate", () => {
-  it("tira os campos de plano de um delta parcial e deixa o resto", () => {
-    const patch = { maxMonths: 24, imagePrices: { base: 99, option: 33 } };
-
-    expect(stripRetiredEstimate(patch)).toEqual({ imagePrices: { base: 99, option: 33 } });
+    expect(snapshot.slides.map((node) => node.id)).toEqual(expect.arrayContaining(RETIRED_IDS));
+    expect(snapshot).toHaveProperty("estimate");
+    expect(snapshot.chrome).toHaveProperty("allowPriceOverride", true);
   });
 });

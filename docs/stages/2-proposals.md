@@ -1,14 +1,19 @@
 ---
 audience: agent
-status: current
+status: partially-superseded
 verified_against: next 16.2.9 local docs, supabase CLI 2.109.1, @supabase/ssr contract
-size: 357
+size: 362
 ---
 
 # Stage 2 — Proposals
 
 > Paste this whole file into a fresh agent session. It is self-contained.
 > **Stage 1 must be merged and green.** Verify it; do not assume it.
+
+> **Done, and partly removed since.** The plan slide (ADR 26) and the image
+> calculator with its closing frame and `Ctrl+Alt+K` panel (ADR 27) left the
+> product after this stage; the passages that built them are gone from this
+> brief. What remains is the record of the rest.
 
 ## Read this first
 
@@ -78,8 +83,8 @@ cannot complete. If its tools appear in your tool list, ignore them. The CLI ove
 
 ## Out of scope — belongs to stage 3
 
-- **Every form that edits `config`.** Slide picker, ordering, price editor,
-  estimator defaults. Stage 3 owns all of it.
+- **Every form that edits `config`.** Slide picker and ordering. Stage 3 owns
+  all of it.
 - The tracking read-out UI beyond a raw open-count on the proposal list.
 - V2 copy overrides and bespoke slides.
 - Email, roles beyond owner/member, PDF export, any CSS work.
@@ -261,8 +266,8 @@ another.
 ### 6. `/p/[slug]`
 
 Server component, dynamic, `Cache-Control: private, no-store`. Calls the DAL and
-renders one of four states. The locked branch emits **zero** content — no price,
-no slide copy.
+renders one of four states. The locked branch emits **zero** content — no slide
+copy.
 
 **Do not reuse `AccessGate` here.** It compares a password in the browser against
 a value inlined into the bundle. That is the right pattern for `/fast` and exactly
@@ -334,7 +339,7 @@ and `.env.example`. Mark stage 2 done in `docs/stages/README.md`.
 The first one is what actually proves the trust boundary, and it is a one-liner:
 
 ```bash
-curl -s http://localhost:3000/p/<slug> | grep -c "Estime o setup" # must be 0
+curl -s http://localhost:3000/p/<slug> | grep -c "saíram da planilha" # must be 0
 curl -s http://localhost:3000/p/<slug> | grep -ci "planejamento"  # must be 0
 ```
 
@@ -345,7 +350,7 @@ curl -sI localhost:3000/ | grep -i location                 # → /admin
 ```
 
 Plus checklist **B** and **C** in `docs/testing.md`, and **checklist A on `/fast`
-must still pass with the same four canonical numbers** — 45 / 284 / 507 / 738.
+must still pass**.
 
 Runtime dependencies must be exactly the Rule 3 allowlist: `next`, `react`,
 `react-dom`, `@supabase/supabase-js`, `@supabase/ssr`, `zod`.

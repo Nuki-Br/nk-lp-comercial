@@ -1,8 +1,8 @@
 ---
 audience: agent
 status: current
-verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview, 23 unpublish and delete, 24 the panel's motion and layout tokens, 25 the stats reset, 26 the plan slide's removal
-size: 755
+verified_against: the decisions themselves; ADRs 9-18 record the proposal-app build, 20 the stage-2 gate split, 21 the admin UI pass, 22 the composer preview, 23 unpublish and delete, 24 the panel's motion and layout tokens, 25 the stats reset, 26 the plan slide's removal, 27 the image calculator's removal
+size: 784
 ---
 
 # Decisions
@@ -16,7 +16,9 @@ record of what was believed and why at a point in time; editing the body destroy
 the only thing it was for.
 
 **One exception, and it is recorded rather than hidden.** ADR 26 deleted ADR 19
-outright and removed the plan passages from ADRs 5 and 13, at the owner's
+outright and removed the plan passages from ADRs 5 and 13, and ADR 27 removed the
+image-calculator and price passages from ADRs 5, 7, 9, 12, 13, 18, 22 and 24 —
+both at the owner's
 request. The number 19 is not reused.
 
 | # | Decision | Status |
@@ -32,7 +34,7 @@ request. The number 19 is not reused.
 | 9 | The deck moves to `/fast` and stays code-driven | current |
 | 10 | First-party tracking is not analytics | current |
 | 11 | A dependency allowlist replaces the fixed three | current |
-| 12 | Tests return, scoped to money, passwords and time | current |
+| 12 | Tests return, scoped to money, passwords and time | amended by 27 |
 | 13 | Config is one JSONB delta plus a publish snapshot | amended by 26 |
 | 14 | `node:crypto` over an auth library | current |
 | 15 | Proxy is optimistic; the DAL is authoritative | current |
@@ -45,7 +47,8 @@ request. The number 19 is not reused.
 | 23 | Unpublish is a fourth status; delete is the existing archive | current |
 | 24 | The panel's motion and its sticky ruler are tokens, not literals | current |
 | 25 | Resetting a proposal's stats marks the sessions internal | current |
-| 26 | The plan slide is gone; a stored document loses it on read | current |
+| 26 | The plan slide is gone; a stored document loses it on read | amended by 27 |
+| 27 | The image calculator is gone, and with it the last price in the deck | current |
 
 ## 1. Split out of nk-lp
 
@@ -109,14 +112,13 @@ denylist.
 ## 5. Anchor ids are English, except product names
 
 **Decision.** `#capa` → `#cover`, `#problema` → `#problem`, `#o-que-e` →
-`#what-is-nuki`, `#diferenciais` → `#differentiators`, `#publico` → `#audience`,
-`#calculadora` → `#calculator`.
+`#what-is-nuki`, `#diferenciais` → `#differentiators`, `#publico` → `#audience`.
 
-`#planner`, `#personaliza`, `#inspetor`, `#inspetor-demo`, `#cases` and `#total`
-are unchanged — they are product names or already English.
+`#planner`, `#personaliza`, `#inspetor`, `#inspetor-demo` and `#cases` are
+unchanged — they are product names or already English.
 
-**Consequence.** Deep links shared before the split (`/comercial#calculadora`)
-land on the deck but do not scroll to the section. Nothing keys off an id in
+**Consequence.** Deep links shared before the split (`/comercial#problema`) land
+on the deck but do not scroll to the section. Nothing keys off an id in
 CSS, so the rename was structurally free; the only cost is those stale
 fragments.
 
@@ -154,19 +156,10 @@ exactly 2 is accounted for — `jornada`+`comercial` collapsed to `deck`, and
 
 **Decision.** No Vitest, no Jest, no Playwright.
 
-**Rationale.** A static deck whose only logic is the estimate calculator has
-near-zero unit-test ROI, and the parts most likely to break — reveal observers,
-keyboard nav, the demo iframe's ESC bridge — are browser behavior that unit tests
-would not catch anyway. `npm run check` plus the manual checklist in `AGENTS.md`
-is the guard.
-
-**The extraction happened; the tests did not.** When the calculator gained a
-second tariff (base image vs option image), the math moved out of
-`CalculatorSlide.tsx` into `src/lib/estimate.ts` — pure, React-free, and small
-enough to read in one sitting. That was for legibility, not for testability: the
-slide was already 850 lines. If the pricing is ever disputed in a sales call,
-that single file is now the thing to test, and it is the only file in the repo
-worth a test at all.
+**Rationale.** A static deck has near-zero unit-test ROI, and the parts most
+likely to break — reveal observers, keyboard nav, the demo iframe's ESC bridge —
+are browser behavior that unit tests would not catch anyway. `npm run check` plus
+the manual checklist in `AGENTS.md` is the guard.
 
 ## 8. Committed demo artifact
 
@@ -191,7 +184,7 @@ they can open in thirty seconds for an unplanned pitch.
 **Consequence.** `/fast` works when Supabase is down, which is the point: a live
 client meeting is the worst possible moment to discover a hosted dependency is
 unavailable. The cost is that `/fast` keeps the known weakness — the gate is
-client-side, so the full HTML including pricing is in the payload for anyone who
+client-side, so the full HTML is in the payload for anyone who
 fetches the page. That was accepted knowingly. It stays `noindex` three ways
 (`next.config.ts` header, layout metadata, `public/robots.txt`); keep all three.
 
@@ -249,18 +242,15 @@ that a reviewer cannot miss.
 
 ## 12. Tests return, scoped to money, passwords and time
 
-**Context.** ADR 7 reasoned from "a static deck whose only logic is the estimate
-calculator". The repo now contains pricing driven by database config, password
-hashing, signed-cookie expiry, and an access-control boundary.
+> **Amended by ADR 27.** The money half left with the image calculator. What is
+> tested now is passwords, time and the config the deck is built from.
 
-**The evidence is in this repo's own history.** `AGENTS.md` asserted preset
-totals of 208 / 678 / 1.544 while the code produced 284 / 507 / 738, and the same
-numbers were restated in two other files. A ten-line test would have caught it
-the day the preset compositions changed.
+**Context.** ADR 7 reasoned from "a static deck". The repo now contains a config
+driven by the database, password hashing, signed-cookie expiry, and an
+access-control boundary.
 
 **Decision.** Vitest, dev-dependency, with a written ceiling. Tested: the
-estimate math (the four canonical scenarios, count and cost), the `DeckConfig`
-JSON round trip, password hash/verify, cookie validity and tampering, and the
+`DeckConfig` JSON round trip, password hash/verify, cookie validity and tampering, and the
 DAL decision table with its fetcher injected so CI needs no database.
 
 **Consequence.** `npm run check` gains a test run. Slide components, snapshots,
@@ -280,7 +270,7 @@ ADR needs revisiting.
 > **Amended by ADR 26** — a snapshot frozen with the plan slide loses it on read.
 
 **Context.** Per-proposal customization could be normalized tables (a row per
-slide, per price) or a JSON document.
+slide, per setting) or a JSON document.
 
 **Decision.** `DeckConfig` is a single TypeScript type and the contract between
 all three build stages. `proposals.config_override` stores a **delta** over the
@@ -293,7 +283,7 @@ rather than a property maintained by hand. Copy fixes in `src/content/` reach
 unpublished drafts for free.
 
 **Why also a snapshot.** A sent proposal is a commercial document. It must not
-change because someone edited a default price two months later. The delta is what
+change because someone edited a default two months later. The delta is what
 the admin edits; the snapshot is what the client sees.
 
 **Why not normalized config tables.** They would make the schema the contract
@@ -301,7 +291,7 @@ instead of the type, which breaks the staged build: stage 1 could no longer
 define the shape by proving it renders. They also bring transactional reorders
 with deferrable constraints — real surface for an agent to get subtly wrong.
 
-**Consequence, accepted.** Cross-proposal reporting on prices is a JSONB
+**Consequence, accepted.** Cross-proposal reporting on any config field is a JSONB
 query rather than a `SELECT` over a column. At this volume that is fine. Deltas
 are keyed by node **id**, never by array index, so reordering cannot scramble
 patches; unknown ids are dropped rather than throwing, so a rollback does not 500
@@ -409,8 +399,8 @@ admin-facing field schema rather than just a label.
 
 **The one V1 cost worth paying.** Every human-visible string should move into
 config in V1 — including the ones the V1 admin never exposes. If `CasesSlide`'s
-logo list and `CalculatorSlide`'s inline labels are still module imports when V1
-ships, V2 has to re-open all ten slide files. One pass now, two passes later.
+logo list is still a module import when V1 ships, V2 has to re-open every slide
+file. One pass now, two passes later.
 
 ## 20. The shared-password gate is scoped to `/fast`, not to the deck group
 
@@ -520,8 +510,8 @@ from being a fourth *product* surface:
   *live* delta — which is the entire point, since a salesperson previews what
   they have not published — and therefore may only ever be reachable by an admin.
 - **It shows what a client would see.** `resolveForProposal` already runs the
-  config through `forVisitor`, so `allowPriceOverride` is false here too. The
-  `Ctrl+Alt+K` cost panel is as absent from the preview as it is from the link.
+  config through `forVisitor`, so the preview is exactly the document publishing
+  would freeze.
 
 `proxy.ts` is deliberately not extended to `/preview`. Its matcher is `/admin`
 and its own header says it decides nothing; the authority is the `requireAdmin()`
@@ -634,9 +624,8 @@ reads as a series of reloads rather than one application.
   ordinary Tailwind utilities (`animate-rise`, `ease-out-quart`).
 
 **Rationale.** Naming the two measured heights and deriving the rest is what
-makes "the ruler grew by a line" a one-line edit instead of a hunt. It is the
-same argument `docs/estimate.md` won for the estimate figures, applied to
-layout: the repo has already lost the same number in three places once.
+makes "the ruler grew by a line" a one-line edit instead of a hunt. The repo
+has already lost the same number in three places once.
 
 Four animations and two curves, rather than a per-component judgement call, is
 the part that keeps this from becoming decoration. A panel where each screen
@@ -715,6 +704,9 @@ worth having.
 
 ## 26. The plan slide is gone; a stored document loses it on read
 
+> **Amended by ADR 27.** The closing frame and the image tariffs this ADR left in
+> place are gone too.
+
 **Context.** The deck carried a plan slide — a price for the platform, cycles
 with discounts and a months simulator — and the closing frame added that
 platform cost to the image setup. The commercial model it presented was studied
@@ -753,3 +745,40 @@ were about the plan slide. It stays wired through the composer —
 ADR 19 ("The billing cycle is derived, not selected") was deleted and the plan
 passages of ADRs 5 and 13 were removed. That is the stated exception to
 "amending, not rewriting" at the top of this file.
+
+## 27. The image calculator is gone, and with it the last price in the deck
+
+**Context.** After ADR 26 the deck still priced something: a calculator that
+estimated the 3D images a development would need, at two tariffs — base image
+and finish option — and a closing frame that stated the total. The owner asked
+for the calculator to be removed from the product and from the docs, the way
+the plan was.
+
+**Decision.** The `calculator` and `total` slide kinds are deleted, with
+everything that existed only for them: `EstimateConfig` and `DeckConfig.estimate`,
+the image math in `src/lib/`, the presets and room seeds in `src/content/`, the
+cross-slide `EstimateProvider`, the `Ctrl+Alt+K` tariff panel and the
+`chrome.allowPriceOverride` flag that kept it off client links, the composer's
+"Tarifas de imagem" and "Calculadora" tabs, and the "Setup de imagens" column of
+the proposals list. The deck ends at `cases`. `docs/estimate.md` is deleted, and
+`scripts/check-docs.mjs` loses the check that kept its numbers in step.
+
+Stored documents are handled exactly as in ADR 26. `stripRetired` now drops the
+`calculator` and `total` nodes, the whole `estimate` block and
+`chrome.allowPriceOverride` from a stored snapshot on read, and
+`parseDeckOverride` no longer reads `estimate` from a stored delta, so the next
+save does not write it back.
+
+**Rationale.** The same as ADR 26 for the read-side stripping: an enabled node
+whose kind no longer renders would light a nav dot with no anchor. And with no
+price left in the deck, `allowPriceOverride` has nothing to guard — keeping it
+would be a security control protecting an empty room.
+
+**Consequence, accepted.** A proposal published before this ADR opens without
+the calculator and the closing frame — the second time the app changes a
+document already sent, again on purpose. The tests for money (ADR 12) go with
+the money; what remains tested is passwords, time and the config.
+
+The image-calculator and price passages of ADRs 5, 7, 9, 12, 13, 18, 22 and 24
+were removed. That is the same stated exception to "amending, not rewriting"
+that ADR 26 used.

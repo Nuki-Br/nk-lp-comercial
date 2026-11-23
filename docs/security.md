@@ -29,7 +29,7 @@ page, not RLS. Every other control in this document is depth behind it.
 | `/admin` | Supabase Auth session + an `admin_users` row | `requireAdmin()`, per page/action/handler |
 
 `/fast`'s gate is a speed bump and is documented as one (ADR 9): the password is
-inlined in the client bundle and the full deck, pricing included, is in the
+inlined in the client bundle and the full deck is in the
 payload of anyone who fetches the page. That is accepted, because `/fast` must
 work with Supabase down. It is **not** a pattern to copy — which is why the gate
 now lives in `src/app/(deck)/fast/layout.tsx` and not in the layout above it,
@@ -63,7 +63,7 @@ Checked in this order, stopping at the first failure:
 The fetcher is injected, so this table is testable with no database — which is
 also what keeps CI database-free (ADR 12).
 
-**`locked` renders zero content.** No price, no slide copy, and a generic
+**`locked` renders zero content.** No slide copy, and a generic
 `<title>`: a `generateMetadata` that read the proposal's document title would
 leak the client's name into the HTML of a page nobody has unlocked. The `curl`
 one-liner in `testing.md` checklist B is what proves this, and it is the single

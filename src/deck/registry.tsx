@@ -1,18 +1,16 @@
 import type { ReactElement } from "react";
 import {
   AudienceSlide,
-  CalculatorSlide,
   CasesSlide,
   CoverSlide,
   DifferentiatorsSlide,
-  EstimatedTotalSlide,
   ModuleDemoSlide,
   ModuleSlide,
   ProblemSlide,
   ValueSlide,
   WhatIsNukiSlide,
 } from "@/components/slides";
-import type { DeckChrome, EstimateConfig, SlideNode } from "@/deck/types";
+import type { SlideNode } from "@/deck/types";
 
 /**
  * O ÚNICO módulo do repo que dá switch em `kind`.
@@ -22,12 +20,7 @@ import type { DeckChrome, EstimateConfig, SlideNode } from "@/deck/types";
  * ninguém está olhando. Tudo que outros consumidores precisam ler mora na base
  * do nó (`enabled`, `inNav`, `walkable`, `ordinal`, `childId`).
  */
-export type SlideContext = {
-  estimate: EstimateConfig;
-  chrome: DeckChrome;
-};
-
-export function renderSlide(node: SlideNode, ctx: SlideContext): ReactElement | null {
+export function renderSlide(node: SlideNode): ReactElement | null {
   if (!node.enabled) return null;
 
   switch (node.kind) {
@@ -49,17 +42,6 @@ export function renderSlide(node: SlideNode, ctx: SlideContext): ReactElement | 
       return <AudienceSlide key={node.id} node={node} />;
     case "cases":
       return <CasesSlide key={node.id} node={node} />;
-    case "calculator":
-      return (
-        <CalculatorSlide
-          key={node.id}
-          node={node}
-          estimate={ctx.estimate}
-          allowPriceOverride={ctx.chrome.allowPriceOverride}
-        />
-      );
-    case "total":
-      return <EstimatedTotalSlide key={node.id} node={node} />;
     default:
       /* V2 e degradação. Um config escrito por um deploy MAIS NOVO pode trazer
          um `kind` que este build não conhece; devolver `null` faz o slide sumir

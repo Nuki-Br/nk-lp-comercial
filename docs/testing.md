@@ -1,25 +1,21 @@
 ---
 audience: agent
 status: current
-verified_against: package.json scripts, ADR 7 and ADR 12, src/server/**/*.test.ts
-size: 281
+verified_against: package.json scripts, ADRs 7, 12 and 27, src/**/*.test.ts
+size: 251
 ---
 
 # Testing
 
 ## The policy, in one sentence
 
-**There are no tests for the deck, deliberately. There are tests for money,
-passwords and time, mandatorily.**
+**There are no tests for the deck, deliberately. There are tests for passwords
+and time, and for the config the deck is built from, mandatorily.**
 
-ADR 7 decided against a test framework and was right. Its premise — "a static
-deck whose only logic is the estimate calculator" — expired when the repo gained
-pricing driven by database config, password hashing, signed-cookie expiry and an
-access-control boundary. ADR 12 records the change and what survived from ADR 7.
-
-The evidence that this was needed is in the repo's own history: `AGENTS.md`
-asserted preset totals of 208 / 678 / 1.544 while the code produced 284 / 507 /
-738, restated in two other files.
+ADR 7 decided against a test framework and was right. Its premise expired when
+the repo gained a database-driven config, password hashing, signed-cookie expiry
+and an access-control boundary. ADR 12 records the change and what survived from
+ADR 7; ADR 27 removed the money half when the image calculator left.
 
 ## What is tested
 
@@ -29,14 +25,13 @@ is what makes its decision table testable at all.
 
 | File | Assertions |
 |---|---|
-| `src/lib/estimate.ts` | the four canonical scenarios, image count **and** cost — the table in `estimate.md`; the materialize/aliasing guards; `formatCurrency`'s NBSP |
-| `src/deck/defaults.ts` | JSON round trip; `resolve(base, null) === base`; `normalizeDeck` idempotence; disabled slides skipped by `anchorsOf`; orphan-demo drop; ordinal renumbering; arrays replace in `mergeEstimate`; `parseDeckOverride` never throws |
+| `src/deck/defaults.ts` | JSON round trip; `resolve(base, null) === base`; `normalizeDeck` idempotence; disabled slides skipped by `anchorsOf`; orphan-demo drop; ordinal renumbering; `parseDeckOverride` never throws and never reads `estimate` |
 | `src/server/auth/password.ts` | hash/verify round trip; wrong password fails; comparison is timing-safe |
 | `src/server/auth/proposalSession.ts` | valid cookie accepted; expired-by-1s rejected; one-byte-tampered rejected; proposal A's cookie rejected for proposal B |
-| `src/server/proposals/dal.ts` | the decision table `(row, cookie, now) → ok \| locked \| expired \| not-found`, fetcher injected; drafts are not-found; a stale `access_epoch` locks out; `allowPriceOverride` is forced false; the `locked` result has exactly two keys; a snapshot frozen with the plan slide renders without it |
-| `src/deck/retired.ts` | the identity on a config this build wrote; an old snapshot comes out equal to today's deck; the nav dot leaves with the slide; idempotent, and it does not mutate what it was given; a partial delta loses only the plan fields |
-| `src/server/config/validate.ts` | rejects demo-without-module, total-without-calculator, a negative or NaN image tariff, duplicate ids, an all-disabled deck — and accepts the shipped default deck, which is what stops a validator that rejects everything from passing every other case; the warnings list is carried on both arms |
-| `src/server/proposals/config.ts` | the delta merge (`estimate` merges one level so two forms cannot overwrite each other); `enabledDelta` against the shipped defaults; `isSnapshotStale` deep-compares and survives reordered keys |
+| `src/server/proposals/dal.ts` | the decision table `(row, cookie, now) → ok \| locked \| expired \| not-found`, fetcher injected; drafts are not-found; a stale `access_epoch` locks out; the `locked` result has exactly two keys; a legacy snapshot comes back without the retired slides, `estimate` and `allowPriceOverride` |
+| `src/deck/retired.ts` | the identity on a config this build wrote; an old snapshot comes out equal to today's deck; the nav dots leave with the slides; idempotent, and it does not mutate what it was given |
+| `src/server/config/validate.ts` | rejects demo-without-module, duplicate ids, an all-disabled deck — and accepts the shipped default deck, which is what stops a validator that rejects everything from passing every other case; the warnings list is carried on both arms |
+| `src/server/proposals/config.ts` | the delta merge (each form owns a top-level key; empty keys are pruned); `enabledDelta` against the shipped defaults; `isSnapshotStale` deep-compares and survives reordered keys |
 | `src/deck/v2Hooks.test.ts` | the ADR 18 hooks: the union stays open, `slideMetaOf` degrades, `copy` round-trips unread, `custom` is the only addable kind |
 
 ## What is not tested, and why
@@ -109,19 +104,13 @@ One per surface. Most of this is browser behavior that typecheck cannot see —
 but note how much of checklist B is `curl`, which matters because agents usually
 cannot see a screen.
 
-> **rAF does not fire in a hidden tab.** `useCountUp` animates every number, so
-> in a headless or backgrounded pane the calculator freezes at its first computed
-> value and the closing frame shows R$ 0. **That is not a failure.** Read raw
-> values, or make the pane visible. Agents report this as a bug constantly.
-
 ### What an automated pane cannot tell you
 
-Stage 1 lost time to four separate measurement artifacts. All four look exactly
-like regressions and none of them are:
+Stage 1 lost time to separate measurement artifacts. They look exactly like
+regressions and none of them are:
 
 | Symptom | Cause | Tell |
 |---|---|---|
-| Closing frame reads zero; animated numbers stale after a preset click | rAF frozen | the **non**-animated readouts (`738 imagens estimadas`, the `N base · M de opção` line) are correct |
 | No progress-nav dot ever lights; arrow keys do nothing; `scrollIntoView` does nothing | `window.innerHeight === 0`, so a `-50%` rootMargin observer can never fire and the document cannot scroll | check `window.innerHeight` first; a **direct** `scrollIntoView` failing proves it is the pane, not the handler |
 | `.gate` computes `min-height: 0px` | `100dvh` against a zero-height viewport | `offsetHeight` is correct anyway |
 | Nested `<html>`/`<body>`, "mounting a new html component" | stale HMR in a tab left open across a layout edit | `curl` the route: one `<html>`. A fresh tab is clean |
@@ -141,8 +130,7 @@ are present depends on scroll position, tab age and wall clock. Normalise first:
 strip `.is-visible`, `.is-active`, `.progress-nav[data-tone]` and inline
 `transform` on `[data-parallax]`, and nothing else. Everything authored —
 `data-tone` on sections, `data-nav-id`, ids, real classes — must still compare
-byte-for-byte. Then poll until the closing frame stops reading zero before
-trusting the capture.
+byte-for-byte.
 
 ## A — `/fast` regression
 
@@ -151,17 +139,13 @@ that touches the deck.
 
 - [ ] The gate appears; the password unlocks; the unlock survives a reload
 - [ ] Arrow keys walk every rendered anchor, in order, including `#inspetor-demo`
-- [ ] Every progress-nav dot scrolls somewhere — **10 dots**, not 12.
+- [ ] Every progress-nav dot scrolls somewhere — **8 dots**, not 10.
       `differentiators` and `audience` are `enabled: false` nodes, so `anchorsOf`
       skips them and no dead dot can be rendered. Do not "fix" this by un-hiding
       the slides; that was a deliberate content decision.
 - [ ] The reveal stagger fires on each section
 - [ ] The Inspetor iframe loads; **ESC pressed inside it exits**; scrolling passes
       through while the frame is inert
-- [ ] The estimate reads **45 imagens (3 base · 42 de opção) / R$ 1.428** at defaults
-- [ ] The three presets read **Studio 284 (R$ 8.736) · Padrão 507 (R$ 15.876) ·
-      Alto padrão 738 (R$ 23.184)**
-- [ ] `Ctrl+Alt+K` opens the price panel
 - [ ] Network shows **zero** third-party requests on a full scroll-through
 - [ ] Zero tracking requests — `/fast` must never emit one
 
@@ -180,13 +164,9 @@ then Chrome's *Save as PDF* destination, defaults untouched:
 - [ ] No browser header or footer — no title, URL or timestamp in the margins
 - [ ] Dark slides (cover, value) keep their background; the copy on them is
       readable
-- [ ] Nothing is cropped on the tall slides — the **calculator** is the one that
-      needs scaling, so it is the one to look at
+- [ ] Nothing is cropped on any slide
 - [ ] Print it **cold**, straight after a reload without scrolling: every slide
       still has its content (this is the `.reveal` case)
-
-Canonical numbers live in `estimate.md`. If they changed, re-derive from code and
-update that file only.
 
 ## B — `/p/[slug]`
 
@@ -194,7 +174,7 @@ The first item is the one that actually proves the trust boundary, and it is a
 one-liner:
 
 ```bash
-curl -s http://localhost:3000/p/<slug> | grep -c "Estime o setup" # must be 0
+curl -s http://localhost:3000/p/<slug> | grep -c "saíram da planilha" # must be 0
 curl -s http://localhost:3000/p/<slug> | grep -ci "planejamento"  # must be 0
 ```
 
@@ -203,7 +183,7 @@ curl -s http://localhost:3000/p/<slug> | grep -ci "planejamento"  # must be 0
 > cacheable in production, returns the same `no-cache, must-revalidate` string
 > there. A dev reading of that header proves nothing in either direction.
 
-- [ ] **Before unlocking**, the raw HTML contains no price and no slide copy
+- [ ] **Before unlocking**, the raw HTML contains no slide copy
 - [ ] **…including the `<head>`.** Page metadata is shallow-merged, so a page
       that does not override `description` and `openGraph` inherits the deck's
       marketing copy from the `(deck)` root layout — which is why the second
@@ -222,7 +202,6 @@ curl -s http://localhost:3000/p/<slug> | grep -ci "planejamento"  # must be 0
       enabled slides
 - [ ] Exactly one tracking beacon per slide transition; **none before unlock**
 - [ ] The response carries `Cache-Control: private, no-store`
-- [ ] `Ctrl+Alt+K` does **nothing** here
 
 ## C — `/admin`
 
@@ -254,22 +233,13 @@ window, and confirm each change reached `/p/[slug]`:
       switched off scrolls nowhere, because it renders nothing
 - [ ] Unticking a module's demo removes the demo **and** its "▷ Explorar" button —
       a leftover button would scroll to nothing
-- [ ] Calculadora: the live panel's image count matches what the client's
-      calculator opens with, and the per-room "Imagens" column sums to the
-      per-metragem subtotal
-- [ ] Image tariffs move the calculator's cost, and `Ctrl+Alt+K` does **nothing**
-- [ ] Two preloaded unit types are there when the calculator opens
-- [ ] With every size preset unticked, the whole preset block is absent — not an
-      empty one
 
 Validation and the freeze (ADR 13):
 
-- [ ] Total-before-calculator and an all-disabled deck are refused, each with a
-      sentence a salesperson could act on
-- [ ] A proposal published before ADR 26 opens without the plan slide, with no
-      dead dot in the progress nav, and its total equals the image setup
-- [ ] Editing a published proposal banners Tarifas de imagem and Calculadora at the top,
-      Slides inside the rail under its title, and Visão geral inside the publish
+- [ ] An all-disabled deck is refused, with a sentence a salesperson could act on
+- [ ] A proposal published before ADRs 26 and 27 opens without the plan, calculator
+      and total slides, with no dead dot in the progress nav
+- [ ] Editing a published proposal banners Slides inside the rail under its title, and Visão geral inside the publish
       block next to the button that fixes it — and leaves the client's link on
       the old version; republishing clears them
 - [ ] Changing a default in `src/content/deck.ts` and reloading the published

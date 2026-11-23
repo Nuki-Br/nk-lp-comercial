@@ -33,31 +33,6 @@ describe("validateDeckConfig", () => {
     expect(codesOf(config)).toContain("orphan-child");
   });
 
-  it("rejects a total slide placed before the calculator", () => {
-    const config = base();
-    const calculator = config.slides.findIndex((n) => n.id === "calculator");
-    const total = config.slides.findIndex((n) => n.id === "total");
-    expect(calculator).toBeGreaterThanOrEqual(0);
-    expect(total).toBeGreaterThan(calculator);
-
-    const [totalNode] = config.slides.splice(total, 1);
-    config.slides.splice(calculator, 0, totalNode);
-
-    expect(codesOf(config)).toContain("total-before-calculator");
-  });
-
-  it("rejects a negative image tariff", () => {
-    const config = base();
-    config.estimate.imagePrices.base = -84;
-    expect(codesOf(config)).toContain("negative-price");
-  });
-
-  it("rejects NaN where a number is required", () => {
-    const config = base();
-    config.estimate.imagePrices.option = Number.NaN;
-    expect(codesOf(config)).toContain("negative-price");
-  });
-
   it("rejects duplicate slide ids", () => {
     const config = base();
     config.slides.push(structuredClone(config.slides[0]));
@@ -72,10 +47,12 @@ describe("validateDeckConfig", () => {
 
   it("reports every problem at once, rather than the first", () => {
     const config = base();
-    config.estimate.imagePrices.base = -1;
     config.slides.push(structuredClone(config.slides[0]));
+    const demo = config.slides.find((n) => n.parentId);
+    const parent = config.slides.find((n) => n.id === demo?.parentId);
+    if (parent) parent.enabled = false;
 
-    expect(codesOf(config)).toEqual(expect.arrayContaining(["negative-price", "duplicate-id"]));
+    expect(codesOf(config)).toEqual(expect.arrayContaining(["duplicate-id", "orphan-child"]));
   });
 
   /* The warning channel has no producer today — the two rules that wrote to it
@@ -86,7 +63,7 @@ describe("validateDeckConfig", () => {
     expect(validateDeckConfig(base()).warnings).toEqual([]);
 
     const broken = base();
-    broken.estimate.imagePrices.base = -1;
+    for (const node of broken.slides) node.enabled = false;
     const result = validateDeckConfig(broken);
 
     expect(result.ok).toBe(false);

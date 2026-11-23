@@ -29,11 +29,6 @@ const adminClient = async () => (await import("@/server/supabase/adminClient")).
  * Runs behind requireAdmin() and does not check it — same rule as `admin.ts`: a
  * function that authorizes itself is a function someone will call from a place
  * that forgot to.
- *
- * Note what this file CANNOT write. `DeckOverride` has no `chrome` key, so
- * `allowPriceOverride` is unreachable from here by construction rather than by
- * discipline. Keep it that way; the alternative is /fast's `true` freezing into
- * a published snapshot and shipping the Ctrl+Alt+K cost panel to a client.
  */
 
 export type ProposalConfigView = {
@@ -104,9 +99,6 @@ function pruneOverride(override: DeckOverride): DeckOverride {
   if (override.hidden?.length) out.hidden = override.hidden;
   if (override.shown?.length) out.shown = override.shown;
   if (override.slides && Object.keys(override.slides).length > 0) out.slides = override.slides;
-  if (override.estimate && Object.keys(override.estimate).length > 0) {
-    out.estimate = override.estimate;
-  }
   if (override.document && Object.keys(override.document).length > 0) {
     out.document = override.document;
   }
@@ -119,29 +111,19 @@ function pruneOverride(override: DeckOverride): DeckOverride {
  *
  * Top-level keys REPLACE, because each composer form owns a whole key: the
  * slide picker owns `order`/`hidden`/`shown`.
- *
- * `estimate` is the exception and merges one level, because two different
- * forms write disjoint parts of it — image tariffs and estimator defaults.
- * Replacing it wholesale would make saving the image tariffs silently discard
- * the calculator seed the salesperson set five minutes earlier. One level is
- * enough: `mergeEstimate` already treats each of those keys independently.
  */
 export function mergeOverride(previous: DeckOverride, patch: Partial<DeckOverride>): DeckOverride {
   const next: DeckOverride = { ...previous };
 
   for (const [key, value] of Object.entries(patch)) {
     if (value === undefined) continue;
-    if (key === "estimate") {
-      next.estimate = { ...previous.estimate, ...(value as DeckOverride["estimate"]) };
-    } else {
-      Object.assign(next, { [key]: value });
-    }
+    Object.assign(next, { [key]: value });
   }
 
   return pruneOverride(next);
 }
 
-/** Defaults + delta, with the two render-site fields already applied. This is
+/** Defaults + delta, with the render-site key already applied. This is
     what publishing freezes, so the composer must preview exactly it. */
 export function resolveForProposal(override: DeckOverride, slug: string): DeckConfig {
   return forVisitor(resolveDeckConfig(buildDefaultDeck(), override), slug);
@@ -181,8 +163,8 @@ export async function loadProposalConfig(id: string): Promise<ProposalConfigView
  *
  * Validation runs against the RESOLVED config and not against the delta,
  * because every invariant worth enforcing is a fact about the rendered deck:
- * "total after calculator" is meaningless until the order has been applied, and
- * an orphaned demo only exists once its parent's `enabled` is known.
+ * an orphaned demo only exists once its parent's `enabled` is known, and "no
+ * slide enabled" only once `hidden` and `shown` have been applied.
  *
  * Nothing is written when it fails. The admin gets the issues back and the
  * stored delta is exactly what it was.

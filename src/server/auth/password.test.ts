@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hashPassword, normalizePassword, verifyPassword } from "@/server/auth/password";
 
-/* Money, passwords and time — ADR 12. This is the passwords half.
+/* Passwords and time — ADR 12, as amended by ADR 27. This is the passwords half.
 
    scrypt at N=16384 costs real milliseconds by design, so this file is slower
    than the rest of the suite. That is the feature being tested. */

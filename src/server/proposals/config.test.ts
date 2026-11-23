@@ -31,33 +31,10 @@ describe("mergeOverride — each form owns a key", () => {
   });
 
   it("saving one form does not touch another form's key", () => {
-    const merged = mergeOverride({ hidden: ["cases"], order: ["total"] }, { hidden: [] });
+    const merged = mergeOverride({ hidden: ["cases"], order: ["cover"] }, { hidden: [] });
 
-    expect(merged.order).toEqual(["total"]);
+    expect(merged.order).toEqual(["cover"]);
     expect(merged.hidden).toBeUndefined();
-  });
-
-  /* The bug this prevents is quiet and expensive: the salesperson sets the
-     calculator seed, then five minutes later sets the image tariffs, and the
-     seed reverts to the default with nothing on screen saying so. */
-  it("estimate merges one level, so two forms do not overwrite each other", () => {
-    const withSeed = mergeOverride(
-      {},
-      { estimate: { defaults: { dryOptions: 4, wetOptions: 5, unitTypes: [] } } },
-    );
-    const withPrices = mergeOverride(withSeed, {
-      estimate: { imagePrices: { base: 99, option: 33 } },
-    });
-
-    expect(withPrices.estimate?.defaults?.dryOptions).toBe(4);
-    expect(withPrices.estimate?.imagePrices).toEqual({ base: 99, option: 33 });
-  });
-
-  it("a later write to the same estimate key still replaces it", () => {
-    const first = mergeOverride({}, { estimate: { imagePrices: { base: 99, option: 33 } } });
-    const second = mergeOverride(first, { estimate: { imagePrices: { base: 70, option: 20 } } });
-
-    expect(second.estimate?.imagePrices).toEqual({ base: 70, option: 20 });
   });
 
   it("prunes empty keys, so an untouched proposal stores {}", () => {
@@ -65,15 +42,15 @@ describe("mergeOverride — each form owns a key", () => {
        resolve(base, null) === base, visible in the database. */
     const merged = mergeOverride(
       { hidden: ["cases"] },
-      { hidden: [], shown: [], order: [], estimate: {} },
+      { hidden: [], shown: [], order: [], document: {} },
     );
     expect(merged).toEqual({});
   });
 
   it("never produces a `chrome` key", () => {
-    // DeckOverride has no such key; this pins that a cast cannot smuggle one in,
-    // because that is the field that would ship the cost panel to a client.
-    const merged = mergeOverride({}, { chrome: { allowPriceOverride: true } } as never);
+    // DeckOverride has no such key; this pins that a cast cannot smuggle one in.
+    // Nothing in `chrome` is a per-proposal choice.
+    const merged = mergeOverride({}, { chrome: { showFooter: false } } as never);
     expect("chrome" in merged).toBe(false);
   });
 });
@@ -119,13 +96,6 @@ describe("enabledDelta — minimal against the shipped defaults", () => {
 });
 
 describe("resolveForProposal — what publishing would freeze", () => {
-  it("forces allowPriceOverride false", () => {
-    // The composer must preview exactly what publish writes, or the freeze
-    // guarantee is only true in the function that happens to call forVisitor.
-    expect(buildDefaultDeck().chrome.allowPriceOverride).toBe(true);
-    expect(resolveForProposal({}, "cliente-abc").chrome.allowPriceOverride).toBe(false);
-  });
-
   it("stamps the slug as the key", () => {
     expect(resolveForProposal({}, "cliente-abc").key).toBe("cliente-abc");
   });

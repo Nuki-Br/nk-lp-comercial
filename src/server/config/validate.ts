@@ -15,12 +15,7 @@ import type { DeckConfig } from "@/deck/types";
 
 export type ValidationIssue = {
   /** Stable, greppable, and safe to branch on. */
-  code:
-    | "duplicate-id"
-    | "orphan-child"
-    | "total-before-calculator"
-    | "negative-price"
-    | "empty-deck";
+  code: "duplicate-id" | "orphan-child" | "empty-deck";
   /** pt-BR, because stage 3 shows this to a salesperson. */
   message: string;
   /** The node or field at fault, when there is one. */
@@ -48,7 +43,7 @@ export type ValidationResult =
 export function validateDeckConfig(config: DeckConfig): ValidationResult {
   const issues: ValidationIssue[] = [];
   const warnings: ValidationIssue[] = [];
-  const { slides, estimate } = config;
+  const { slides } = config;
 
   /* ---- Structure ---- */
 
@@ -81,32 +76,6 @@ export function validateDeckConfig(config: DeckConfig): ValidationResult {
         code: "orphan-child",
         at: node.id,
         message: `"${node.label}" depende de "${node.parentId}", que está desativado.`,
-      });
-    }
-  }
-
-  /* The closing frame reads what the calculator publishes. Reversed, it reads
-     zeros — in front of the client, on the slide that states the price. */
-  const order = enabled.map((n) => n.id);
-  const calculator = order.indexOf("calculator");
-  const total = order.indexOf("total");
-  if (calculator !== -1 && total !== -1 && total < calculator) {
-    issues.push({
-      code: "total-before-calculator",
-      at: "total",
-      message: 'O slide de total vem antes da calculadora e mostraria "R$ 0".',
-    });
-  }
-
-  /* ---- Money ---- */
-
-  for (const key of ["base", "option"] as const) {
-    const price = estimate.imagePrices[key];
-    if (!(price >= 0) || !Number.isFinite(price)) {
-      issues.push({
-        code: "negative-price",
-        at: `imagePrices.${key}`,
-        message: `A tarifa de imagem "${key}" é inválida.`,
       });
     }
   }

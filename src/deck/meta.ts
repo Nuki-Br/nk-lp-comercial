@@ -86,11 +86,6 @@ export const SLIDE_META: Record<SlideKind, SlideMeta> = {
     { key: "fit.items", label: fieldCopy.fitItems, kind: "list" },
   ]),
   cases: meta("cases", [...HEAD_FIELDS, { key: "logos", label: fieldCopy.logos, kind: "list" }]),
-  calculator: meta("calculator", HEAD_FIELDS),
-  total: meta("total", [
-    { key: "head.tag", label: fieldCopy.tag, kind: "text" },
-    { key: "head.title", label: fieldCopy.title, kind: "richtext" },
-  ]),
   custom: meta("custom", [], { addable: true, removable: true, singleton: false }),
 };
 

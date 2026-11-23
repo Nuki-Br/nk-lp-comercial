@@ -8,7 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 **This file holds rules, not explanations.** Every "why" lives in exactly one doc
 under `docs/`. If you find yourself explaining here, you are drifting — and a
-drifting summary is how the estimate numbers in this very file went stale.
+drifting summary is how numbers in this very file once went stale.
 
 Router: **`docs/README.md`** — read it, then read the one doc it points you at.
 
@@ -51,11 +51,6 @@ The copy contains the very words that look like identifiers ("ciclo", "meses",
 "imagens", "dor"). If you rename in bulk, drive it off the TypeScript AST and
 touch only `Identifier` nodes — a word-boundary regex will corrupt the copy and
 `Intl`'s own `currency` option key. See `docs/decisions.md` ADR 4.
-
-Known violation, do not fix opportunistically: `CalculatorSlide.tsx` carries
-`setOpcoesSecas`, `setMetragens`, `addAmbiente` and friends. It is queued in
-`docs/tech-debt.md` because renaming it inside another change drowns that
-change's diff.
 
 ## Rule 2 — no third-party analytics, ever
 
@@ -134,7 +129,6 @@ meant, and it still holds.
 | `src/components/ui/` | primitives with no domain knowledge | imports from `content/` |
 | `src/components/layout/` | footer | |
 | `src/content/` | pt-BR copy + **default** config constants | JSX, React, DB reads, **functions in exported config** |
-| `src/hooks/` | shared client behavior | |
 | `src/lib/` | pure, React-free, importable from both sides | `process.env`, DB, `next/headers` |
 | `src/styles/` | all CSS | |
 | `proxy.ts` (repo root) | coarse `/admin` gating only | DB queries, content decisions |
@@ -162,8 +156,6 @@ Components are `PascalCase.tsx`; everything else is `camelCase.ts`.
 - **The demo slide borrows another slide's nav dot** (`data-nav-id="inspetor"`).
   A config that hides the `inspetor` module but keeps its demo blanks the progress
   nav. Config validation rejects it.
-- **`calculator` must come before `total`.** The closing frame reads what the
-  calculator publishes.
 - **Every nav entry needs a rendered element with that `id`,** and ids must be
   unique. Duplicates make `getElementById` pick the first, light two dots, and
   double an entry in the keyboard walk list — all silently.
@@ -198,22 +190,14 @@ npm run check && npm run build
 
 `check` = typecheck + Biome + ESLint + Vitest.
 
-**There are no tests for the deck, deliberately. There are tests for money,
-passwords and time, mandatorily.** ADR 7 decided against a test framework and its
-reasoning — "a static deck whose only logic is the calculator" — stopped being
-true. Slide components, snapshots, `DeckBehaviors`, the iframe, keyboard nav and
-observers stay untested; unit tests would not catch those failures anyway. Scope
-and rationale: `docs/testing.md`, ADR 12.
+**There are no tests for the deck, deliberately. There are tests for passwords
+and time, and for the config the deck is built from, mandatorily.** Slide
+components, snapshots, `DeckBehaviors`, the iframe, keyboard nav and observers
+stay untested; unit tests would not catch those failures anyway. Scope and
+rationale: `docs/testing.md`, ADRs 12 and 27.
 
 Most of this repo is browser behavior that typecheck cannot see. The three manual
-checklists — one per surface — are in `docs/testing.md`. The canonical estimate
-numbers live in **`docs/estimate.md`** and nowhere else; they are wrong in three
-places in this repo's history precisely because they were copied around.
-
-> Note for browser-driving agents: `useCountUp` animates with
-> `requestAnimationFrame`, which does not fire in a hidden tab. In a headless or
-> backgrounded pane every animated number freezes at its initial value — that is
-> not a bug. Read the raw values, or make the pane visible.
+checklists — one per surface — are in `docs/testing.md`.
 
 ## Do not
 

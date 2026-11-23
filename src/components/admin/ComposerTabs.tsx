@@ -6,15 +6,14 @@ import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/admin/ui/Alert";
 import { cn } from "@/lib/cn";
 
-/* The composer is four routes rather than one page with six forms. Each one is
-   reviewable on its own, each calls requireAdmin() at its own top, and a
-   salesperson opening "Slides" does not load the estimator editor.
+/* The composer is two routes rather than one page with every form. Each one is
+   reviewable on its own, and each calls requireAdmin() at its own top.
 
    Sub-routes under /admin/**, not a fifth surface — AGENTS.md Rule 4's route
    table still describes this app exactly.
 
    A ABA ATIVA VEM DO PATHNAME, não de uma prop. A régua subiu para o layout do
-   compositor, que é comum às quatro rotas e não sabe qual delas está montada;
+   compositor, que é comum às duas rotas e não sabe qual delas está montada;
    e o efeito colateral é o que interessa numa tela que se atravessa o dia
    inteiro: o sublinhado troca no clique, junto com o resto da navegação, em vez
    de esperar a página do outro lado responder. */
@@ -22,8 +21,6 @@ import { cn } from "@/lib/cn";
 const TABS: { key: string; label: string; segment: string }[] = [
   { key: "overview", label: "Visão geral", segment: "" },
   { key: "slides", label: "Slides", segment: "/slides" },
-  { key: "pricing", label: "Tarifas de imagem", segment: "/pricing" },
-  { key: "estimate", label: "Calculadora", segment: "/estimate" },
 ];
 
 /* O SUBLINHADO É UM ELEMENTO SÓ, QUE ANDA.

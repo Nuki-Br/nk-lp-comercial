@@ -28,19 +28,13 @@ const slideNode = z.looseObject({
   walkable: z.boolean().optional(),
 });
 
-const estimate = z.looseObject({
-  imagePrices: z.looseObject({ base: z.number().finite(), option: z.number().finite() }),
-});
-
 export const deckConfigSchema = z.looseObject({
   key: z.string(),
   document: z.looseObject({ title: z.string(), description: z.string() }),
   slides: z.array(slideNode).min(1),
-  estimate,
   chrome: z.looseObject({
     showFooter: z.boolean(),
     keyboardHint: richText,
-    allowPriceOverride: z.boolean(),
   }),
 });
 
@@ -54,8 +48,8 @@ export const deckConfigSchema = z.looseObject({
  * cast — and reconsider the mirror.
  *
  * `stripRetired` runs on the way out, so every reader of a stored document —
- * the visitor path and the admin list alike — sees it without the plan slide a
- * snapshot frozen before ADR 26 still carries. The stored row is not touched.
+ * sees it without the slides and the `estimate` block a snapshot frozen before
+ * ADRs 26 and 27 still carries. The stored row is not touched.
  */
 export function parseStoredDeckConfig(input: unknown): DeckConfig | null {
   const result = deckConfigSchema.safeParse(input);

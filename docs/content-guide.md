@@ -2,7 +2,7 @@
 audience: human
 status: current
 verified_against: src/content/deck.ts, src/content/modules.ts
-size: 123
+size: 96
 ---
 
 # Editando o conteúdo do deck
@@ -42,25 +42,18 @@ Quase tudo vive em dois arquivos: `src/content/deck.ts` e `src/content/modules.t
 |---|---|---|
 | Os nomes na navegação lateral | `content/deck.ts` | `slideLabels` |
 | Títulos e textos de cada slide | `content/slides.ts` | o bloco do slide |
-| Rótulos internos da calculadora | `content/slides.ts` | `calculatorLabels` |
 | Os 3 cards de "O problema" | `content/deck.ts` | `problemCards` |
 | As 3 fases (Planner/Personaliza/Inspetor) | `content/deck.ts` | `moduleFlow` |
 | Os diferenciais | `content/deck.ts` | `differentiators` |
 | As personas de "Pra quem serve" | `content/deck.ts` | `personas` |
 | A lista "quando faz sentido" | `content/deck.ts` | `fitList` |
-| Defaults da calculadora | `content/deck.ts` | `ESTIMATE_DEFAULTS` |
-| Limites dos campos da calculadora | `lib/estimateTypes.ts` | `ESTIMATE_RANGES` |
-| **Preço da imagem base** | `content/deck.ts` | `ESTIMATE_DEFAULTS.baseImagePrice` |
-| **Preço da imagem de opção** | `content/deck.ts` | `ESTIMATE_DEFAULTS.optionImagePrice` |
-| Presets de porte (Studio/Padrão/Alto padrão) | `content/deck.ts` | `PROJECT_SIZE_PRESETS` |
-| Ambientes do "+ Adicionar ambiente" | `content/deck.ts` | `ROOM_PRESETS` |
 | Texto e telas de cada módulo | `content/modules.ts` | `modules` |
 | Link "Saiba mais" de um módulo | `content/modules.ts` | `learnMoreHref` |
 | Botão que abre o app do módulo | `content/modules.ts` | `links` |
 
 **Nenhum slide guarda mais texto dentro do componente.** Toda string que um
 humano lê está em `src/content/slides.ts` — inclusive as que o painel ainda não
-expõe (os logos de cases, os rótulos internos da calculadora). Um componente de
+expõe (os logos de cases, os rótulos da demo). Um componente de
 slide não importa de `src/content/`: a configuração entra por prop.
 
 Títulos com destaque laranja são uma lista de pedaços, não HTML:
@@ -74,9 +67,6 @@ pedaço — sem ele as duas partes se colam.
 
 ## Detalhes que confundem
 
-**As tarifas de imagem são números puros, sem "R$" e sem ponto.** `84`, não
-`"R$ 84"`. A formatação em reais é automática.
-
 **Títulos partidos em duas partes.** Alguns títulos têm `pre` e `strong` — o
 `strong` sai em negrito e é reaproveitado sozinho em botões e textos alternativos.
 
@@ -85,23 +75,6 @@ title: { pre: "Conheça o", strong: "Planner" },
 ```
 
 Mantenha o `strong` curto: ele aparece em frases como "Explorar o Planner".
-
-**São dois preços de imagem, não um.** A **imagem base** é o render do ambiente
-modelado em 3D — uma por unidade de ambiente, e é a cara. As **imagens de opção**
-são recortes de material sobre essa base, e por isso saem bem mais baratas. Os
-dois números vivem em `ESTIMATE_DEFAULTS` e são multiplicados separadamente.
-
-**Trocar os preços durante uma reunião.** Não precisa mexer no código —
-`Ctrl+Alt+K` abre um painel escondido na calculadora com um campo pra cada preço,
-ajustáveis ao vivo. Os valores voltam ao default quando a página recarrega.
-
-**Os presets de porte são um ponto de partida, não um catálogo.** Clicar em
-Studio, Padrão ou Alto padrão substitui a calculadora inteira (metragens,
-ambientes, variações e opções por componente). O destaque some assim que o
-vendedor edita qualquer coisa — o chip aceso não pode afirmar um estado que já
-mudou. Em `PROJECT_SIZE_PRESETS`, o `hint` de cada preset descreve a estrutura
-("1 metragem · 5 ambientes"); não coloque total de imagens ali, porque ele muda
-junto com as opções por componente e desatualiza sozinho.
 
 ## Trocando as imagens de um módulo
 
